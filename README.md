@@ -22,6 +22,7 @@ Echtzeitdaten sind für den Anfang Out of Scope.
 Es werden folgende Rollen gebraucht:
 
 - Manager
+- Employee
 - Admin
 
 ![Das Datenmodell zur Applikation NeuroFleet](uc-diagramm.drawio.svg)
