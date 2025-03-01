@@ -43,83 +43,160 @@ Echtzeitdaten sind für den Anfang Out of Scope.
 
 ### TRENDS & TECHNOLOGIE
 
-> Im Feld Trends & Technologien notieren wir Informationen über Megatrends sowie soziokulturelle Trends, Konsum- und Zeitgeisttrends, die einen Einfluss auf unser Projekt haben (könnten). Auch unsere Kenntnisse über aktuelle Technologien und Entwicklungen fließen hier hinein. Vor allem im Bereich der digitalen Innovationen sind diese wichtig.
+- Megatrends: Digitalisierung, Automatisierung, Nachhaltigkeit, Urbanisierung
+
+- Technologische Entwicklungen: KI-gestützte Routenplanung, Predictive Analytics, IoT-basierte Fahrzeugüberwachung, Blockchain für Lieferketten
+
+- Soziokulturelle Trends: Sharing Economy, Umweltbewusstsein, steigende Nachfrage nach On-Demand-Logistik
+
+- Konsum- und Zeitgeisttrends: Effizienzsteigerung in der Logistik, steigende E-Commerce-Bedürfnisse, autonome Fahrzeuge
+
+- Digitale Innovationen: Cloud-basierte Flottenmanagement-Systeme, 5G-Netzwerke für Echtzeit-Datenübertragung
 
 ### POTENTIELLE PARTNER & WETTBEWERB
 
-> Im Feld Potenzielle Partnerschaften & Wettbewerb stehen alle Informationen über relevante Partnerschaften und Wettbewerber in dem Markt, den wir innovieren wollen.
+- Potenzielle Partner: Logistikdienstleister, Speditionen, Technologieanbieter für KI und IoT, Universitäten mit Forschung zu Transport und KI
+
+- Wettbewerber: SAP Transportation Management, Transporeon, Sennder, FourKites, Project44
+
+- Marktentwicklung: Wachsende Nachfrage nach intelligenter Transportplanung, zunehmende Vernetzung von Logistiksystemen
 
 ### FAKTEN
 
-> Das Feld Fakten ist gewissermassen unser Joker. Hier steht alles, was sich in den anderen Feldern nicht einordnen lässt, aber irgendwie mit unserem Recherchethema zu tun hat.
+- NeuroFleet ist ein Prototyp-Projekt mit 150 Stunden Entwicklungszeit
+
+- Fokus auf Simulation statt Echtzeit-Datenintegration
+
+- Einsatz von Dummy-Daten für ERP-Simulation
+
+- Hauptnutzer: Logistikunternehmen mit mehreren Standorten, wobei der Fokus auf Lastwagentransport ist.
+
+- Kombination aus KI, Simulation und Datenanalyse für optimierte Transportkapazitäten
 
 ### POTENZIALFELDER
 
-> Unter Potentialfelder notieren wir wiederkehrende Themenschwerpunkte, die unsere User beschäftigen. Diese sind erste Hinweise auf konkrete Bedürfnisse und entpuppen sich oftmals als Vorstufe von Ideen, die wir später mithilfe des CREATE-Moduls und seiner Methoden herausarbeiten können.
+- Optimierung von Flottenauslastung
+
+- Einsatz von KI zur Kapazitätsprognose
+
+- Integration von ERP-ähnlichen Prozessen zur Simulation
+
+- Automatisierte Entscheidungsunterstützung für Disponenten
+
+- Dynamische Anpassung der Kapazitätsplanung an veränderte Marktbedingungen
 
 ### USER
 
-> Das Feld User enthält die Merkmale unseren künftigen Usern. Da die Informationen in diesem Bereich eng mit unseren Notizen in den Feldern Erkenntnisse, Bedürfnisse und Touchpoints zusammenhängen, teilen sich diese vier Rubriken den größten Abschnitt des EXPLORE-Moduls.
+- Primäre Zielgruppe: Transport- und Logistikunternehmen
+
+- Sekundäre Zielgruppe: Disponenten, Fuhrparkmanager, strategische Planer
+
+- Mögliche Stakeholder: IT-Abteilungen, Geschäftsführung, Kunden der Logistikunternehmen
 
 ### BEDÜRFNISSE
 
-> Was wir unter Bedürfnisse notieren, müssen wir mit unserer Innovation (auf)lösen. Die Kombination von User und Bedürfnis ist der Fixpunkt für die Entwicklung von neuen digitalen Produkten und Services.
+- Effizientere Nutzung von Flottenkapazitäten
+
+- Reduzierung von Leerfahrten und Ressourcenverschwendung
+
+- Frühzeitige Erkennung von Engpässen
+
+- Intuitive Benutzeroberfläche zur schnellen Entscheidungsfindung
+
+- Flexible Anpassung an Unternehmensprozesse ohne grosse IT-Integration
 
 ### ERKENNTNISSE
 
-> Das Feld Erkenntnisse enthält Informationen, die sowohl die physische als auch die emotionale Lebenswelt unserer User betreffen. Hier notieren wir auch passende Analogien, die uns eine neue Perspektive für unser Recherchethema ermöglichen. Oder Analogien, die unsere Empathie für das Recherchethema vertiefen.
+- Disponenten benötigen einfache, visuelle Dashboards für schnelle Entscheidungen
+
+- Logistikunternehmen stehen unter wachsendem Kostendruck
+
+- Die Transportbranche leidet unter Fahrermangel und ineffizienter Kapazitätsnutzung
+
+- Datenbasierte Entscheidungsfindung wird immer wichtiger
 
 ### TOUCHPOINTS
 
-> Das Feld Touchpoints listet die Berührungspunkte auf, die User mit einem Service oder Produkt haben.
+- Web-Dashboard für Flottenmanagement
+
+- Benachrichtigungen und Warnsysteme für Engpässe
+
+- Schnittstellen zu bestehenden ERP- und TMS-Systemen
+
+- Mobile Anwendung für Echtzeit-Zugriff auf Kapazitätsinformationen
 
 ### WIE KÖNNEN WIR?
 
-> Aus den Informationen über User, Bedürfnisse, Erkenntnisse und Touchpoints entwickeln wir eine Wie-können wir- Frage, die ein ungelöstes Problem für User beschreibt.
+- Wie können wir Transportkapazitäten so optimieren, dass Unternehmen Leerfahrten vermeiden und gleichzeitig flexibel auf Marktveränderungen reagieren können?
+
+- Wie können wir Disponenten eine intuitive Möglichkeit bieten, Engpässe frühzeitig zu erkennen und Lösungen zu simulieren?
+
+- Wie können wir ohne direkte ERP-Integration eine realitätsnahe Simulation von Unternehmensprozessen ermöglichen?
 
 ## Create-Board
 
 ### IDEEN-BESCHREIBUNG
 
-> Im Feld Ideenbeschreibung notieren wir den Kern unserer Idee. Sie sollte sich auf einen klaren Anwendungsfall fokussieren und diesen beschreiben.
+NeuroFleet ist eine KI-gestützte Plattform zur Optimierung der Transportkapazitäten in Logistikunternehmen. Sie nutzt Simulationen und vorausschauende Analysen, um Engpässe zu vermeiden und Leerfahrten zu reduzieren. Dabei ersetzt sie eine direkte ERP-Integration durch eine dynamische Datensimulation und bietet eine intuitive Benutzeroberfläche für Disponenten.
 
 ### ADRESSIERTE NUTZER
 
-> Im Feld Adressierte NutzerInnen schreiben wir Details und Besonderheiten zu den NutzerInnen auf, für die wir unsere Lösungsidee entwickeln.
+- Logistikunternehmen mit mehreren Standorten
+
+- Disponenten und Flottenmanager
+
+- Strategische Planer für Kapazitätsmanagement
+
+- IT-Abteilungen und Digitalisierungsbeauftragte
 
 ### ADRESSIERTE BEDÜRFNISSE
 
-> In Feld Bedürfnisse notieren wir die Bedürfnisse der NutzerInnen, die wir mit unserer Idee erfüllen wollen.
+- Echtzeit-Übersicht über verfügbare Transportkapazitäten
+
+- Reduktion von Leerfahrten und ineffizienter Nutzung von Ressourcen
+
+- Frühzeitige Erkennung und Vermeidung von Kapazitätsengpässen
+
+- Effiziente Disposition ohne komplexe ERP-Integration
+
+- Anpassungsfähigkeit an sich ändernde Marktbedingungen
 
 ### PROBLEME
 
-> Im Feld Probleme notieren wir die ein bis drei drängendsten Probleme, die mit diesen Bedürfnissen zu tun haben.
+1. Intransparente Kapazitätsauslastung: Unternehmen haben oft keinen klaren Überblick über ihre aktuellen Kapazitäten, was zu ineffizienter Planung führt.
+
+2. Hohes Mass an Leerfahrten: Lkw und Transportkapazitäten werden nicht optimal genutzt, was Kosten verursacht und die Umwelt belastet.
+
+3. Fehlende Frühwarnsysteme: Engpässe und Überkapazitäten werden oft zu spät erkannt, was operative Probleme und unnötige Kosten verursacht.
 
 ### IDEENPOTENZIAL
 
-Mehrwert: Mückenstich vs. Hai-Attacke
+**Mehrwert: Mückenstich vs. Hai-Attacke**
 
+Mittelmässiger Schmerzpunkt, aber relevant für Effizienzsteigerung:  
 🔵🔵🔵⚪️⚪️⚪️⚪️⚪️⚪️⚪️
 
-Übertragbarkeit: Robinson Crusoe vs. die Welt
+**Übertragbarkeit: Robinson Crusoe vs. die Welt**
 
+Gutes Potenzial zur Skalierung auf viele Logistikunternehmen:
 🔵🔵🔵🔵🔵⚪️⚪️⚪️⚪️⚪️
 
-Machbarkeit: Hammer vs. Raumschiff
+**Machbarkeit: Hammer vs. Raumschiff**
 
+Technisch umsetzbar mit vorhandenen Technologien:  
 🔵🔵🔵🔵🔵🔵🔵🔵⚪️⚪️
 
 ### DAS WOW
 
-> Im Feld Das Wow notieren wir das eine Detail unserer Lösungsidee, für das wir in der Presse gefeiert werden wollen.
+NeuroFleet bietet eine Plug-and-Play-Lösung zur Kapazitätsoptimierung. Unternehmen erhalten innerhalb von Minuten eine vorausschauende Analyse und Handlungsempfehlungen zur effizienten Flottennutzung. Bei Ressourcenengpässen können sie frühzeitig handeln und vermeiden verspätete Zustellungen von Lieferungen an ihre Verteilzentren oder Läden.
 
 ### HIGH-LEVEL-KONZEPT
 
-> Im Feld High-Level-Konzept notieren wir eine griffige Analogie, mit der wir unsere Lösungsidee beschreiben könnten.
+NeuroFleet ist das "Google Maps der Transportkapazitäten" – es zeigt nicht nur den aktuellen Status, sondern prognostiziert zukünftige Engpässe und schlägt alternative Routen vor, um Leerfahrten zu vermeiden.
 
 ### WERTVERSPRECHEN
 
-> Ins Feld Wertversprechen schreiben wir unsere Lösungshypothese. Sie ist die Synthese aus Idee, NutzerIn, Bedürfnis und Ideenpotenzial. Und sie ist unsere Antwort auf die Wie-können-wir-Frage aus den EXPLORE-BOARD.
+NeuroFleet ermöglicht es Logistikunternehmen, ihre Transportkapazitäten intelligent zu steuern, Engpässe frühzeitig zu erkennen und Leerfahrten drastisch zu reduzieren – ohne komplizierte IT-Integration. Das spart Kosten, reduziert CO₂-Emissionen und erhöht die betriebliche Effizienz.
 
 ## Evaluate-Board
 
