@@ -17,26 +17,6 @@ Was sind die Kernideen?
 
 Echtzeitdaten sind für den Anfang Out of Scope.
 
-## Rollenbeschreibung
-
-Es werden folgende Rollen gebraucht:
-
-- Manager
-- Employee
-- Admin
-
-![Das Datenmodell zur Applikation NeuroFleet](uc-diagramm.drawio.svg)
-
-## Datenmodell
-
-Die folgende Abbildung zeigt das fachliche Datenmodell:
-
-![Das Datenmodell zur Applikation NeuroFleet](datenmodell.drawio.svg)
-
-# Projektname
-
-Ein kurzer Text als Intro
-
 # Inhaltsverzeichnis
 
 - [Einleitung](#einleitung)
@@ -167,15 +147,19 @@ Machbarkeit: Hammer vs. Raumschiff
 
 ## Use-Case Diagramm
 
-> Hier das Diagramm einbinden
+![Das Datenmodell zur Applikation NeuroFleet](uc-diagramm.drawio.svg)
 
 ## Use-Case Beschreibung
 
-> Hier die Use-Case Beschreibung einfügen so wie du das in RE gelernt hast.
+Es werden folgende Rollen gebraucht:
+
+- Manager
+- Employee
+- Admin
 
 ## Fachliches Datenmodell
 
-> Hier das fachliche Datenmodell (ER-Modell) einbinden. Ein fachliches Modell enthält **keine** IDs oder Ähnliches
+![Das Datenmodell zur Applikation NeuroFleet](datenmodell.drawio.svg)
 
 ## Erläuterungen zum Datenmodell
 
