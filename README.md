@@ -159,8 +159,7 @@ NeuroFleet bietet eine vollständig KI-gesteuerte Kapazitätsverteilung, die ohn
 
 ### HIGH-LEVEL-KONZEPT
 
-NeuroFleet ist das "Autopilot-System für Logistikkapazitäten" – es analysiert bestehende Ressourcen, simuliert optimierte Verteilungen und setzt diese automatisiert um, ohne manuelle Dispositionsarbeit.
-
+„Das Tetris für Transportkapazitäten“ - NeuroFleet nutzt KI, um Transportkapazitäten so effizient zu „stapeln“, dass keine Leerflächen entstehen – genau wie im perfekten Tetris-Spiel.
 ### WERTVERSPRECHEN
 
 NeuroFleet ermöglicht Logistikunternehmen eine intelligente, KI-gestützte Kapazitätsverteilung. Durch die Simulation verschiedener Szenarien und die automatische Optimierung von Transportressourcen werden Leerfahrten minimiert, die Auslastung maximiert und CO₂-Emissionen reduziert. Unsere Plattform sorgt dafür, dass die richtigen Kapazitäten zur richtigen Zeit am richtigen Ort sind – ohne zeitaufwändige manuelle Planung.
