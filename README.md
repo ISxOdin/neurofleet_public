@@ -43,160 +43,127 @@ Echtzeitdaten sind für den Anfang Out of Scope.
 
 ### TRENDS & TECHNOLOGIE
 
-- Megatrends: Digitalisierung, Automatisierung, Nachhaltigkeit, Urbanisierung
-
-- Technologische Entwicklungen: KI-gestützte Routenplanung, Predictive Analytics, IoT-basierte Fahrzeugüberwachung, Blockchain für Lieferketten
-
-- Soziokulturelle Trends: Sharing Economy, Umweltbewusstsein, steigende Nachfrage nach On-Demand-Logistik
-
-- Konsum- und Zeitgeisttrends: Effizienzsteigerung in der Logistik, steigende E-Commerce-Bedürfnisse, autonome Fahrzeuge
-
-- Digitale Innovationen: Cloud-basierte Flottenmanagement-Systeme, 5G-Netzwerke für Echtzeit-Datenübertragung
+- **Megatrends:** Digitalisierung, Automatisierung, Nachhaltigkeit, Urbanisierung
+- **Technologische Entwicklungen:** KI-gestützte Routenplanung, Predictive Analytics, IoT-basierte Fahrzeugüberwachung
+- **Soziokulturelle Trends:** Sharing Economy, Umweltbewusstsein, steigende Nachfrage nach On-Demand-Logistik
+- **Konsum- und Zeitgeisttrends:** Effizienzsteigerung in der Logistik, steigende E-Commerce-Bedürfnisse, autonome Fahrzeuge
+- **Digitale Innovationen:** Cloud-basierte Flottenmanagement-Systeme
 
 ### POTENTIELLE PARTNER & WETTBEWERB
 
-- Potenzielle Partner: Logistikdienstleister, Speditionen, Technologieanbieter für KI und IoT, Universitäten mit Forschung zu Transport und KI
-
-- Wettbewerber: SAP Transportation Management, Transporeon, Sennder, FourKites, Project44
-
-- Marktentwicklung: Wachsende Nachfrage nach intelligenter Transportplanung, zunehmende Vernetzung von Logistiksystemen
+- **Potenzielle Partner:** Logistikdienstleister, Speditionen, Technologieanbieter für KI und IoT, Universitäten mit Forschung zu Transport und KI
+- **Wettbewerber:** SAP Transportation Management, Transporeon, Sennder, FourKites, Project44
+- **Marktentwicklung:** Wachsende Nachfrage nach intelligenter Transportplanung, zunehmende Vernetzung von Logistiksystemen
 
 ### FAKTEN
 
 - NeuroFleet ist ein Prototyp-Projekt mit 150 Stunden Entwicklungszeit
-
 - Fokus auf Simulation statt Echtzeit-Datenintegration
-
-- Einsatz von Dummy-Daten für ERP-Simulation
-
-- Hauptnutzer: Logistikunternehmen mit mehreren Standorten, wobei der Fokus auf Lastwagentransport ist.
-
+- Einsatz von Mock-Daten für Kapazitätsplanung
+- Hauptnutzer: Logistikunternehmen mit mehreren Standorten, wobei der Fokus auf Lastwagentransport liegt
 - Kombination aus KI, Simulation und Datenanalyse für optimierte Transportkapazitäten
 
 ### POTENZIALFELDER
 
 - Optimierung von Flottenauslastung
-
-- Einsatz von KI zur Kapazitätsprognose
-
-- Integration von ERP-ähnlichen Prozessen zur Simulation
-
+- Einsatz von KI zur Kapazitätsverteilung
 - Automatisierte Entscheidungsunterstützung für Disponenten
-
 - Dynamische Anpassung der Kapazitätsplanung an veränderte Marktbedingungen
 
 ### USER
 
-- Primäre Zielgruppe: Transport- und Logistikunternehmen
-
-- Sekundäre Zielgruppe: Disponenten, Fuhrparkmanager, strategische Planer
-
-- Mögliche Stakeholder: IT-Abteilungen, Geschäftsführung, Kunden der Logistikunternehmen
+- **Primäre Zielgruppe:** Transport- und Logistikunternehmen
+- **Sekundäre Zielgruppe:** Disponenten, Fuhrparkmanager, strategische Planer
+- **Mögliche Stakeholder:** IT-Abteilungen, Geschäftsführung, Kunden der Logistikunternehmen
 
 ### BEDÜRFNISSE
 
 - Effizientere Nutzung von Flottenkapazitäten
-
 - Reduzierung von Leerfahrten und Ressourcenverschwendung
-
-- Frühzeitige Erkennung von Engpässen
-
+- Optimierte Kapazitätsverteilung durch KI-basierte Entscheidungen
 - Intuitive Benutzeroberfläche zur schnellen Entscheidungsfindung
-
-- Flexible Anpassung an Unternehmensprozesse ohne grosse IT-Integration
 
 ### ERKENNTNISSE
 
 - Disponenten benötigen einfache, visuelle Dashboards für schnelle Entscheidungen
-
 - Logistikunternehmen stehen unter wachsendem Kostendruck
-
 - Die Transportbranche leidet unter Fahrermangel und ineffizienter Kapazitätsnutzung
-
 - Datenbasierte Entscheidungsfindung wird immer wichtiger
 
 ### TOUCHPOINTS
 
-- Web-Dashboard für Flottenmanagement
-
-- Benachrichtigungen und Warnsysteme für Engpässe
-
-- Schnittstellen zu bestehenden ERP- und TMS-Systemen
-
-- Mobile Anwendung für Echtzeit-Zugriff auf Kapazitätsinformationen
+- Web-Dashboard für Flottenmanagement**
+- Benachrichtigungen und Vorschläge für optimierte Kapazitätsverteilung
+- Schnittstellen zur Nutzung von Mock-Daten für Simulationen
 
 ### WIE KÖNNEN WIR?
 
 - Wie können wir Transportkapazitäten so optimieren, dass Unternehmen Leerfahrten vermeiden und gleichzeitig flexibel auf Marktveränderungen reagieren können?
-
-- Wie können wir Disponenten eine intuitive Möglichkeit bieten, Engpässe frühzeitig zu erkennen und Lösungen zu simulieren?
-
-- Wie können wir ohne direkte ERP-Integration eine realitätsnahe Simulation von Unternehmensprozessen ermöglichen?
+- Wie können wir Disponenten eine intuitive Möglichkeit bieten, ihre Kapazitäten effizienter zu verteilen und Ressourcen bestmöglich zu nutzen?
+- Wie können wir durch KI-gestützte Simulationen eine möglichst realitätsnahe Kapazitätsplanung ermöglichen?
 
 ## Create-Board
 
 ### IDEEN-BESCHREIBUNG
 
-NeuroFleet ist eine KI-gestützte Plattform zur Optimierung der Transportkapazitäten in Logistikunternehmen. Sie nutzt Simulationen und vorausschauende Analysen, um Engpässe zu vermeiden und Leerfahrten zu reduzieren. Dabei ersetzt sie eine direkte ERP-Integration durch eine dynamische Datensimulation und bietet eine intuitive Benutzeroberfläche für Disponenten.
+NeuroFleet ist eine KI-gestützte Plattform zur Optimierung der Transportkapazitäten in Logistikunternehmen. Sie nutzt Simulationen und vorausschauende Analysen, um eine intelligente Kapazitätsverteilung zu ermöglichen und Leerfahrten zu reduzieren. Die Plattform basiert vollständig auf Mock-Daten und bietet eine intuitive Benutzeroberfläche für Disponenten.
 
 ### ADRESSIERTE NUTZER
 
-- Logistikunternehmen mit mehreren Standorten
+Logistikunternehmen mit mehreren Standorten
 
-- Disponenten und Flottenmanager
+Disponenten und Flottenmanager
 
-- Strategische Planer für Kapazitätsmanagement
+Strategische Planer für Kapazitätsmanagement
 
-- IT-Abteilungen und Digitalisierungsbeauftragte
+IT-Abteilungen und Digitalisierungsbeauftragte
 
 ### ADRESSIERTE BEDÜRFNISSE
 
-- Echtzeit-Übersicht über verfügbare Transportkapazitäten
+Optimale Verteilung der vorhandenen Transportkapazitäten
 
-- Reduktion von Leerfahrten und ineffizienter Nutzung von Ressourcen
+Reduktion von Leerfahrten und ineffizienter Nutzung von Ressourcen
 
-- Frühzeitige Erkennung und Vermeidung von Kapazitätsengpässen
+Dynamische Anpassung der Kapazitätsplanung an veränderte Marktbedingungen
 
-- Effiziente Disposition ohne komplexe ERP-Integration
-
-- Anpassungsfähigkeit an sich ändernde Marktbedingungen
+Effiziente Disposition ohne hohe Integrationsaufwände
 
 ### PROBLEME
 
-1. Intransparente Kapazitätsauslastung: Unternehmen haben oft keinen klaren Überblick über ihre aktuellen Kapazitäten, was zu ineffizienter Planung führt.
-
-2. Hohes Mass an Leerfahrten: Lkw und Transportkapazitäten werden nicht optimal genutzt, was Kosten verursacht und die Umwelt belastet.
-
-3. Fehlende Frühwarnsysteme: Engpässe und Überkapazitäten werden oft zu spät erkannt, was operative Probleme und unnötige Kosten verursacht.
+1. Ineffiziente Kapazitätsnutzung: Unternehmen nutzen ihre Transportressourcen nicht optimal, was zu hohen Kosten und ungenutzten Kapazitäten führt.
+   
+2. Hohes Mass an Leerfahrten: Lkw und Transportkapazitäten werden nicht effizient ausgelastet, was Kosten verursacht und die Umwelt belastet.
+   
+3. Komplexe Entscheidungsprozesse: Disponenten stehen vor der Herausforderung, Kapazitäten manuell und ineffizient zuzuweisen.
 
 ### IDEENPOTENZIAL
 
 **Mehrwert: Mückenstich vs. Hai-Attacke**
 
-Mittelmässiger Schmerzpunkt, aber relevant für Effizienzsteigerung:  
-🔵🔵🔵⚪️⚪️⚪️⚪️⚪️⚪️⚪️
+🔵🔵🔵⚪️⚪️⚪️⚪️⚪️⚪️⚪️   
+(Mittelmässiger Schmerzpunkt, aber relevant für Effizienzsteigerung)
 
 **Übertragbarkeit: Robinson Crusoe vs. die Welt**
 
-Gutes Potenzial zur Skalierung auf viele Logistikunternehmen:
-🔵🔵🔵🔵🔵⚪️⚪️⚪️⚪️⚪️
+🔵🔵🔵🔵🔵⚪️⚪️⚪️⚪️⚪️   
+(Gutes Potenzial zur Skalierung auf viele Logistikunternehmen)
 
 **Machbarkeit: Hammer vs. Raumschiff**
 
-Technisch umsetzbar mit vorhandenen Technologien:  
-🔵🔵🔵🔵🔵🔵🔵🔵⚪️⚪️
+🔵🔵🔵🔵🔵🔵🔵🔵⚪️⚪️   
+(Technisch umsetzbar mit vorhandenen Technologien)
 
 ### DAS WOW
 
-NeuroFleet bietet eine Plug-and-Play-Lösung zur Kapazitätsoptimierung. Unternehmen erhalten innerhalb von Minuten eine vorausschauende Analyse und Handlungsempfehlungen zur effizienten Flottennutzung. Bei Ressourcenengpässen können sie frühzeitig handeln und vermeiden verspätete Zustellungen von Lieferungen an ihre Verteilzentren oder Läden.
+NeuroFleet bietet eine vollständig KI-gesteuerte Kapazitätsverteilung, die ohne komplexe menschliche Eingriffe funktioniert. Unternehmen erhalten innerhalb von Minuten eine optimierte Verteilung ihrer Flottenkapazitäten basierend auf dynamischen Simulationsmodellen.
 
 ### HIGH-LEVEL-KONZEPT
 
-NeuroFleet ist das "Google Maps der Transportkapazitäten" – es zeigt nicht nur den aktuellen Status, sondern prognostiziert zukünftige Engpässe und schlägt alternative Routen vor, um Leerfahrten zu vermeiden.
+NeuroFleet ist das "Autopilot-System für Logistikkapazitäten" – es analysiert bestehende Ressourcen, simuliert optimierte Verteilungen und setzt diese automatisiert um, ohne manuelle Dispositionsarbeit.
 
 ### WERTVERSPRECHEN
 
-NeuroFleet ermöglicht es Logistikunternehmen, ihre Transportkapazitäten intelligent zu steuern, Engpässe frühzeitig zu erkennen und Leerfahrten drastisch zu reduzieren – ohne komplizierte IT-Integration. Das spart Kosten, reduziert CO₂-Emissionen und erhöht die betriebliche Effizienz.
+NeuroFleet ermöglicht Logistikunternehmen eine intelligente, KI-gestützte Kapazitätsverteilung. Durch die Simulation verschiedener Szenarien und die automatische Optimierung von Transportressourcen werden Leerfahrten minimiert, die Auslastung maximiert und CO₂-Emissionen reduziert. Unsere Plattform sorgt dafür, dass die richtigen Kapazitäten zur richtigen Zeit am richtigen Ort sind – ohne zeitaufwändige manuelle Planung.
 
 ## Evaluate-Board
 
