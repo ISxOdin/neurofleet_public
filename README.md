@@ -194,7 +194,7 @@ Zur Erfolgsmessung der Lösung werden folgende KPIs verwendet:
 ### EINNAHMEQUELLEN
 Die Monetarisierung erfolgt über verschiedene Einnahmemodelle:
 - **Lizenzbasierte Abonnements**: Monatliche oder jährliche Gebühren für Unternehmen mit verschiedenen Nutzungsplänen.
-- **Enterprise-Lösungen**: Individuelle Anpassungen und Integrationen für Grosskunden mit massgeschneiderten Features.
+- **Enterprise-Lösungen**: Individuelle Anpassungen und Integrationen für Grosskunden (mindestens 100 Fahrzeugen oder >10.000 Transporten pro Monat) mit massgeschneiderten Features.
 - **Datenanalyse & Insights**: Verkauf anonymisierter Datenanalysen für Markttrends und Logistikoptimierung.
 - **Fördergelder & Subventionen**: Unterstützung durch Programme für nachhaltige Logistiklösungen.
 
