@@ -1,3 +1,4 @@
+/* 
 package ch.zhaw.neurofleet.config;
 
 import java.io.IOException;
@@ -9,13 +10,13 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
-
+*/
 /**
  * Configuration for Single Page Application (SPA) routing.
  * This is necessary to ensure that the SvelteKit app works correctly
  * even when URLs are accessed directly (e.g., during a reload).
  */
-
+/* 
 @Configuration
 public class SpaConfiguration implements WebMvcConfigurer {
 
@@ -40,3 +41,4 @@ public class SpaConfiguration implements WebMvcConfigurer {
         registry.addViewController("/").setViewName("forward:/index.html");
     }
 }
+*/
