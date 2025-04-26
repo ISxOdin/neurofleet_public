@@ -3,8 +3,12 @@
 ### Wichtigste Links & URL
 | Name          | URL |
 |--------------|----|
-| Postman Dokumentation  | [Postman_Documentation](https://documenter.getpostman.com/view/40518505/2sB2j1gBvr) |
+| Deployte Applikation         | [Azure Deployment]() |
 | Code         | [GitHub Repository](https://github.com/ISxOdin/neurofleet) |
+| Postman Dokumentation  | [Postman_Documentation](https://documenter.getpostman.com/view/40518505/2sB2j1gBvr) |
+| Roadmap-History         | [Tbd]() |
+| Chart mit Iterations und Labels         | [Tbd]() |
+| SonarQube         | [Tbd]() |
 
 Was sind die Kernideen?
 
