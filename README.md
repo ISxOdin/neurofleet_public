@@ -6,8 +6,8 @@
 | Deployte Applikation         | [Azure Deployment]() |
 | Code         | [GitHub Repository](https://github.com/ISxOdin/neurofleet) |
 | Postman Dokumentation  | [Postman_Documentation](https://documenter.getpostman.com/view/40518505/2sB2j1gBvr) |
-| Roadmap-History         | [Tbd]() |
-| Chart mit Iterations und Labels         | [Tbd]() |
+| Roadmap-History         | [History](https://github.com/users/ISxOdin/projects/2/views/7) |
+| Chart mit Iterations und Labels         | [Iterations](https://github.com/users/ISxOdin/projects/2/insights/2) |
 | SonarQube         | [Tbd]() |
 
 Was sind die Kernideen?
