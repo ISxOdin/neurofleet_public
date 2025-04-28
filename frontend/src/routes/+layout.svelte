@@ -69,8 +69,6 @@
               </div>
             </li>
           </ul>
-
-          <hr class="border-light" />
         </div>
       </div>
     </div>
