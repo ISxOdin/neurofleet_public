@@ -1,11 +1,15 @@
 <script>
   import "./styles.css";
+  import { isAuthenticated, user } from "../store";
+  import auth from "../auth.service";
 </script>
 
 <div class="container-fluid">
   <div class="row flex-nowrap">
+    {#if $isAuthenticated}
     <!-- Sidebar -->
     <div class="col-auto px-0">
+      
       <div
         id="sidebar"
         class="collapse collapse-horizontal show border-end position-fixed"
@@ -41,6 +45,7 @@
                 <i class="bi bi-people-fill me-2 accent-color"></i> Users
               </a>
             </li>
+            {#if $isAuthenticated && $user.user_roles && $user.user_roles.includes("admin") }
             <li>
               <a
                 class="nav-link text-white p-3 d-flex justify-content-between align-items-center"
@@ -68,10 +73,13 @@
                 </ul>
               </div>
             </li>
+            {/if}
           </ul>
         </div>
       </div>
     </div>
+    {/if}
+    
 
     <!-- Main Content -->
     <div class="col p-0 offset-0" style="margin-left: 180px;">
@@ -85,6 +93,7 @@
         >
           <!-- Left Side: Menu Button + Logo -->
           <div class="d-flex align-items-center">
+            {#if $isAuthenticated}
             <button
               class="btn btn-outline-light me-2"
               type="button"
@@ -96,11 +105,13 @@
             >
               <i class="bi bi-list accent-color"></i>
             </button>
+            {/if}
 
             <img src="/images/Writing.png" alt="Logo" class="navbar-logo" />
           </div>
 
           <!-- Right Side: User Dropdown -->
+           {#if $isAuthenticated}
           <div class="dropdown">
             <a
               href="#"
@@ -110,13 +121,13 @@
               aria-expanded="false"
             >
               <img
-                src="https://github.com/ISxOdin.png"
+                src={$user.picture}
                 alt=""
                 width="32"
                 height="32"
                 class="rounded-circle me-2"
               />
-              <strong>ISxOdin</strong>
+              <strong>{$user.nickname}</strong>
             </a>
             <ul
               class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
@@ -124,11 +135,12 @@
             >
               <li><a class="dropdown-item" href="#">New project...</a></li>
               <li><a class="dropdown-item" href="#">Settings</a></li>
-              <li><a class="dropdown-item" href="#">Profile</a></li>
+              <li><a class="dropdown-item" href="/profile">Profile</a></li>
               <li><hr class="dropdown-divider" /></li>
-              <li><a class="dropdown-item" href="#">Sign out</a></li>
+              <li><a class="dropdown-item" href="#" onclick={auth.logout}>Sign out</a></li>
             </ul>
           </div>
+          {/if}
         </div>
       </nav>
 

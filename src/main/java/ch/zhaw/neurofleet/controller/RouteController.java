@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Route;
 import ch.zhaw.neurofleet.model.RouteCreateDTO;
 import ch.zhaw.neurofleet.repository.RouteRepository;
+import ch.zhaw.neurofleet.service.UserService;
 
 
 
@@ -30,8 +31,14 @@ public class RouteController {
     @Autowired
     RouteRepository routeRepository;
 
+    @Autowired
+    UserService userService;
+
     @PostMapping("/routes")
     public ResponseEntity<Route> createRoute(@RequestBody RouteCreateDTO rDTO) {
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
         try {
             Route routeDAO = new Route(
                     rDTO.getName(),

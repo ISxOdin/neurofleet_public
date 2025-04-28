@@ -20,8 +20,7 @@ import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.model.LocationCreateDTO;
 import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.service.LocationService;
-
-
+import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
 @RequestMapping("/api")
@@ -34,14 +33,19 @@ public class LocationController {
     @Autowired
     LocationService locationService;
 
+    @Autowired
+    UserService userService;
+
     @PostMapping("/locations")
     public ResponseEntity<Location> createLocation(@RequestBody LocationCreateDTO lDTO) {
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         try {
             Location locationDAO = locationService.createLocation(
                     lDTO.getName(),
                     lDTO.getAddress(),
-                    lDTO.getCompanyId()
-            );
+                    lDTO.getCompanyId());
             Location location = locationRepository.save(locationDAO);
             return new ResponseEntity<>(location, HttpStatus.CREATED);
         } catch (Exception e) {

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Vehicle;
 import ch.zhaw.neurofleet.model.VehicleCreateDTO;
 import ch.zhaw.neurofleet.repository.VehicleRepository;
+import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
 @RequestMapping("/api")
@@ -27,17 +28,22 @@ public class VehicleController {
     @Autowired
     private VehicleRepository vehicleRepository;
 
+    @Autowired
+    UserService userService;
+
     @PostMapping("/vehicles")
     public ResponseEntity<Vehicle> createVehicle(
-    @RequestBody VehicleCreateDTO vDTO) {
+            @RequestBody VehicleCreateDTO vDTO) {
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         Vehicle vDAO = new Vehicle(
                 vDTO.getLicensePlate(),
                 vDTO.getVin(),
                 vDTO.getType(),
                 vDTO.getCapacity(),
                 vDTO.getLocationId(),
-                vDTO.getCompanyId()
-            );
+                vDTO.getCompanyId());
         Vehicle v = vehicleRepository.save(vDAO);
         return new ResponseEntity<>(v, HttpStatus.CREATED);
     }
