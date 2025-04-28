@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Job;
 import ch.zhaw.neurofleet.model.JobCreateDTO;
 import ch.zhaw.neurofleet.repository.JobRepository;
+import ch.zhaw.neurofleet.service.UserService;
 
 
 
@@ -30,8 +31,14 @@ public class JobController {
     @Autowired
     JobRepository jobRepository;
 
+    @Autowired
+    UserService userService;
+
     @PostMapping("/jobs")
     public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO jDTO) {
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         try {
             Job jobDAO = new Job(
                     jDTO.getDescription(),

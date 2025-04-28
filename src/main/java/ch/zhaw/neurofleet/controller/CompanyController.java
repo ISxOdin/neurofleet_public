@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Company;
 import ch.zhaw.neurofleet.model.CompanyCreateDTO;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
+import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
 @RequestMapping("/api")
@@ -26,10 +27,15 @@ public class CompanyController {
     @Autowired
     CompanyRepository companyRepository;
 
+    @Autowired
+    UserService userService;
 
     @PostMapping("/companies")
     public ResponseEntity<Company> createCompany(
             @RequestBody CompanyCreateDTO cDTO) {
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         Company cDAO = new Company(cDTO.getName(), cDTO.getEmail(), cDTO.getAddress());
         Company c = companyRepository.save(cDAO);
         return new ResponseEntity<>(c, HttpStatus.CREATED);
