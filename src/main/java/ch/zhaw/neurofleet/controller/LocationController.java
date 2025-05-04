@@ -38,10 +38,9 @@ public class LocationController {
 
     @PostMapping("/locations")
     public ResponseEntity<Location> createLocation(@RequestBody LocationCreateDTO lDTO) {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasRole("admin")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-
         try {
             Location locationDAO = locationService.createLocation(
                     lDTO.getName(),
@@ -74,9 +73,6 @@ public class LocationController {
 
     @DeleteMapping("/locations/{id}")
     public ResponseEntity<String> deleteLocationById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
         locationRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK).body("DELETED");
     }

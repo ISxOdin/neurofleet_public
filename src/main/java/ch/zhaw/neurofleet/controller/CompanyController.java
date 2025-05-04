@@ -33,10 +33,9 @@ public class CompanyController {
     @PostMapping("/companies")
     public ResponseEntity<Company> createCompany(
             @RequestBody CompanyCreateDTO cDTO) {
-                if (!userService.userHasAnyRole("admin")) {
-                    return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-                }
-        
+        if (!userService.userHasRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         Company cDAO = new Company(cDTO.getName(), cDTO.getEmail(), cDTO.getAddress());
         Company c = companyRepository.save(cDAO);
         return new ResponseEntity<>(c, HttpStatus.CREATED);
@@ -62,9 +61,6 @@ public class CompanyController {
 
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<String> deleteCompanyById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
         if (companyRepository.existsById(id)) {
             companyRepository.deleteById(id);
             return ResponseEntity.status(HttpStatus.OK).body("DELETED");

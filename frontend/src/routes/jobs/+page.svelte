@@ -9,15 +9,11 @@
 
   let companies = $state([]);
   let jobs = $state([]);
-  let locations = $state([]);
-  let vehicles = $state([]);
-
   let job = $state({
+    title: null,
     description: null,
-    scheduledTime: null,
-    originId: null,
-    destinationId: null,
-    vehicleId: null,
+    earnings: null,
+    jobType: null,
     companyId: null,
   });
 
@@ -30,8 +26,7 @@
     var config = {
       method: "get",
       url: api_root + "/api/companies",
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
+      headers: {Authorization: "Bearer "+$jwt_token},    };
 
     axios(config)
       .then(function (response) {
@@ -47,8 +42,8 @@
     var config = {
       method: "get",
       url: api_root + "/api/jobs",
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
+      headers: {Authorization: "Bearer "+$jwt_token},
+        };
 
     axios(config)
       .then(function (response) {
@@ -60,52 +55,13 @@
       });
   }
 
-  function getLocations() {
-  if (!job.companyId) return;
-
-  var config = {
-    method: "get",
-    url: api_root + "/api/locations?companyId=" + job.companyId,
-    headers: { Authorization: "Bearer " + $jwt_token },
-  };
-
-  axios(config)
-    .then(function (response) {
-      locations = response.data;
-    })
-    .catch(function (error) {
-      alert("Could not get locations");
-      console.log(error);
-    });
-}
-
-
-  function getVehicles() {
-  if (!job.companyId) return;
-
-  var config = {
-    method: "get",
-    url: api_root + "/api/vehicles?companyId=" + job.companyId,
-    headers: { Authorization: "Bearer " + $jwt_token },
-  };
-
-  axios(config)
-    .then(function (response) {
-      vehicles = response.data;
-    })
-    .catch(function (error) {
-      alert("Could not get vehicles");
-      console.log(error);
-    });
-}
-
   function createJob() {
     var config = {
       method: "post",
       url: api_root + "/api/jobs",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + $jwt_token,
+        Authorization: "Bearer "+$jwt_token,
       },
       data: job,
     };
@@ -124,67 +80,56 @@
 
 <h1 class="mt-3">Create Job</h1>
 <form class="mb-5">
-  <div class="mb-3">
-    <label class="form-label" for="description">Description</label>
-    <input
-      bind:value={job.description}
-      class="form-control"
-      id="description"
-      type="text"
-    />
-  </div>
-
-  <div class="mb-3">
-    <label class="form-label" for="scheduledTime">Scheduled Time</label>
-    <input
-      bind:value={job.scheduledTime}
-      class="form-control"
-      id="scheduledTime"
-      type="datetime-local"
-    />
-  </div>
-
   <div class="row mb-3">
     <div class="col">
-      <label class="form-label" for="originId">Origin</label>
+      <label class="form-label" for="description">Title</label>
       <input
-        bind:value={job.originId}
+        bind:value={job.title}
         class="form-control"
-        id="originId"
-        type="text"
-      />
-    </div>
-    <div class="col">
-      <label class="form-label" for="destinationId">Destination</label>
-      <input
-        bind:value={job.destinationId}
-        class="form-control"
-        id="destinationId"
+        id="description"
         type="text"
       />
     </div>
   </div>
-
   <div class="row mb-3">
     <div class="col">
-      <label class="form-label" for="vehicleId">Vehicle ID</label>
+      <label class="form-label" for="description">Description</label>
       <input
-        bind:value={job.vehicleId}
+        bind:value={job.description}
         class="form-control"
-        id="vehicleId"
+        id="description"
         type="text"
       />
     </div>
+  </div>
+  <div class="row mb-3">
     <div class="col">
-      <label class="form-label" for="companyId">Company</label>
-      <select bind:value={job.companyId} class="form-select" id="companyId">
+      <label class="form-label" for="type">Type</label>
+      <select bind:value={job.jobType} class="form-select" id="type">
+        <option value="OTHER">OTHER</option>
+        <option value="TEST">TEST</option>
+        <option value="IMPLEMENT">IMPLEMENT</option>
+        <option value="REVIEW">REVIEW</option>
+      </select>
+    </div>
+    <div class="col">
+      <label class="form-label" for="earnings">Earnings</label>
+      <input
+        bind:value={job.earnings}
+        class="form-control"
+        id="earnings"
+        type="number"
+      />
+    </div>
+    <div class="col">
+      <label class="form-label" for="company">Company</label>
+      <select bind:value={job.companyId} class="form-select" id="company">
         {#each companies as company}
           <option value={company.id}>{company.name}</option>
         {/each}
       </select>
     </div>
   </div>
-
   <button type="button" class="btn btn-primary" onclick={createJob}
     >Submit</button
   >

@@ -36,9 +36,9 @@ public class RouteController {
 
     @PostMapping("/routes")
     public ResponseEntity<Route> createRoute(@RequestBody RouteCreateDTO rDTO) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasRole("admin")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+            }
         try {
             Route routeDAO = new Route(
                     rDTO.getName(),
@@ -74,9 +74,6 @@ public class RouteController {
 
     @DeleteMapping("/routes/{id}")
     public ResponseEntity<String> deleteRouteById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
         routeRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK).body("DELETED");
     }
