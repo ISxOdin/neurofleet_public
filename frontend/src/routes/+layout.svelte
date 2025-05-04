@@ -177,7 +177,6 @@
                 class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
                 aria-labelledby="userDropdown"
               >
-                <li><a class="dropdown-item" href="#">New project...</a></li>
                 <li><a class="dropdown-item" href="#">Settings</a></li>
                 <li><a class="dropdown-item" href="/profile">Profile</a></li>
                 <li><hr class="dropdown-divider" /></li>

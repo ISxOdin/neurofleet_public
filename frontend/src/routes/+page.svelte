@@ -84,12 +84,5 @@
 {/if}
 
 <style>
-       body{
-        color: #fff;
-        background: #343C44;
-    }
-    img{
-        max-width: 100%;
-        height: auto;
-    }
+
 </style>
