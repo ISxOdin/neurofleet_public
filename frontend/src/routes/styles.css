@@ -1,11 +1,8 @@
 body{
     background-color: #4F5A65;
-    font-family: 'Arial';
+    font-family: 'Arial', 'Blanka';
     color: white;
     height: 100%;
     margin: 0;
     padding: 0;
-}
-h1{
-    font-family: 'Blanka';
 }

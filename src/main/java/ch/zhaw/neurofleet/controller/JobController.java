@@ -21,6 +21,8 @@ import ch.zhaw.neurofleet.model.JobCreateDTO;
 import ch.zhaw.neurofleet.repository.JobRepository;
 import ch.zhaw.neurofleet.service.UserService;
 
+
+
 @RestController
 @RequestMapping("/api")
 
@@ -34,11 +36,9 @@ public class JobController {
 
     @PostMapping("/jobs")
     public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO jDTO) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasRole("admin")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        
-
         try {
             Job jobDAO = new Job(
                     jDTO.getDescription(),
@@ -46,7 +46,8 @@ public class JobController {
                     jDTO.getOriginId(),
                     jDTO.getDestinationId(),
                     jDTO.getVehicleId(),
-                    jDTO.getCompanyId());
+                    jDTO.getCompanyId()
+            );
             Job job = jobRepository.save(jobDAO);
             return new ResponseEntity<>(job, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -74,9 +75,6 @@ public class JobController {
 
     @DeleteMapping("/jobs/{id}")
     public ResponseEntity<String> deleteJobById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
         jobRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK).body("DELETED");
     }
