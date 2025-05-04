@@ -2,84 +2,128 @@
   import "./styles.css";
   import { isAuthenticated, user } from "../store";
   import auth from "../auth.service";
+  import { page } from "$app/stores";
+
+  $: currentPath = $page.url.pathname;
 </script>
 
 <div class="container-fluid">
   <div class="row flex-nowrap">
     {#if $isAuthenticated}
-    <!-- Sidebar -->
-    <div class="col-auto px-0">
-      
-      <div
-        id="sidebar"
-        class="collapse collapse-horizontal show border-end position-fixed"
-        style="top: 56px; height: calc(100% - 56px); background-color: #343C44;"
-      >
+      <!-- Sidebar -->
+      <div class="col-auto px-0">
         <div
-          id="sidebar-nav"
-          class="list-group border-0 rounded-0 text-sm-start min-vh-100 text-white"
+          id="sidebar"
+          class="collapse collapse-horizontal show position-fixed"
+          style="top: 56px; height: calc(100% - 56px); background-color: #343C44;"
         >
-          <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-              <a href="#" class="nav-link active custom-active p-3">
-                <i class="bi bi-house-door-fill me-2 accent-color"></i> Dashboard
-              </a>
-            </li>
-            <li>
-              <a href="/vehicles" class="nav-link text-white p-3">
-                <i class="bi bi-truck me-2 accent-color"></i> Fleet Management
-              </a>
-            </li>
-            <li>
-              <a href="/jobs" class="nav-link text-white p-3">
-                <i class="bi bi-box me-2 accent-color"></i> Transport Jobs
-              </a>
-            </li>
-            <li>
-              <a href="/routes" class="nav-link text-white p-3">
-                <i class="bi bi-sign-turn-left me-2 accent-color"></i>Routes
-              </a>
-            </li>
-            <li>
-              <a href="/users" class="nav-link text-white p-3">
-                <i class="bi bi-people-fill me-2 accent-color"></i> Users
-              </a>
-            </li>
-            {#if $isAuthenticated && $user.user_roles && $user.user_roles.includes("admin") }
-            <li>
-              <a
-                class="nav-link text-white p-3 d-flex justify-content-between align-items-center"
-                data-bs-toggle="collapse"
-                href="#productsSubmenu"
-                role="button"
-                aria-expanded="false"
-                aria-controls="productsSubmenu"
-              >
-                <span
-                  ><i class="bi bi-grid-fill me-2 accent-color"></i> Admin</span
+          <div
+            id="sidebar-nav"
+            class="list-group border-0 rounded-0 text-sm-start min-vh-100 text-white"
+          >
+            <ul class="nav nav-pills flex-column mb-auto">
+              <li class="nav-item">
+                <a
+                  href="/"
+                  class="nav-link p-3"
+                  class:custom-active={currentPath === "/"}
                 >
-                <i class="bi bi-caret-down-fill"></i>
-              </a>
-              <div class="collapse" id="productsSubmenu">
-                <ul
-                  class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4"
+                  <i class="bi bi-house-door-fill me-2 accent-color"></i> Dashboard
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/vehicles"
+                  class="nav-link p-3 text-white"
+                  class:custom-active={currentPath === "/vehicles"}
                 >
-                  <li>
-                    <a href="/companies" class="nav-link text-white py-1">Companies</a>
-                  </li>
-                  <li>
-                    <a href="/locations" class="nav-link text-white py-1">Locations</a>
-                  </li>
-                </ul>
-              </div>
-            </li>
-            {/if}
-          </ul>
+                  <i class="bi bi-truck me-2 accent-color"></i> Fleet Management
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/jobs"
+                  class="nav-link p-3 text-white"
+                  class:custom-active={currentPath === "/jobs"}
+                >
+                  <i class="bi bi-box me-2 accent-color"></i> Transport Jobs
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/routes"
+                  class="nav-link p-3 text-white"
+                  class:custom-active={currentPath === "/routes"}
+                >
+                  <i class="bi bi-sign-turn-left me-2 accent-color"></i> Routes
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/users"
+                  class="nav-link p-3 text-white"
+                  class:custom-active={currentPath === "/users"}
+                >
+                  <i class="bi bi-people-fill me-2 accent-color"></i> Users
+                </a>
+              </li>
+
+              {#if $isAuthenticated && $user.user_roles && $user.user_roles.includes("admin")}
+                <li>
+                  <a
+                    class="nav-link text-white p-3 d-flex justify-content-between align-items-center"
+                    data-bs-toggle="collapse"
+                    href="#productsSubmenu"
+                    role="button"
+                    aria-expanded={currentPath.startsWith("/companies") ||
+                    currentPath.startsWith("/locations")
+                      ? "true"
+                      : "false"}
+                    aria-controls="productsSubmenu"
+                  >
+                    <span
+                      ><i class="bi bi-grid-fill me-2 accent-color"></i> Admin</span
+                    >
+                    <i class="bi bi-caret-down-fill"></i>
+                  </a>
+                  <div
+                    class="collapse {currentPath.startsWith('/companies') ||
+                    currentPath.startsWith('/locations')
+                      ? 'show'
+                      : ''}"
+                    id="productsSubmenu"
+                  >
+                    <ul
+                      class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4"
+                    >
+                      <li>
+                        <a
+                          href="/companies"
+                          class="nav-link text-white py-1"
+                          class:custom-active={currentPath === "/companies"}
+                        >
+                        <i class="bi bi-building me-2 accent-color"></i>
+                          Companies
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="/locations"
+                          class="nav-link text-white py-1"
+                          class:custom-active={currentPath === "/locations"}
+                        >
+                        <i class="bi bi-geo-alt  me-2 accent-color"></i>Locations
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+              {/if}
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
     {/if}
-    
 
     <!-- Main Content -->
     <div class="col p-0 offset-0" style="margin-left: 180px;">
@@ -94,52 +138,56 @@
           <!-- Left Side: Menu Button + Logo -->
           <div class="d-flex align-items-center">
             {#if $isAuthenticated}
-            <button
-              class="btn btn-outline-light me-2"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#sidebar"
-              aria-controls="sidebar"
-              aria-expanded="true"
-              aria-label="Toggle navigation"
-            >
-              <i class="bi bi-list accent-color"></i>
-            </button>
+              <button
+                class="btn btn-outline-light me-2"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#sidebar"
+                aria-controls="sidebar"
+                aria-expanded="true"
+                aria-label="Toggle navigation"
+              >
+                <i class="bi bi-list accent-color"></i>
+              </button>
             {/if}
 
             <img src="/images/Writing.png" alt="Logo" class="navbar-logo" />
           </div>
 
           <!-- Right Side: User Dropdown -->
-           {#if $isAuthenticated}
-          <div class="dropdown">
-            <a
-              href="#"
-              class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-              id="userDropdown"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <img
-                src={$user.picture}
-                alt=""
-                width="32"
-                height="32"
-                class="rounded-circle me-2"
-              />
-              <strong>{$user.nickname}</strong>
-            </a>
-            <ul
-              class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
-              aria-labelledby="userDropdown"
-            >
-              <li><a class="dropdown-item" href="#">New project...</a></li>
-              <li><a class="dropdown-item" href="#">Settings</a></li>
-              <li><a class="dropdown-item" href="/profile">Profile</a></li>
-              <li><hr class="dropdown-divider" /></li>
-              <li><a class="dropdown-item" href="#" onclick={auth.logout}>Sign out</a></li>
-            </ul>
-          </div>
+          {#if $isAuthenticated}
+            <div class="dropdown">
+              <a
+                href="#"
+                class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                id="userDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <img
+                  src={$user.picture}
+                  alt=""
+                  width="32"
+                  height="32"
+                  class="rounded-circle me-2"
+                />
+                <strong>{$user.nickname}</strong>
+              </a>
+              <ul
+                class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
+                aria-labelledby="userDropdown"
+              >
+                <li><a class="dropdown-item" href="#">New project...</a></li>
+                <li><a class="dropdown-item" href="#">Settings</a></li>
+                <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" href="#" onclick={auth.logout}
+                    >Sign out</a
+                  >
+                </li>
+              </ul>
+            </div>
           {/if}
         </div>
       </nav>
@@ -163,14 +211,6 @@
 
   #sidebar-nav {
     width: 200px;
-  }
-
-  body,
-  html {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: #343c44;
   }
 
   main {
@@ -197,8 +237,7 @@
   }
 
   .custom-active {
-    background-color: var(--accent-color);
-    color: var(--base-color);
+    background-color: rgba(149, 212, 238, 0.2);
     font-weight: bold;
   }
 
