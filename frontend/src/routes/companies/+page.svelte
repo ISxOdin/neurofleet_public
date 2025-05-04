@@ -13,6 +13,8 @@
 
   let showEditModal = $state(false);
   let editCompany = $state(null);
+  let users = $state([]);
+  let userMap = $state({});
 
   let companies = $state([]);
   let company = $state({
@@ -27,6 +29,7 @@
 
   onMount(() => {
     getCompanies();
+    getUsers();
   });
 
   function changePage(page) {
@@ -78,6 +81,7 @@
   function openEditModal(company) {
     editCompany = { ...company };
     showEditModal = true;
+    getUsers();
   }
   function closeEditModal() {
     showEditModal = false;
@@ -85,28 +89,32 @@
   }
 
   function submitEdit() {
-  axios
-    .put(`${api_root}/api/companies/${editCompany.id}`, {
-      name: editCompany.name,
-      email: editCompany.email,
-      address: editCompany.address
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + $jwt_token
-      }
-    })
-    .then(() => {
-      alert("Company updated successfully");
-      closeEditModal();
-      getCompanies(); // refresh the list
-    })
-    .catch((err) => {
-      alert("Could not update company");
-      console.error(err);
-    });
-}
-
+    axios
+      .put(
+        `${api_root}/api/companies/${editCompany.id}`,
+        {
+          name: editCompany.name,
+          email: editCompany.email,
+          address: editCompany.address,
+          owner: editCompany.owner,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + $jwt_token,
+          },
+        }
+      )
+      .then(() => {
+        alert("Company updated successfully");
+        closeEditModal();
+        getCompanies(); // refresh the list
+      })
+      .catch((err) => {
+        alert("Could not update company");
+        console.error(err);
+      });
+  }
 
   function deleteCompany(companyId) {
     if (confirm("Are you sure you want to delete this company?")) {
@@ -125,8 +133,29 @@
     }
   }
 
-  function openAssignOwnerModal(company) {
-    console.log("Assign owner to:", company);
+  function getUsers() {
+    axios
+      .get(api_root + "/api/auth0/users", {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
+      .then((res) => {
+        users = res.data.map((user) => ({
+          id: user.user_id,
+          label: user.email || user.name,
+          name: user.name,
+          email: user.email,
+        }));
+
+        // Build lookup map by ID
+        userMap = users.reduce((acc, user) => {
+          acc[user.id] = user;
+          return acc;
+        }, {});
+      })
+      .catch((err) => {
+        alert("Failed to load Auth0 users");
+        console.error(err);
+      });
   }
 </script>
 
@@ -153,6 +182,13 @@
 
           <label>Address</label>
           <input class="form-control mb-2" bind:value={editCompany.address} />
+          <label>Owner</label>
+          <select class="form-select mb-2" bind:value={editCompany.owner}>
+            <option disabled selected value="">-- Select owner --</option>
+            {#each users as user}
+              <option value={user.id}>{user.label}</option>
+            {/each}
+          </select>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick={closeEditModal}
@@ -227,7 +263,7 @@
         <td>{company.latitude}</td>
         <td>{company.longitude}</td>
         <td>{company.id}</td>
-        <td>{company.owner}</td>
+        <td>{userMap[company.owner]?.name || userMap[company.owner]?.email || '–'}</td>
         <td>{company.email}</td>
         <td>
           <div class="dropdown">
@@ -244,13 +280,6 @@
                 <button
                   class="dropdown-item"
                   onclick={() => openEditModal(company)}>Edit</button
-                >
-              </li>
-              <li>
-                <button
-                  class="dropdown-item"
-                  onclick={() => openAssignOwnerModal(company)}
-                  >Assign Owner</button
                 >
               </li>
               <li>

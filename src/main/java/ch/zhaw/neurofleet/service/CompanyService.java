@@ -41,6 +41,7 @@ public class CompanyService {
 
         company.setName(dto.getName());
         company.setEmail(dto.getEmail());
+        company.setOwner(dto.getOwner());
 
         if (!company.getAddress().equals(dto.getAddress())) {
             Coordinates coords = geocodeAddress(dto.getAddress());
