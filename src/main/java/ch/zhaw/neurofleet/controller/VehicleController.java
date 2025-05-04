@@ -34,7 +34,7 @@ public class VehicleController {
     @PostMapping("/vehicles")
     public ResponseEntity<Vehicle> createVehicle(
             @RequestBody VehicleCreateDTO vDTO) {
-        if (!userService.userHasRole("admin")) {
+        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         Vehicle vDAO = new Vehicle(
@@ -68,7 +68,9 @@ public class VehicleController {
 
     @DeleteMapping("/vehicles/{id}")
     public ResponseEntity<String> deleteVehicleById(@PathVariable String id) {
-
+        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         if (vehicleRepository.existsById(id)) {
             vehicleRepository.deleteById(id);
             return ResponseEntity.status(HttpStatus.OK).body("DELETED");
