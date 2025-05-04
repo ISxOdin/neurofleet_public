@@ -6,9 +6,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @RequiredArgsConstructor
 @Getter
+@Setter
 @Document("companies")
 public class Company {
     @Id
@@ -19,4 +21,9 @@ public class Company {
     private String email;
     @NonNull
     private String address;
+    @NonNull
+    private Double latitude;
+    @NonNull
+    private Double longitude;
+    private String owner;
 }
