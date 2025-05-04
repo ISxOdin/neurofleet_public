@@ -28,7 +28,22 @@
                   class="nav-link p-3"
                   class:custom-active={currentPath === "/"}
                 >
-                  <i class="bi bi-house-door-fill me-2 accent-color"></i> Dashboard
+                  <i class="bi bi-house-door-fill me-2 accent-color"></i> Home
+                </a>
+              </li>
+              {#if $isAuthenticated && 
+                $user.user_roles && 
+                $user.user_roles.includes("admin") ||
+                $user.user_roles.includes("owner") ||
+                $user.user_roles.includes("fleetmanager")}
+              <li>
+              <li class="nav-item">
+                <a
+                  href="/"
+                  class="nav-link p-3"
+                  class:custom-active={currentPath === "/dashboard"}
+                >
+                  <i class="bi bi-speedometer2 me-2 accent-color"></i> Dashboard
                 </a>
               </li>
               <li>
@@ -58,17 +73,12 @@
                   <i class="bi bi-sign-turn-left me-2 accent-color"></i> Routes
                 </a>
               </li>
-              <li>
-                <a
-                  href="/users"
-                  class="nav-link p-3 text-white"
-                  class:custom-active={currentPath === "/users"}
-                >
-                  <i class="bi bi-people-fill me-2 accent-color"></i> Users
-                </a>
-              </li>
+             
 
-              {#if $isAuthenticated && $user.user_roles && $user.user_roles.includes("admin")}
+              {#if $isAuthenticated && 
+              $user.user_roles && 
+              $user.user_roles.includes("admin") ||
+              $user.user_roles.includes("owner")}
                 <li>
                   <a
                     class="nav-link text-white p-3 d-flex justify-content-between align-items-center"
@@ -88,7 +98,7 @@
                   </a>
                   <div
                     class="collapse {currentPath.startsWith('/companies') ||
-                    currentPath.startsWith('/locations')
+                    currentPath.startsWith('/locations') || currentPath.startsWith('/users')
                       ? 'show'
                       : ''}"
                     id="productsSubmenu"
@@ -96,30 +106,59 @@
                     <ul
                       class="btn-toggle-nav list-unstyled fw-normal pb-1 small ms-4"
                     >
+                    <li>
+                      <a
+                        href="/users"
+                        class="nav-link p-3 text-white"
+                        class:custom-active={currentPath === "/users"}
+                      >
+                        <i class="bi bi-people-fill me-2 accent-color"></i> Users
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="/locations"
+                        class="nav-link text-white py-3"
+                        class:custom-active={currentPath === "/locations"}
+                      >
+                      <i class="bi bi-geo-alt  me-2 accent-color"></i>Locations
+                      </a>
+                    </li>
+                    {#if $isAuthenticated && 
+                      $user.user_roles && 
+                      $user.user_roles.includes("admin")}
                       <li>
                         <a
                           href="/companies"
-                          class="nav-link text-white py-1"
+                          class="nav-link text-white py-3"
                           class:custom-active={currentPath === "/companies"}
                         >
                         <i class="bi bi-building me-2 accent-color"></i>
                           Companies
                         </a>
                       </li>
-                      <li>
-                        <a
-                          href="/locations"
-                          class="nav-link text-white py-1"
-                          class:custom-active={currentPath === "/locations"}
-                        >
-                        <i class="bi bi-geo-alt  me-2 accent-color"></i>Locations
-                        </a>
-                      </li>
+                      {/if}
+                      
                     </ul>
                   </div>
                 </li>
               {/if}
+              {:else if $isAuthenticated && 
+                $user.user_roles && 
+                $user.user_roles.includes("driver")}
+              <li class="nav-item">
+                <a
+                  href="/driverjobs"
+                  class="nav-link p-3"
+                  class:custom-active={currentPath === "/driverjobs"}
+                >
+                  <i class="bi bi-truck me-2 accent-color"></i> Your Jobs
+                </a>
+              </li>  
+
+              {/if}
             </ul>
+           
           </div>
         </div>
       </div>
