@@ -19,4 +19,9 @@ public class Company {
     private String email;
     @NonNull
     private String address;
+    @NonNull
+    private Double latitude;
+    @NonNull
+    private Double longitude;
+    private String owner;
 }
