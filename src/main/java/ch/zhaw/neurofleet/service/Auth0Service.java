@@ -1,5 +1,7 @@
 package ch.zhaw.neurofleet.service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -45,33 +47,31 @@ public class Auth0Service {
                 url,
                 HttpMethod.GET,
                 entity,
-                Auth0UserDTO[].class
-        );
+                Auth0UserDTO[].class);
 
         return Arrays.asList(Objects.requireNonNull(response.getBody()));
     }
 
     public List<String> getUserRoles(String userId) {
         String token = getAccessToken();
-    
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-    
+
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-    
+
         String url = "https://" + domain + "/api/v2/users/" + userId + "/roles";
-    
+
         ResponseEntity<Auth0RoleDTO[]> response = restTemplate.exchange(
-            url,
-            HttpMethod.GET,
-            entity,
-            Auth0RoleDTO[].class
-        );
-    
+                url,
+                HttpMethod.GET,
+                entity,
+                Auth0RoleDTO[].class);
+
         return Arrays.stream(response.getBody())
-                     .map(Auth0RoleDTO::getName)
-                     .toList();
+                .map(Auth0RoleDTO::getName)
+                .toList();
     }
 
     private String getAccessToken() {
@@ -92,10 +92,40 @@ public class Auth0Service {
         return (String) response.get("access_token");
     }
 
+    public AppMetadataDTO getUserAppMetadata(String userId) {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        String url = "https://" + domain + "/api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8);
+
+        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+        Map<String, Object> body = response.getBody();
+        Map<String, Object> metadata = (Map<String, Object>) body.get("app_metadata");
+
+        AppMetadataDTO dto = new AppMetadataDTO();
+        dto.setCompanyId((String) metadata.get("companyId"));
+        dto.setRole((String) metadata.get("role"));
+
+        return dto;
+    }
+
     @Data
     public static class Auth0UserDTO {
         private String user_id;
         private String email;
         private String name;
     }
+
+    @Data
+    public class AppMetadataDTO {
+        private String companyId;
+        private String role;
+    }
+
 }

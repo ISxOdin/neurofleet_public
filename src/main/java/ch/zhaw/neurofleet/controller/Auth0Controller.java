@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ch.zhaw.neurofleet.service.Auth0Service;
+import ch.zhaw.neurofleet.service.Auth0Service.AppMetadataDTO;
 import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
@@ -49,6 +50,21 @@ public class Auth0Controller {
             String decodedId = URLDecoder.decode(id, StandardCharsets.UTF_8); // manually decode
             List<String> roles = auth0Service.getUserRoles(decodedId);
             return ResponseEntity.ok(roles);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/users/{id}/metadata")
+    public ResponseEntity<AppMetadataDTO> getUserMetadata(@PathVariable String id) {
+        if (!userService.userHasAnyRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        try {
+            String decodedId = URLDecoder.decode(id, StandardCharsets.UTF_8);
+            AppMetadataDTO metadata = auth0Service.getUserAppMetadata(decodedId);
+            return ResponseEntity.ok(metadata);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
