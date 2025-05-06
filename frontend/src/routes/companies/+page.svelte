@@ -108,7 +108,7 @@
       .then(() => {
         alert("Company updated successfully");
         closeEditModal();
-        getCompanies(); // refresh the list
+        getCompanies();
       })
       .catch((err) => {
         alert("Could not update company");
@@ -146,7 +146,6 @@
           email: user.email,
         }));
 
-        // Build lookup map by ID
         userMap = users.reduce((acc, user) => {
           acc[user.id] = user;
           return acc;
@@ -263,7 +262,11 @@
         <td>{company.latitude}</td>
         <td>{company.longitude}</td>
         <td>{company.id}</td>
-        <td>{userMap[company.owner]?.name || userMap[company.owner]?.email || '–'}</td>
+        <td
+          >{userMap[company.owner]?.name ||
+            userMap[company.owner]?.email ||
+            "–"}</td
+        >
         <td>{company.email}</td>
         <td>
           <div class="dropdown">
