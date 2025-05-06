@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ch.zhaw.neurofleet.model.Company;
-import ch.zhaw.neurofleet.model.CompanyCreateDTO;
 import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.model.LocationCreateDTO;
 import ch.zhaw.neurofleet.repository.LocationRepository;
@@ -49,7 +47,7 @@ public class LocationController {
         try {
             String companyId = lDTO.getCompanyId();
             if (userService.userHasAnyRole("owner")) {
-                companyId = userService.getCompanyIdOfCurrentUser(); // sichere Methode vorausgesetzt
+                companyId = userService.getCompanyIdOfCurrentUser();
             }
             Location locationDAO = locationService.createLocation(
                     lDTO.getName(),

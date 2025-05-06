@@ -12,9 +12,10 @@
   let currentRoles = $state([]);
   let newRole = $state("");
   let loading = $state(false);
+  let metadata = $state({ companyId: "" });
 
-  onMount(() => {
-    getUsers();
+  onMount(async () => {
+    await getUsers();
   });
 
   async function getUsers() {
@@ -68,6 +69,18 @@
       alert("Could not load roles");
       console.error(err);
     }
+    try {
+      const metaRes = await axios.get(
+        `${api_root}/api/auth0/users/${encodeURIComponent(user.user_id)}/metadata`,
+        {
+          headers: { Authorization: "Bearer " + $jwt_token },
+        }
+      );
+      metadata = metaRes.data;
+    } catch (err) {
+      console.error("Could not load metadata", err);
+      metadata = { companyId: "" };
+    }
   }
 
   function closeEditModal() {
@@ -104,6 +117,25 @@
       getUsers();
     } catch (err) {
       alert("Failed to assign role");
+      console.error(err);
+    }
+  }
+
+  async function updateMetadata() {
+    try {
+      await axios.patch(
+        `${api_root}/api/auth0/users/${encodeURIComponent(selectedUser.user_id)}/metadata`,
+        metadata,
+        {
+          headers: {
+            Authorization: "Bearer " + $jwt_token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      alert("Company ID updated");
+    } catch (err) {
+      alert("Failed to update companyId");
       console.error(err);
     }
   }
@@ -149,6 +181,13 @@
         </div>
       </div>
     </div>
+    <hr />
+    <label>Company ID</label>
+    <input class="form-control mb-3" bind:value={metadata.companyId} />
+
+    <button class="btn btn-outline-light w-100 mb-2" onclick={updateMetadata}>
+      Update Company ID
+    </button>
   </div>
 {/if}
 
@@ -174,7 +213,7 @@
     <tbody>
       {#each users as user}
         <tr>
-          <td>{user.name}</td>
+          <td>{user.given_name} {user.family_name}</td>
           <td>{user.email}</td>
           <td>{user.user_id}</td>
           <td>{user.role}</td>

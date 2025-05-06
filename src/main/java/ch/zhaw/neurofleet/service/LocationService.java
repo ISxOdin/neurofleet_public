@@ -1,6 +1,5 @@
 package ch.zhaw.neurofleet.service;
 
-import ch.zhaw.neurofleet.model.Company;
 import ch.zhaw.neurofleet.model.LocationCreateDTO;
 import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.repository.LocationRepository;
@@ -40,8 +39,9 @@ public class LocationService {
                 .orElseThrow(() -> new NoSuchElementException("Location not found"));
 
         location.setName(dto.getName());
-        location.setEmail(dto.getEmail());
-        location.setOwner(dto.getOwner());
+        location.setAddress(dto.getAddress());
+        location.setCompanyId(dto.getCompanyId());
+        location.setFleetmanagerId(dto.getFleetmanagerId());
 
         if (!location.getAddress().equals(dto.getAddress())) {
             Coordinates coords = geocodeAddress(dto.getAddress());

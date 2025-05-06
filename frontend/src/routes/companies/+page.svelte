@@ -141,10 +141,20 @@
       .then((res) => {
         users = res.data.map((user) => ({
           id: user.user_id,
-          label: user.email || user.name,
+          label:
+            `${user.given_name ?? ""} ${user.family_name ?? ""}`.trim() ||
+            user.email,
           name: user.name,
           email: user.email,
+          given_name: user.given_name,
+          family_name: user.family_name,
         }));
+
+        users.sort((a, b) => {
+          const lastA = (a.family_name || "").toLowerCase();
+          const lastB = (b.family_name || "").toLowerCase();
+          return lastA.localeCompare(lastB);
+        });
 
         userMap = users.reduce((acc, user) => {
           acc[user.id] = user;
@@ -185,7 +195,10 @@
           <select class="form-select mb-2" bind:value={editCompany.owner}>
             <option disabled selected value="">-- Select owner --</option>
             {#each users as user}
-              <option value={user.id}>{user.label}</option>
+              <option value={user.id}>
+                {user.given_name}
+                {user.family_name} ({user.email})
+              </option>
             {/each}
           </select>
         </div>
@@ -262,11 +275,15 @@
         <td>{company.latitude}</td>
         <td>{company.longitude}</td>
         <td>{company.id}</td>
-        <td
-          >{userMap[company.owner]?.name ||
-            userMap[company.owner]?.email ||
-            "–"}</td
-        >
+        <td>
+          {#if userMap[company.owner]}
+            {userMap[company.owner].given_name}
+            {userMap[company.owner].family_name}
+          {:else}
+            {userMap[company.owner]?.email || "-"}
+          {/if}
+        </td>
+
         <td>{company.email}</td>
         <td>
           <div class="dropdown">
