@@ -108,7 +108,7 @@
       .then(() => {
         alert("Company updated successfully");
         closeEditModal();
-        getCompanies(); // refresh the list
+        getCompanies();
       })
       .catch((err) => {
         alert("Could not update company");
@@ -146,7 +146,6 @@
           email: user.email,
         }));
 
-        // Build lookup map by ID
         userMap = users.reduce((acc, user) => {
           acc[user.id] = user;
           return acc;
