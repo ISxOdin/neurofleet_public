@@ -102,7 +102,7 @@ Echtzeitdaten sind für den Anfang Out of Scope.
 
 ### TOUCHPOINTS
 
-- Web-Dashboard für Flottenmanagement**
+- Web-Dashboard für Flottenmanagement\*\*
 - Benachrichtigungen und Vorschläge für optimierte Kapazitätsverteilung
 - Schnittstellen zur Nutzung von Mock-Daten für Simulationen
 
@@ -141,26 +141,24 @@ Effiziente Disposition ohne hohe Integrationsaufwände
 ### PROBLEME
 
 1. Ineffiziente Kapazitätsnutzung: Unternehmen nutzen ihre Transportressourcen nicht optimal, was zu hohen Kosten und ungenutzten Kapazitäten führt.
-   
 2. Hohes Mass an Leerfahrten: Lkw und Transportkapazitäten werden nicht effizient ausgelastet, was Kosten verursacht und die Umwelt belastet.
-   
 3. Komplexe Entscheidungsprozesse: Disponenten stehen vor der Herausforderung, Kapazitäten manuell und ineffizient zuzuweisen.
 
 ### IDEENPOTENZIAL
 
 **Mehrwert: Mückenstich vs. Hai-Attacke**
 
-🔵🔵🔵⚪️⚪️⚪️⚪️⚪️⚪️⚪️   
+🔵🔵🔵⚪️⚪️⚪️⚪️⚪️⚪️⚪️  
 (Mittelmässiger Schmerzpunkt, aber relevant für Effizienzsteigerung)
 
 **Übertragbarkeit: Robinson Crusoe vs. die Welt**
 
-🔵🔵🔵🔵🔵⚪️⚪️⚪️⚪️⚪️   
+🔵🔵🔵🔵🔵⚪️⚪️⚪️⚪️⚪️  
 (Gutes Potenzial zur Skalierung auf viele Logistikunternehmen)
 
 **Machbarkeit: Hammer vs. Raumschiff**
 
-🔵🔵🔵🔵🔵🔵🔵🔵⚪️⚪️   
+🔵🔵🔵🔵🔵🔵🔵🔵⚪️⚪️  
 (Technisch umsetzbar mit vorhandenen Technologien)
 
 ### DAS WOW
@@ -170,6 +168,7 @@ NeuroFleet bietet eine vollständig KI-gesteuerte Kapazitätsverteilung, die ohn
 ### HIGH-LEVEL-KONZEPT
 
 „Das Tetris für Transportkapazitäten“ - NeuroFleet nutzt KI, um Transportkapazitäten so effizient zu „stapeln“, dass keine Leerflächen entstehen – genau wie im perfekten Tetris-Spiel.
+
 ### WERTVERSPRECHEN
 
 NeuroFleet ermöglicht Logistikunternehmen eine intelligente, KI-gestützte Kapazitätsverteilung. Durch die Simulation verschiedener Szenarien und die automatische Optimierung von Transportressourcen werden Leerfahrten minimiert, die Auslastung maximiert und CO₂-Emissionen reduziert. Unsere Plattform sorgt dafür, dass die richtigen Kapazitäten zur richtigen Zeit am richtigen Ort sind – ohne zeitaufwändige manuelle Planung.
@@ -177,7 +176,9 @@ NeuroFleet ermöglicht Logistikunternehmen eine intelligente, KI-gestützte Kapa
 ## **Evaluate-Board**
 
 ### KANÄLE
+
 Die NutzerInnen sollen über verschiedene digitale und analoge Kanäle erreicht werden, um eine breite Zielgruppe zu erreichen und die Verbreitung der Lösung sicherzustellen. Dazu gehören:
+
 - **LinkedIn** – Fachbeiträge und gezieltes B2B-Marketing für Logistikunternehmen und Entscheidungsträger.
 - **Google Ads & SEO** – Optimierung der Webpräsenz für gezielte Suchanfragen im Bereich Transportoptimierung.
 - **Messen & Fachkonferenzen** – Präsentation auf Logistik- und Transportmessen zur direkten Kundenansprache.
@@ -186,14 +187,18 @@ Die NutzerInnen sollen über verschiedene digitale und analoge Kanäle erreicht 
 - **Partnerschaften mit Logistikverbänden** – Zusammenarbeit mit Branchennetzwerken zur Steigerung der Bekanntheit.
 
 ### UNFAIRER VORTEIL
+
 Die Lösung bietet folgende Alleinstellungsmerkmale, die schwer oder gar nicht kopierbar sind:
+
 - **KI-gestützte Optimierung**: Selbstlernende Algorithmen analysieren kontinuierlich Transportdaten und verbessern die Effizienz.
 - **Simulationen für Kapazitätsauslastung**: Vergleich verschiedener Szenarien zur besseren Entscheidungsfindung.
 - **Dynamische Disposition**: Automatische Neuzuweisung von Transportkapazitäten in Echtzeit.
 - **Benutzerfreundlichkeit**: Intuitives Dashboard für schnelle Analyse und Anpassung von Kapazitätsplänen.
 
 ### KPI
+
 Zur Erfolgsmessung der Lösung werden folgende KPIs verwendet:
+
 - **Nutzerwachstum**: Anzahl der registrierten Unternehmen und aktiven Nutzer.
 - **Kapazitätsauslastung**: Durchschnittlicher Anstieg der Transportauslastung durch Nutzung der Lösung.
 - **Reduktion von Leerfahrten**: Prozentuale Abnahme der Leerfahrten pro Unternehmen.
@@ -202,7 +207,9 @@ Zur Erfolgsmessung der Lösung werden folgende KPIs verwendet:
 - **Kundenzufriedenheit**: Net Promoter Score (NPS) basierend auf Kundenfeedback.
 
 ### EINNAHMEQUELLEN
+
 Die Monetarisierung erfolgt über verschiedene Einnahmemodelle:
+
 - **Lizenzbasierte Abonnements**: Monatliche oder jährliche Gebühren für Unternehmen mit verschiedenen Nutzungsplänen.
 - **Enterprise-Lösungen**: Individuelle Anpassungen und Integrationen für Grosskunden (mindestens 100 Fahrzeugen oder >10.000 Transporten pro Monat) mit massgeschneiderten Features.
 - **Datenanalyse & Insights**: Verkauf anonymisierter Datenanalysen für Markttrends und Logistikoptimierung.
@@ -240,7 +247,9 @@ Es werden folgende Rollen gebraucht:
 
 ## UI-Mockup
 
-> Mockup oder Skizze des UIs
+[Figma Link](https://www.figma.com/proto/HXADeWdARjWyuPwI7rRJwC/NeuroFleet-Mockup?node-id=0-1&t=kFJGtDqYuxMPDniw-1)
+
+<iframe style="border: 1px solid rgba(0, 0, 0, 0.1);" width="800" height="450" src="https://embed.figma.com/design/HXADeWdARjWyuPwI7rRJwC/NeuroFleet-Mockup?node-id=0-1&embed-host=share" allowfullscreen></iframe>
 
 # Implementation
 
