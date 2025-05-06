@@ -12,12 +12,12 @@
   let defaultPageSize = $state(20);
 
   let showEditModal = $state(false);
-  let editCompany = $state(null);
+  let editLocation = $state(null);
   let users = $state([]);
   let userMap = $state({});
 
-  let companies = $state([]);
-  let company = $state({
+  let locations = $state([]);
+  let location = $state({
     id: null,
     name: null,
     email: null,
@@ -28,21 +28,21 @@
   });
 
   onMount(() => {
-    getCompanies();
+    getLocations();
     getUsers();
   });
 
   function changePage(page) {
     currentPage = page;
-    getCompanies();
+    getLocations();
   }
 
-  function getCompanies() {
+  function getLocations() {
     let query = "?pageSize=" + defaultPageSize + "&pageNumber=" + currentPage;
 
     var config = {
       method: "get",
-      url: api_root + "/api/companies" + query,
+      url: api_root + "/api/locations" + query,
       headers: { Authorization: "Bearer " + $jwt_token },
     };
 
@@ -57,46 +57,46 @@
       });
   }
 
-  function createCompany() {
+  function createLocation() {
     var config = {
       method: "post",
-      url: api_root + "/api/companies",
+      url: api_root + "/api/locations",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + $jwt_token,
       },
-      data: company,
+      data: location,
     };
 
     axios(config)
       .then(function (response) {
-        alert("Company created");
+        alert("Location created");
         getCompanies();
       })
       .catch(function (error) {
-        alert("Could not create Company");
+        alert("Could not create Location");
         console.log(error);
       });
   }
-  function openEditModal(company) {
-    editCompany = { ...company };
+  function openEditModal(location) {
+    editLocation = { ...location };
     showEditModal = true;
     getUsers();
   }
   function closeEditModal() {
     showEditModal = false;
-    editCompany = null;
+    editLocation = null;
   }
 
   function submitEdit() {
     axios
       .put(
-        `${api_root}/api/companies/${editCompany.id}`,
+        `${api_root}/api/locations/${editLocation.id}`,
         {
-          name: editCompany.name,
-          email: editCompany.email,
-          address: editCompany.address,
-          owner: editCompany.owner,
+          name: editLocation.name,
+          email: editLocation.email,
+          address: editLocation.address,
+          owner: editLocation.owner,
         },
         {
           headers: {
@@ -106,28 +106,28 @@
         }
       )
       .then(() => {
-        alert("Company updated successfully");
+        alert("Location updated successfully");
         closeEditModal();
         getCompanies(); // refresh the list
       })
       .catch((err) => {
-        alert("Could not update company");
+        alert("Could not update Location");
         console.error(err);
       });
   }
 
-  function deleteCompany(companyId) {
-    if (confirm("Are you sure you want to delete this company?")) {
+  function deleteLocation(locationId) {
+    if (confirm("Are you sure you want to delete this location?")) {
       axios
-        .delete(`${api_root}/api/companies/${companyId}`, {
+        .delete(`${api_root}/api/locations/${locationId}`, {
           headers: { Authorization: "Bearer " + $jwt_token },
         })
         .then(() => {
-          alert("Company deleted");
+          alert("Location deleted");
           getCompanies();
         })
         .catch((err) => {
-          alert("Could not delete company");
+          alert("Could not delete location");
           console.log(err);
         });
     }
@@ -146,7 +146,6 @@
           email: user.email,
         }));
 
-        // Build lookup map by ID
         userMap = users.reduce((acc, user) => {
           acc[user.id] = user;
           return acc;
@@ -169,22 +168,24 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background-color: #4F5A65">
         <div class="modal-header">
-          <h5 class="modal-title">Edit Company</h5>
+          <h5 class="modal-title">Edit Location</h5>
           <button type="button" class="btn-close" onclick={closeEditModal}
           ></button>
         </div>
         <div class="modal-body">
           <label>Name</label>
-          <input class="form-control mb-2" bind:value={editCompany.name} />
+          <input class="form-control mb-2" bind:value={editLocation.name} />
 
           <label>Email</label>
-          <input class="form-control mb-2" bind:value={editCompany.email} />
+          <input class="form-control mb-2" bind:value={editLocation.email} />
 
           <label>Address</label>
-          <input class="form-control mb-2" bind:value={editCompany.address} />
-          <label>Owner</label>
-          <select class="form-select mb-2" bind:value={editCompany.owner}>
-            <option disabled selected value="">-- Select owner --</option>
+          <input class="form-control mb-2" bind:value={editLocation.address} />
+          <label>Fleet Manager</label>
+          <select class="form-select mb-2" bind:value={editLocation.owner}>
+            <option disabled selected value=""
+              >-- Select Fleet Manager --</option
+            >
             {#each users as user}
               <option value={user.id}>{user.label}</option>
             {/each}
@@ -201,13 +202,13 @@
   </div>
 {/if}
 
-<h1 class="mt-3">Create Company</h1>
+<h1 class="mt-3">Create Location</h1>
 <form class="mb-5">
   <div class="row mb-3">
     <div class="col">
       <label class="form-label" for="description">Name</label>
       <input
-        bind:value={company.name}
+        bind:value={location.name}
         class="form-control"
         id="description"
         type="text"
@@ -218,7 +219,7 @@
     <div class="col">
       <label class="form-label" for="description">E-Mail</label>
       <input
-        bind:value={company.email}
+        bind:value={location.email}
         class="form-control"
         id="description"
         type="text"
@@ -229,19 +230,19 @@
     <div class="col">
       <label class="form-label" for="description">Address</label>
       <input
-        bind:value={company.address}
+        bind:value={location.address}
         class="form-control"
         id="description"
         type="text"
       />
     </div>
   </div>
-  <button type="button" class="btn btn-primary" onclick={createCompany}
+  <button type="button" class="btn btn-primary" onclick={createLocation}
     >Submit</button
   >
 </form>
 
-<h1>All Companies</h1>
+<h1>All Locations</h1>
 <table class="table">
   <thead>
     <tr>
@@ -256,19 +257,19 @@
     </tr>
   </thead>
   <tbody>
-    {#each companies as company}
+    {#each companies as location}
       <tr>
-        <td>{company.name}</td>
-        <td>{company.address}</td>
-        <td>{company.latitude}</td>
-        <td>{company.longitude}</td>
-        <td>{company.id}</td>
+        <td>{location.name}</td>
+        <td>{location.address}</td>
+        <td>{location.latitude}</td>
+        <td>{location.longitude}</td>
+        <td>{location.id}</td>
         <td
-          >{userMap[company.owner]?.name ||
-            userMap[company.owner]?.email ||
+          >{userMap[location.owner]?.name ||
+            userMap[location.owner]?.email ||
             "–"}</td
         >
-        <td>{company.email}</td>
+        <td>{location.email}</td>
         <td>
           <div class="dropdown">
             <button
@@ -283,13 +284,13 @@
               <li>
                 <button
                   class="dropdown-item"
-                  onclick={() => openEditModal(company)}>Edit</button
+                  onclick={() => openEditModal(location)}>Edit</button
                 >
               </li>
               <li>
                 <button
                   class="dropdown-item text-danger"
-                  onclick={() => deleteCompany(company.id)}>Delete</button
+                  onclick={() => deleteLocation(location.id)}>Delete</button
                 >
               </li>
             </ul>
