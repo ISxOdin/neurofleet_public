@@ -1,7 +1,5 @@
 package ch.zhaw.neurofleet.service;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -101,7 +99,7 @@ public class Auth0Service {
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = "https://" + domain + "/api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8);
+        String url = "https://" + domain + "/api/v2/users/" + userId;
 
         ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
 
@@ -109,10 +107,75 @@ public class Auth0Service {
         Map<String, Object> metadata = (Map<String, Object>) body.get("app_metadata");
 
         AppMetadataDTO dto = new AppMetadataDTO();
-        dto.setCompanyId((String) metadata.get("companyId"));
-        dto.setRole((String) metadata.get("role"));
+        if (metadata != null) {
+            dto.setCompanyId((String) metadata.getOrDefault("companyId", ""));
+        } else {
+            dto.setCompanyId("");
+        }
 
         return dto;
+    }
+
+    public void assignUserRole(String userId, String roleName) {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        String rolesUrl = "https://" + domain + "/api/v2/roles";
+        ResponseEntity<Map[]> response = restTemplate.exchange(
+                rolesUrl, HttpMethod.GET, entity, Map[].class);
+
+        String roleId = Arrays.stream(response.getBody())
+                .filter(role -> roleName.equalsIgnoreCase((String) role.get("name")))
+                .map(role -> (String) role.get("id"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+
+        HttpHeaders postHeaders = new HttpHeaders();
+        postHeaders.setBearerAuth(token);
+        postHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> body = Map.of("roles", List.of(roleId));
+        HttpEntity<Map<String, Object>> assignEntity = new HttpEntity<>(body, postHeaders);
+
+        String assignUrl = "https://" + domain + "/api/v2/users/" + userId + "/roles";
+
+        restTemplate.postForEntity(assignUrl, assignEntity, Void.class);
+    }
+
+    public void deleteUserRole(String userId, String roleName) {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Void> getEntity = new HttpEntity<>(headers);
+        String rolesUrl = "https://" + domain + "/api/v2/roles";
+
+        ResponseEntity<Map[]> response = restTemplate.exchange(
+                rolesUrl, HttpMethod.GET, getEntity, Map[].class);
+
+        String roleId = Arrays.stream(response.getBody())
+                .filter(role -> roleName.equalsIgnoreCase((String) role.get("name")))
+                .map(role -> (String) role.get("id"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+
+        HttpHeaders deleteHeaders = new HttpHeaders();
+        deleteHeaders.setBearerAuth(token);
+        deleteHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> body = Map.of("roles", List.of(roleId));
+        HttpEntity<Map<String, Object>> deleteEntity = new HttpEntity<>(body, deleteHeaders);
+
+        String deleteUrl = "https://" + domain + "/api/v2/users/" + userId + "/roles";
+
+        restTemplate.exchange(deleteUrl, HttpMethod.DELETE, deleteEntity, Void.class);
     }
 
     @Data
@@ -125,7 +188,6 @@ public class Auth0Service {
     @Data
     public class AppMetadataDTO {
         private String companyId;
-        private String role;
     }
 
 }

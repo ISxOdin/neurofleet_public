@@ -1,14 +1,14 @@
 package ch.zhaw.neurofleet.controller;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,7 +18,7 @@ import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
 @RequestMapping("/api/auth0")
-public class Auth0Controller {
+public class UserController {
 
     @Autowired
     UserService userService;
@@ -47,8 +47,7 @@ public class Auth0Controller {
         }
 
         try {
-            String decodedId = URLDecoder.decode(id, StandardCharsets.UTF_8); // manually decode
-            List<String> roles = auth0Service.getUserRoles(decodedId);
+            List<String> roles = auth0Service.getUserRoles(id);
             return ResponseEntity.ok(roles);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -62,10 +61,47 @@ public class Auth0Controller {
         }
 
         try {
-            String decodedId = URLDecoder.decode(id, StandardCharsets.UTF_8);
-            AppMetadataDTO metadata = auth0Service.getUserAppMetadata(decodedId);
+            AppMetadataDTO metadata = auth0Service.getUserAppMetadata(id);
             return ResponseEntity.ok(metadata);
         } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    @PostMapping("/users/{id}/roles/{roleName}")
+    public ResponseEntity<String> assignUserRole(
+            @PathVariable String id,
+            @PathVariable String roleName) {
+
+        if (!userService.userHasAnyRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        try {
+            auth0Service.assignUserRole(id, roleName);
+            return ResponseEntity.status(HttpStatus.OK).body("ASSIGNED");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/users/{id}/roles/{roleName}")
+    public ResponseEntity<String> deleteUserRole(
+            @PathVariable String id,
+            @PathVariable String roleName) {
+
+        if (!userService.userHasAnyRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        try {
+            auth0Service.deleteUserRole(id, roleName);
+            return ResponseEntity.status(HttpStatus.OK).body("DELETED");
+        } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
