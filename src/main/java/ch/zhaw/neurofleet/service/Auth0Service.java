@@ -1,14 +1,27 @@
 package ch.zhaw.neurofleet.service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ch.zhaw.neurofleet.model.AppMetadataDTO;
 import ch.zhaw.neurofleet.model.Auth0RoleDTO;
-import lombok.Data;
+import ch.zhaw.neurofleet.model.Auth0UserDTO;
+import ch.zhaw.neurofleet.model.EnrichedUserDTO;
 
 @Service
 public class Auth0Service {
@@ -236,29 +249,6 @@ public class Auth0Service {
         }
 
         return result;
-    }
-
-    @Data
-    public static class Auth0UserDTO {
-        private String user_id;
-        private String email;
-        private String name;
-    }
-
-    @Data
-    public class AppMetadataDTO {
-        private String companyId;
-    }
-
-    @Data
-    public static class EnrichedUserDTO {
-        private String user_id;
-        private String email;
-        private String name;
-        private String given_name;
-        private String family_name;
-        private String companyId;
-        private List<String> roles;
     }
 
 }

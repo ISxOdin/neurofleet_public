@@ -103,4 +103,20 @@ public class CompanyController {
         }
     }
 
+    @PostMapping("/companies/{companyId}/users/{userId}")
+    public ResponseEntity<String> addUser(
+            @PathVariable String companyId,
+            @PathVariable String userId) {
+        companyService.addUserToCompany(companyId, userId);
+        return ResponseEntity.status(HttpStatus.OK).body("ASSIGNED");
+    }
+
+    @DeleteMapping("/companies/{companyId}/users/{userId}")
+    public ResponseEntity<Void> removeUser(
+            @PathVariable String companyId,
+            @PathVariable String userId) {
+        companyService.removeUserFromCompany(companyId, userId);
+        return ResponseEntity.ok().build();
+    }
+
 }
