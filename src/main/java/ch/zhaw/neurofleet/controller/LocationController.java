@@ -26,94 +26,113 @@ import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
 @RequestMapping("/api")
-
 public class LocationController {
 
     @Autowired
-    LocationRepository locationRepository;
+    private LocationService locationService;
 
     @Autowired
-    LocationService locationService;
+    private LocationRepository locationRepository;
 
     @Autowired
-    UserService userService;
+    private UserService userService;
 
-    @PostMapping("/locations")
-    public ResponseEntity<Location> createLocation(@RequestBody LocationCreateDTO lDTO) {
+    @PostMapping("/locations/{id}")
+    public ResponseEntity<Location> createLocation(@RequestBody LocationCreateDTO dto) {
         if (!userService.userHasAnyRole("admin", "owner")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         try {
-            String companyId = lDTO.getCompanyId();
             if (userService.userHasAnyRole("owner")) {
-                companyId = userService.getCompanyIdOfCurrentUser();
+                dto.setCompanyId(userService.getCompanyIdOfCurrentUser());
             }
-            Location locationDAO = locationService.createLocation(
-                    lDTO.getName(),
-                    lDTO.getAddress(),
-                    companyId);
-
-            Location location = locationRepository.save(locationDAO);
-            return new ResponseEntity<>(location, HttpStatus.CREATED);
+            Location saved = locationService.createLocation(
+                    dto.getName(),
+                    dto.getAddress(),
+                    dto.getCompanyId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/locations")
     public ResponseEntity<Page<Location>> getAllLocations(
-            @RequestParam(defaultValue = "1") Integer pageNumber,
-            @RequestParam(defaultValue = "5") Integer pageSize) {
+            @RequestParam(defaultValue = "1") int pageNumber,
+            @RequestParam(defaultValue = "20") int pageSize) {
 
-        Page<Location> locations;
+        PageRequest pr = PageRequest.of(pageNumber - 1, pageSize);
+        Page<Location> page;
         if (userService.userHasAnyRole("admin")) {
-            locations = locationRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
+            page = locationRepository.findAll(pr);
         } else if (userService.userHasAnyRole("owner")) {
-            String companyId = userService.getCompanyIdOfCurrentUser();
-            locations = locationRepository.findAllByCompanyId(companyId, PageRequest.of(pageNumber - 1, pageSize));
+            String cid = userService.getCompanyIdOfCurrentUser();
+            page = locationRepository.findAllByCompanyId(cid, pr);
         } else {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
-        return new ResponseEntity<>(locations, HttpStatus.OK);
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping("/locations/{id}")
     public ResponseEntity<Location> getLocationById(@PathVariable String id) {
-        Optional<Location> c = locationRepository.findById(id);
-        if (c.isPresent()) {
-            return new ResponseEntity<>(c.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (!userService.userHasAnyRole("admin", "owner")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+        // owners only own company
+        if (userService.userHasAnyRole("owner")) {
+            String cid = userService.getCompanyIdOfCurrentUser();
+            if (!locationRepository.existsByIdAndCompanyId(id, cid)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+        }
+        Optional<Location> opt = locationRepository.findById(id);
+        return opt.map(loc -> ResponseEntity.ok(loc))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @PutMapping("/locations/{id}")
     public ResponseEntity<Location> updateLocation(
             @PathVariable String id,
             @RequestBody LocationCreateDTO dto) {
-        if (!userService.userHasAnyRole("admin", "owner")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
 
+        if (!userService.userHasAnyRole("admin", "owner")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         try {
+            if (userService.userHasAnyRole("owner")) {
+                String cid = userService.getCompanyIdOfCurrentUser();
+                if (!locationRepository.existsByIdAndCompanyId(id, cid)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+                dto.setCompanyId(cid);
+            }
             Location updated = locationService.updateLocation(id, dto);
-            return new ResponseEntity<>(updated, HttpStatus.OK);
+            return ResponseEntity.ok(updated);
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
+    /**
+     * Delete a Location. Owners can delete only their own company's locations.
+     */
     @DeleteMapping("/locations/{id}")
-    public ResponseEntity<String> deleteLocationById(@PathVariable String id) {
+    public ResponseEntity<Void> deleteLocation(@PathVariable String id) {
         if (!userService.userHasAnyRole("admin", "owner")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        if (userService.userHasAnyRole("owner")) {
+            String cid = userService.getCompanyIdOfCurrentUser();
+            if (!locationRepository.existsByIdAndCompanyId(id, cid)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
         }
         locationRepository.deleteById(id);
-        return ResponseEntity.status(HttpStatus.OK).body("DELETED");
+        return ResponseEntity.ok().build();
     }
-
 }

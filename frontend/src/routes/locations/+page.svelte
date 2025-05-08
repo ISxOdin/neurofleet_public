@@ -2,192 +2,183 @@
   import axios from "axios";
   import { page } from "$app/state";
   import { onMount } from "svelte";
-  import { jwt_token } from "../../store";
+  import { browser } from "$app/environment";
+  import { jwt_token, user, isAuthenticated } from "../../store";
 
-  // get the origin of current page, e.g. http://localhost:8080
-  const api_root = page.url.origin;
+  let currentPage = 1;
+  let defaultPageSize = 20;
+  let nrOfPages = 0;
+  let loading = false;
+  let apiRoot = "";
 
-  let currentPage = $state(1);
-  let nrOfPages = $state(0);
-  let defaultPageSize = $state(20);
+  let mySub;
+  let myRole;
+  let myCompanyId;
 
-  let showEditModal = $state(false);
-  let editLocation = $state(null);
-  let users = $state([]);
-  let userMap = $state({});
+  let showEditModal = false;
+  let editLocation = null;
+  let users = [];
+  let userMap = {};
+  let locations = [];
+  let companies = [];
 
-  let locations = $state([]);
-  let location = $state({
-    id: null,
-    name: null,
-    email: null,
-    address: null,
-    latitude: null,
-    longitude: null,
-    owner: null,
+  onMount(async () => {
+    if (browser) {
+      apiRoot = window.location.origin;
+    }
+    const u = $user;
+    mySub = u.sub;
+    myRole = u.user_roles?.[0] || null;
+
+    await getCompanies();
+    await getUsers();
+    await getLocations();
   });
 
-  onMount(() => {
-    getLocations();
-    getUsers();
-  });
-
-  function changePage(page) {
-    currentPage = page;
-    getLocations();
-  }
-
-  function getLocations() {
-    let query = "?pageSize=" + defaultPageSize + "&pageNumber=" + currentPage;
-
-    var config = {
-      method: "get",
-      url: api_root + "/api/locations" + query,
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
-
-    axios(config)
-      .then(function (response) {
-        companies = response.data.content;
-        nrOfPages = response.data.totalPages;
-      })
-      .catch(function (error) {
-        alert("Could not get companies");
-        console.log(error);
+  async function getCompanies() {
+    loading = true;
+    try {
+      const response = await axios.get(`${apiRoot}/api/companies`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
+      companies = response.data.content || response.data;
+
+      const myCo = companies.find((c) => c.userIds?.includes(mySub));
+      myCompanyId = myCo?.id || null;
+    } catch (err) {
+      console.error("Could not load companies", err);
+      alert("Could not load companies");
+    } finally {
+      loading = false;
+    }
   }
 
-  function createLocation() {
-    var config = {
-      method: "post",
-      url: api_root + "/api/locations",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + $jwt_token,
-      },
-      data: location,
-    };
-
-    axios(config)
-      .then(function (response) {
-        alert("Location created");
-        getCompanies();
-      })
-      .catch(function (error) {
-        alert("Could not create Location");
-        console.log(error);
+  async function getUsers() {
+    loading = true;
+    try {
+      const response = await axios.get(`${apiRoot}/api/auth0/users`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
+      users = response.data.map((u) => ({
+        ...u,
+        role: u.roles?.[0] || "–",
+
+        companyId:
+          companies.find((c) => c.userIds?.includes(u.user_id))?.id || null,
+      }));
+      userMap = users.reduce((acc, u) => ({ ...acc, [u.user_id]: u }), {});
+    } catch (err) {
+      console.error("Could not load users", err);
+      alert("Could not load users");
+    } finally {
+      loading = false;
+    }
   }
-  function openEditModal(location) {
-    editLocation = { ...location };
+
+  async function getLocations(page = currentPage) {
+    loading = true;
+    try {
+      const response = await axios.get(
+        `${apiRoot}/api/locations?pageNumber=${page}&pageSize=${defaultPageSize}`,
+        { headers: { Authorization: `Bearer ${$jwt_token}` } }
+      );
+      locations = response.data.content;
+      nrOfPages = response.data.totalPages;
+      currentPage = page;
+    } catch (err) {
+      console.error("Could not get locations", err);
+      alert("Could not get locations");
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function createLocation(data) {
+    if (!myCompanyId) {
+      return alert("You don't belong to any company");
+    }
+    const payload = {
+      ...data,
+      companyId: myCompanyId,
+    };
+    try {
+      await axios.post(`${apiRoot}/api/locations`, payload, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
+      });
+      alert("Location created");
+      await getLocations();
+    } catch (err) {
+      console.error("Could not create location", err);
+      alert("Could not create location");
+    }
+  }
+
+  function openEditModal(loc) {
+    editLocation = { ...loc };
     showEditModal = true;
-    getUsers();
   }
+
   function closeEditModal() {
     showEditModal = false;
     editLocation = null;
   }
 
-  function submitEdit() {
-    axios
-      .put(
-        `${api_root}/api/locations/${editLocation.id}`,
-        {
-          name: editLocation.name,
-          email: editLocation.email,
-          address: editLocation.address,
-          owner: editLocation.owner,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + $jwt_token,
-          },
-        }
-      )
-      .then(() => {
-        alert("Location updated successfully");
-        closeEditModal();
-        getCompanies(); // refresh the list
-      })
-      .catch((err) => {
-        alert("Could not update Location");
-        console.error(err);
-      });
-  }
-
-  function deleteLocation(locationId) {
-    if (confirm("Are you sure you want to delete this location?")) {
-      axios
-        .delete(`${api_root}/api/locations/${locationId}`, {
-          headers: { Authorization: "Bearer " + $jwt_token },
-        })
-        .then(() => {
-          alert("Location deleted");
-          getCompanies();
-        })
-        .catch((err) => {
-          alert("Could not delete location");
-          console.log(err);
-        });
+  async function submitEdit() {
+    try {
+      await axios.put(
+        `${apiRoot}/api/locations/${editLocation.id}`,
+        editLocation,
+        { headers: { Authorization: `Bearer ${$jwt_token}` } }
+      );
+      alert("Location updated successfully");
+      closeEditModal();
+      await getLocations();
+    } catch (err) {
+      console.error("Could not update location", err);
+      alert("Could not update location");
     }
   }
 
-  function getUsers() {
-    axios
-      .get(api_root + "/api/auth0/users", {
-        headers: { Authorization: "Bearer " + $jwt_token },
-      })
-      .then((res) => {
-        users = res.data.map((user) => ({
-          id: user.user_id,
-          label: user.email || user.name,
-          name: user.name,
-          email: user.email,
-        }));
-
-        userMap = users.reduce((acc, user) => {
-          acc[user.id] = user;
-          return acc;
-        }, {});
-      })
-      .catch((err) => {
-        alert("Failed to load Auth0 users");
-        console.error(err);
+  async function deleteLocation(id) {
+    if (!confirm("Delete this location?")) return;
+    try {
+      await axios.delete(`${apiRoot}/api/locations/${id}`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
+      alert("Location deleted");
+      await getLocations();
+    } catch (err) {
+      console.error("Could not delete location", err);
+      alert("Could not delete location");
+    }
   }
 </script>
 
 {#if showEditModal}
   <div class="modal-backdrop show"></div>
-  <div
-    class="modal d-block"
-    tabindex="-1"
-    style="background-color: rgba(0,0,0,0.5)"
-  >
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background-color: #4F5A65">
+      <div class="modal-content bg-dark text-light">
         <div class="modal-header">
           <h5 class="modal-title">Edit Location</h5>
-          <button type="button" class="btn-close" onclick={closeEditModal}
+          <button class="btn-close btn-close-white" onclick={closeEditModal}
           ></button>
         </div>
         <div class="modal-body">
           <label>Name</label>
           <input class="form-control mb-2" bind:value={editLocation.name} />
-
-          <label>Email</label>
-          <input class="form-control mb-2" bind:value={editLocation.email} />
-
           <label>Address</label>
           <input class="form-control mb-2" bind:value={editLocation.address} />
           <label>Fleet Manager</label>
-          <select class="form-select mb-2" bind:value={editLocation.owner}>
-            <option disabled selected value=""
-              >-- Select Fleet Manager --</option
-            >
-            {#each users as user}
-              <option value={user.id}>{user.label}</option>
+          <select
+            class="form-select mb-2"
+            bind:value={editLocation.fleetmanagerId}
+          >
+            <option disabled value="">-- Select Fleet Manager --</option>
+            {#each users.filter((u) => u.role === "fleetmanager" && u.companyId === myCompanyId) as fm}
+              <option value={fm.user_id}
+                >{fm.given_name} {fm.family_name} ({fm.email})</option
+              >
             {/each}
           </select>
         </div>
@@ -202,131 +193,99 @@
   </div>
 {/if}
 
-<h1 class="mt-3">Create Location</h1>
-<form class="mb-5">
+<!-- Create Form -->
+<h1 class="mt-3 text-center">Create Location</h1>
+<form
+  onsubmit={() =>
+    createLocation({ name: location.name, address: location.address })}
+  class="mb-5"
+>
   <div class="row mb-3">
     <div class="col">
-      <label class="form-label" for="description">Name</label>
-      <input
+      <label>Name</label><input
+        class="form-control"
         bind:value={location.name}
-        class="form-control"
-        id="description"
-        type="text"
       />
     </div>
   </div>
   <div class="row mb-3">
     <div class="col">
-      <label class="form-label" for="description">E-Mail</label>
-      <input
-        bind:value={location.email}
+      <label>Address</label><input
         class="form-control"
-        id="description"
-        type="text"
-      />
-    </div>
-  </div>
-  <div class="row mb-3">
-    <div class="col">
-      <label class="form-label" for="description">Address</label>
-      <input
         bind:value={location.address}
-        class="form-control"
-        id="description"
-        type="text"
       />
     </div>
   </div>
-  <button type="button" class="btn btn-primary" onclick={createLocation}
-    >Submit</button
-  >
+  <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 
-<h1>All Locations</h1>
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">Name</th>
-      <th scope="col">Address</th>
-      <th scope="col">Longitude</th>
-      <th scope="col">Latitude</th>
-      <th scope="col">ID</th>
-      <th scope="col">Owner</th>
-      <th scope="col">E-Mail</th>
-      <th scope="col"></th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each companies as location}
-      <tr>
-        <td>{location.name}</td>
-        <td>{location.address}</td>
-        <td>{location.latitude}</td>
-        <td>{location.longitude}</td>
-        <td>{location.id}</td>
-        <td
-          >{userMap[location.owner]?.name ||
-            userMap[location.owner]?.email ||
-            "–"}</td
-        >
-        <td>{location.email}</td>
-        <td>
-          <div class="dropdown">
+<!-- Locations Table -->
+<h1 class="text-center">All Locations</h1>
+{#if loading}
+  <div class="d-flex justify-content-center my-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+{:else}
+  <table class="table table-striped">
+    <thead>
+      <tr
+        ><th>Name</th><th>Address</th><th>Lon</th><th>Lat</th><th>ID</th><th
+          >Company</th
+        ><th>Fleet Manager</th><th></th></tr
+      >
+    </thead>
+    <tbody>
+      {#each locations as loc}
+        <tr>
+          <td>{loc.name}</td>
+          <td>{loc.address}</td>
+          <td>{loc.longitude}</td>
+          <td>{loc.latitude}</td>
+          <td>{loc.id}</td>
+          <td>{companies.find((c) => c.id === loc.companyId)?.name}</td>
+          <td
+            >{userMap[loc.fleetmanagerId]?.given_name}
+            {userMap[loc.fleetmanagerId]?.family_name}</td
+          >
+          <td>
             <button
-              class="btn btn-link text-dark p-0"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
+              class="btn btn-sm btn-outline-secondary"
+              onclick={() => openEditModal(loc)}>Edit</button
             >
-              <i class="bi bi-gear-fill"></i>
-            </button>
-            <ul class="dropdown-menu">
-              <li>
-                <button
-                  class="dropdown-item"
-                  onclick={() => openEditModal(location)}>Edit</button
-                >
-              </li>
-              <li>
-                <button
-                  class="dropdown-item text-danger"
-                  onclick={() => deleteLocation(location.id)}>Delete</button
-                >
-              </li>
-            </ul>
-          </div>
-        </td>
-      </tr>
-    {/each}
-  </tbody>
-</table>
+            <button
+              class="btn btn-sm btn-outline-danger"
+              onclick={() => deleteLocation(loc.id)}>Delete</button
+            >
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
 
-<nav>
-  <ul class="pagination justify-content-center">
-    <li class="page-item">
-      <a class="page-link" href="#" aria-label="Previous">
-        <span aria-hidden="true">&laquo;</span>
-      </a>
-    </li>
-    {#each Array(nrOfPages) as _, i}
-      <li class="page-item">
-        <button
-          class="page-link"
-          class:active={currentPage == i + 1}
-          onclick={() => {
-            changePage(i + 1);
-          }}
-          >{i + 1}
-        </button>
+  <nav>
+    <ul class="pagination justify-content-center">
+      <li class="page-item" class:disabled={currentPage === 1}>
+        <button class="page-link" onclick={() => getLocations(currentPage - 1)}
+          >&laquo;</button
+        >
       </li>
-    {/each}
-    <li class="page-item">
-      <a class="page-link" href="#" aria-label="Next">
-        <span aria-hidden="true">&raquo;</span>
-      </a>
-    </li>
-  </ul>
-</nav>
+      {#each Array(nrOfPages) as _, i}
+        <li class="page-item" class:active={currentPage === i + 1}>
+          <button class="page-link" onclick={() => getLocations(i + 1)}
+            >{i + 1}</button
+          >
+        </li>
+      {/each}
+      <li class="page-item" class:disabled={currentPage === nrOfPages}>
+        <button class="page-link" onclick={() => getLocations(currentPage + 1)}
+          >&raquo;</button
+        >
+      </li>
+    </ul>
+  </nav>
+{/if}
 
 <style>
   .page-link {

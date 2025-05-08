@@ -8,4 +8,6 @@ import ch.zhaw.neurofleet.model.Location;
 
 public interface LocationRepository extends MongoRepository<Location, String> {
     Page<Location> findAllByCompanyId(String companyId, Pageable pageable);
+
+    boolean existsByIdAndCompanyId(String id, String cid);
 }
