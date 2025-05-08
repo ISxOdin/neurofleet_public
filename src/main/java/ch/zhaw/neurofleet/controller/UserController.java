@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ch.zhaw.neurofleet.model.AppMetadataDTO;
+import ch.zhaw.neurofleet.model.EnrichedUserDTO;
 import ch.zhaw.neurofleet.service.Auth0Service;
-import ch.zhaw.neurofleet.service.Auth0Service.AppMetadataDTO;
 import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
@@ -29,13 +30,13 @@ public class UserController {
     Auth0Service auth0Service;
 
     @GetMapping("/users")
-    public ResponseEntity<List<Auth0Service.EnrichedUserDTO>> getAuth0Users() {
+    public ResponseEntity<List<EnrichedUserDTO>> getAuth0Users() {
         if (!userService.userHasAnyRole("admin")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
         try {
-            List<Auth0Service.EnrichedUserDTO> users = auth0Service.fetchAllEnrichedUsers();
+            List<EnrichedUserDTO> users = auth0Service.fetchAllEnrichedUsers();
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

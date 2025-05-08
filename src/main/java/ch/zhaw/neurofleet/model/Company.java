@@ -1,5 +1,8 @@
 package ch.zhaw.neurofleet.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -26,4 +29,5 @@ public class Company {
     @NonNull
     private Double longitude;
     private String owner;
+    private List<String> userIds = new ArrayList<>();
 }
