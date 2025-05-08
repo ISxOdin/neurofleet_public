@@ -1,84 +1,61 @@
 <script>
   import axios from "axios";
   import { onMount } from "svelte";
-  import { page } from "$app/state";
+  import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
 
-  const api_root = page.url.origin;
+  let users = [];
+  let selectedUser = null;
+  let showEditModal = false;
+  let currentRoles = [];
+  let newRole = "";
+  let loading = false;
+  let metadata = { companyId: "" };
+  let apiRoot = "";
 
-  let users = $state([]);
-  let selectedUser = $state(null);
-  let showEditModal = $state(false);
-  let currentRoles = $state([]);
-  let newRole = $state("");
-  let loading = $state(false);
-  let metadata = $state({ companyId: "" });
-
-  onMount(async () => {
-    await getUsers();
+  onMount(() => {
+    if (browser) {
+      apiRoot = window.location.origin;
+    }
+    getUsers();
   });
 
   async function getUsers() {
     loading = true;
     try {
-      const res = await axios.get(`${api_root}/api/auth0/users`, {
-        headers: { Authorization: "Bearer " + $jwt_token },
+      const { data: rawUsers } = await axios.get(`${apiRoot}/api/auth0/users`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
 
-      const rawUsers = res.data;
-
-      const usersWithRoles = await Promise.all(
-        rawUsers.map(async (user) => {
-          try {
-            const roleRes = await axios.get(
-              `${api_root}/api/auth0/users/${encodeURIComponent(user.user_id)}/roles`,
-              {
-                headers: { Authorization: "Bearer " + $jwt_token },
-              }
-            );
-            return { ...user, role: roleRes.data[0] || "–" };
-          } catch {
-            return { ...user, role: "–" };
-          }
-        })
-      );
-
-      users = usersWithRoles;
-    } catch (err) {
+      users = rawUsers.map((user) => ({
+        ...user,
+        role: user.roles?.[0] || "–",
+      }));
+    } catch (error) {
+      console.error("Could not load users", error);
       alert("Could not load users");
-      console.error(err);
     } finally {
       loading = false;
     }
   }
 
-  async function openEditModal(user) {
+  function openEditModal(user) {
     selectedUser = user;
     showEditModal = true;
+    currentRoles = user.roles || [];
+    newRole = currentRoles[0] || "";
+    loadMetadata(user.user_id);
+  }
 
+  async function loadMetadata(userId) {
     try {
-      const res = await axios.get(
-        `${api_root}/api/auth0/users/${encodeURIComponent(user.user_id)}/roles`,
-        {
-          headers: { Authorization: "Bearer " + $jwt_token },
-        }
+      const { data } = await axios.get(
+        `${apiRoot}/api/auth0/users/${encodeURIComponent(userId)}/metadata`,
+        { headers: { Authorization: `Bearer ${$jwt_token}` } }
       );
-      currentRoles = res.data;
-      newRole = currentRoles[0] || "";
-    } catch (err) {
-      alert("Could not load roles");
-      console.error(err);
-    }
-    try {
-      const metaRes = await axios.get(
-        `${api_root}/api/auth0/users/${encodeURIComponent(user.user_id)}/metadata`,
-        {
-          headers: { Authorization: "Bearer " + $jwt_token },
-        }
-      );
-      metadata = metaRes.data;
-    } catch (err) {
-      console.error("Could not load metadata", err);
+      metadata = data;
+    } catch (error) {
+      console.error("Could not load metadata", error);
       metadata = { companyId: "" };
     }
   }
@@ -88,59 +65,59 @@
     selectedUser = null;
     currentRoles = [];
     newRole = "";
+    metadata = { companyId: "" };
   }
 
   async function assignExclusiveRole() {
-    if (!newRole) return;
-
+    if (!newRole || !selectedUser) return;
     const userId = selectedUser.user_id;
-
     try {
-      for (const role of currentRoles) {
-        await axios.delete(
-          `${api_root}/api/auth0/users/${encodeURIComponent(userId)}/roles/${role}`,
-          {
-            headers: { Authorization: "Bearer " + $jwt_token },
-          }
-        );
-      }
+      await Promise.all(
+        currentRoles.map((role) =>
+          axios.delete(
+            `${apiRoot}/api/auth0/users/${encodeURIComponent(userId)}/roles/${role}`,
+            { headers: { Authorization: `Bearer ${$jwt_token}` } }
+          )
+        )
+      );
 
       await axios.post(
-        `${api_root}/api/auth0/users/${encodeURIComponent(userId)}/roles/${newRole}`,
+        `${apiRoot}/api/auth0/users/${encodeURIComponent(userId)}/roles/${newRole}`,
         {},
-        { headers: { Authorization: "Bearer " + $jwt_token } }
+        { headers: { Authorization: `Bearer ${$jwt_token}` } }
       );
 
       alert("Role updated");
-      await openEditModal(selectedUser);
+      await getUsers();
       closeEditModal();
-      getUsers();
-    } catch (err) {
+    } catch (error) {
+      console.error("Failed to assign role", error);
       alert("Failed to assign role");
-      console.error(err);
     }
   }
 
   async function updateMetadata() {
+    if (!selectedUser) return;
     try {
       await axios.patch(
-        `${api_root}/api/auth0/users/${encodeURIComponent(selectedUser.user_id)}/metadata`,
+        `${apiRoot}/api/auth0/users/${encodeURIComponent(selectedUser.user_id)}/metadata`,
         metadata,
         {
           headers: {
-            Authorization: "Bearer " + $jwt_token,
+            Authorization: `Bearer ${$jwt_token}`,
             "Content-Type": "application/json",
           },
         }
       );
       alert("Company ID updated");
-    } catch (err) {
-      alert("Failed to update companyId");
-      console.error(err);
+    } catch (error) {
+      console.error("Failed to update companyId", error);
+      alert("Failed to update company ID");
     }
   }
 </script>
 
+<!-- Edit User Modal -->
 {#if showEditModal}
   <div class="modal-backdrop show"></div>
   <div
@@ -149,48 +126,52 @@
     style="background-color: rgba(0,0,0,0.5)"
   >
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background-color: #4F5A65">
+      <div class="modal-content bg-dark text-light">
         <div class="modal-header">
-          <h5 class="modal-title">Edit User Role</h5>
-          <button type="button" class="btn-close" onclick={closeEditModal}
+          <h5 class="modal-title">Edit User</h5>
+          <button class="btn-close btn-close-white" on:click={closeEditModal}
           ></button>
         </div>
         <div class="modal-body">
           <p><strong>Email:</strong> {selectedUser.email}</p>
-
           <label>Assigned Role</label>
           <select class="form-select mb-3" bind:value={newRole}>
-            <option value="" disabled selected>-- Select role --</option>
+            <option value="" disabled>-- Select role --</option>
             <option value="admin">admin</option>
             <option value="owner">owner</option>
             <option value="fleetmanager">fleetmanager</option>
+            <option value="driver">driver</option>
+            <option value="user">user</option>
           </select>
-
           <button
             class="btn btn-primary w-100"
-            onclick={assignExclusiveRole}
+            on:click={assignExclusiveRole}
             disabled={!newRole}
           >
             Assign Role
           </button>
+          <hr class="my-3" />
+          <label>Company ID</label>
+          <input
+            class="form-control mb-3"
+            bind:value={metadata.companyId}
+            placeholder="Enter Company ID"
+          />
+          <button class="btn btn-outline-light w-100" on:click={updateMetadata}>
+            Update Company ID
+          </button>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick={closeEditModal}
+          <button class="btn btn-secondary" on:click={closeEditModal}
             >Close</button
           >
         </div>
       </div>
     </div>
-    <hr />
-    <label>Company ID</label>
-    <input class="form-control mb-3" bind:value={metadata.companyId} />
-
-    <button class="btn btn-outline-light w-100 mb-2" onclick={updateMetadata}>
-      Update Company ID
-    </button>
   </div>
 {/if}
 
+<!-- User Table -->
 <h1 class="mt-3">All Auth0 Users</h1>
 
 {#if loading}
@@ -200,14 +181,14 @@
     </div>
   </div>
 {:else}
-  <table class="table">
+  <table class="table table-striped">
     <thead>
       <tr>
         <th>Name</th>
         <th>Email</th>
         <th>User ID</th>
         <th>Role</th>
-        <th></th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -218,23 +199,12 @@
           <td>{user.user_id}</td>
           <td>{user.role}</td>
           <td>
-            <div class="dropdown">
-              <button
-                class="btn btn-link text-dark p-0"
-                type="button"
-                data-bs-toggle="dropdown"
-              >
-                <i class="bi bi-gear-fill"></i>
-              </button>
-              <ul class="dropdown-menu">
-                <li>
-                  <button
-                    class="dropdown-item"
-                    onclick={() => openEditModal(user)}>Edit Role</button
-                  >
-                </li>
-              </ul>
-            </div>
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              on:click={() => openEditModal(user)}
+            >
+              <i class="bi bi-gear-fill"></i> Edit</button
+            >
           </td>
         </tr>
       {/each}
