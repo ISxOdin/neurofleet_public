@@ -19,12 +19,12 @@
 
   onMount(async () => {
     if (browser) apiRoot = window.location.origin;
-    await loadUsers();
-    await loadCompanies();
+    await getUsers();
+    await getCompanies();
   });
 
   // Fetch all Auth0 users once
-  async function loadUsers() {
+  async function getUsers() {
     try {
       loading = true;
       const { data } = await axios.get(`${apiRoot}/api/auth0/users`, {
@@ -47,7 +47,7 @@
   }
 
   // Paginated companies
-  async function loadCompanies(page = currentPage) {
+  async function getCompanies(page = currentPage) {
     loading = true;
     try {
       const url = `${apiRoot}/api/companies?pageNumber=${page}&pageSize=${pageSize}`;
@@ -67,7 +67,7 @@
 
   function changePage(page) {
     if (page < 1 || page > totalPages) return;
-    loadCompanies(page);
+    getCompanies(page);
   }
 
   // Create new company
@@ -82,7 +82,7 @@
       });
       alert("Company created");
       newCompany = { name: "", email: "", address: "" };
-      loadCompanies(1);
+      getCompanies(1);
     } catch (error) {
       console.error("Could not create company", error);
       alert("Could not create company");
@@ -119,7 +119,7 @@
       );
       alert("Company updated");
       closeEditModal();
-      loadCompanies(currentPage);
+      getCompanies(currentPage);
     } catch (error) {
       console.error("Could not update company", error);
       alert("Could not update company");
@@ -133,7 +133,7 @@
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
       alert("Company deleted");
-      loadCompanies(currentPage);
+      getCompanies(currentPage);
     } catch (error) {
       console.error("Could not delete company", error);
       alert("Could not delete company");
@@ -149,7 +149,7 @@
       <div class="modal-content bg-dark text-light">
         <div class="modal-header">
           <h5 class="modal-title">Edit Company</h5>
-          <button class="btn-close btn-close-white" on:click={closeEditModal}
+          <button class="btn-close btn-close-white" onclick={closeEditModal}
           ></button>
         </div>
         <div class="modal-body">
@@ -170,10 +170,10 @@
           </select>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" on:click={closeEditModal}
+          <button class="btn btn-secondary" onclick={closeEditModal}
             >Cancel</button
           >
-          <button class="btn btn-primary" on:click={submitEdit}>Save</button>
+          <button class="btn btn-primary" onclick={submitEdit}>Save</button>
         </div>
       </div>
     </div>
@@ -181,8 +181,8 @@
 {/if}
 
 <!-- Create Company Form -->
-<h1 class="mt-3">Create Company</h1>
-<form on:submit|preventDefault={createCompany} class="mb-5">
+<h1 class="mt-3 text-center">Create Company</h1>
+<form onsubmit={createCompany} class="mb-5">
   <div class="row g-3">
     <div class="col-md-4">
       <label class="form-label">Name</label>
@@ -206,7 +206,7 @@
 </form>
 
 <!-- Companies Table -->
-<h1>All Companies</h1>
+<h1 class="text-center">All Companies</h1>
 {#if loading}
   <div class="d-flex justify-content-center my-4">
     <div class="spinner-border" role="status">
@@ -243,41 +243,41 @@
           <td>
             <button
               class="btn btn-sm btn-outline-secondary me-2"
-              on:click={() => openEditModal(c)}>Edit</button
+              onclick={() => openEditModal(c)}>Edit</button
             >
             <button
               class="btn btn-sm btn-outline-danger"
-              on:click={() => deleteCompany(c.id)}>Delete</button
+              onclick={() => deleteCompany(c.id)}>Delete</button
             >
           </td>
         </tr>
       {/each}
     </tbody>
   </table>
-{/if}
 
-<!-- Pagination -->
-<nav>
-  <ul class="pagination justify-content-center">
-    <li class="page-item" class:disabled={currentPage === 1}>
-      <button class="page-link" on:click={() => changePage(currentPage - 1)}
-        >&laquo;</button
-      >
-    </li>
-    {#each Array(totalPages) as _, i}
-      <li class="page-item" class:active={currentPage === i + 1}>
-        <button class="page-link" on:click={() => changePage(i + 1)}
-          >{i + 1}</button
+  <!-- Pagination -->
+  <nav>
+    <ul class="pagination justify-content-center">
+      <li class="page-item" class:disabled={currentPage === 1}>
+        <button class="page-link" onclick={() => changePage(currentPage - 1)}
+          >&laquo;</button
         >
       </li>
-    {/each}
-    <li class="page-item" class:disabled={currentPage === totalPages}>
-      <button class="page-link" on:click={() => changePage(currentPage + 1)}
-        >&raquo;</button
-      >
-    </li>
-  </ul>
-</nav>
+      {#each Array(totalPages) as _, i}
+        <li class="page-item" class:active={currentPage === i + 1}>
+          <button class="page-link" onclick={() => changePage(i + 1)}
+            >{i + 1}</button
+          >
+        </li>
+      {/each}
+      <li class="page-item" class:disabled={currentPage === totalPages}>
+        <button class="page-link" onclick={() => changePage(currentPage + 1)}
+          >&raquo;</button
+        >
+      </li>
+    </ul>
+  </nav>
+{/if}
 
 <style>
   .page-link {

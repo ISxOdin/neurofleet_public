@@ -25,8 +25,8 @@
   });
 
   async function getUsers() {
-    loading = true;
     try {
+      loading = true;
       const { data } = await axios.get(`${apiRoot}/api/auth0/users`, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
@@ -40,8 +40,8 @@
   }
 
   async function getCompanies(page = currentPage) {
-    loading = true;
     try {
+      loading = true;
       const url = `${apiRoot}/api/companies?pageNumber=${page}&pageSize=${pageSize}`;
       const { data } = await axios.get(url, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
@@ -119,6 +119,7 @@
   }
 </script>
 
+<h1 class="text-center">All Users</h1>
 {#if loading}
   <div class="d-flex justify-content-center my-4">
     <div class="spinner-border" role="status">

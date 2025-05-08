@@ -31,7 +31,7 @@ public class UserController {
 
     @GetMapping("/users")
     public ResponseEntity<List<EnrichedUserDTO>> getAuth0Users() {
-        if (!userService.userHasAnyRole("admin")) {
+        if (!userService.userHasAnyRole("admin", "owner")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -45,7 +45,7 @@ public class UserController {
 
     @GetMapping("/users/{id}/roles")
     public ResponseEntity<List<String>> getUserRoles(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin")) {
+        if (!userService.userHasAnyRole("admin", "owner")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -62,7 +62,7 @@ public class UserController {
             @PathVariable String id,
             @PathVariable String roleName) {
 
-        if (!userService.userHasAnyRole("admin")) {
+        if (!userService.userHasAnyRole("admin", "owner")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -80,7 +80,7 @@ public class UserController {
             @PathVariable String id,
             @PathVariable String roleName) {
 
-        if (!userService.userHasAnyRole("admin")) {
+        if (!userService.userHasAnyRole("admin", "owner")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
