@@ -1,14 +1,27 @@
 package ch.zhaw.neurofleet.service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ch.zhaw.neurofleet.model.AppMetadataDTO;
 import ch.zhaw.neurofleet.model.Auth0RoleDTO;
-import lombok.Data;
+import ch.zhaw.neurofleet.model.Auth0UserDTO;
+import ch.zhaw.neurofleet.model.EnrichedUserDTO;
 
 @Service
 public class Auth0Service {
@@ -90,32 +103,6 @@ public class Auth0Service {
         return (String) response.get("access_token");
     }
 
-    public AppMetadataDTO getUserAppMetadata(String userId) {
-        String token = getAccessToken();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        String url = "https://" + domain + "/api/v2/users/" + userId;
-
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
-
-        Map<String, Object> body = response.getBody();
-        Map<String, Object> metadata = (Map<String, Object>) body.get("app_metadata");
-
-        AppMetadataDTO dto = new AppMetadataDTO();
-        if (metadata != null) {
-            dto.setCompanyId((String) metadata.getOrDefault("companyId", ""));
-        } else {
-            dto.setCompanyId("");
-        }
-
-        return dto;
-    }
-
     public void assignUserRole(String userId, String roleName) {
         String token = getAccessToken();
 
@@ -178,16 +165,90 @@ public class Auth0Service {
         restTemplate.exchange(deleteUrl, HttpMethod.DELETE, deleteEntity, Void.class);
     }
 
-    @Data
-    public static class Auth0UserDTO {
-        private String user_id;
-        private String email;
-        private String name;
+    public AppMetadataDTO getUserAppMetadata(String userId) {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        String url = "https://" + domain + "/api/v2/users/" + userId;
+
+        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+        Map<String, Object> body = response.getBody();
+        Map<String, Object> metadata = (Map<String, Object>) body.get("app_metadata");
+
+        AppMetadataDTO dto = new AppMetadataDTO();
+        if (metadata != null) {
+            dto.setCompanyId((String) metadata.getOrDefault("companyId", ""));
+        } else {
+            dto.setCompanyId("");
+        }
+
+        return dto;
     }
 
-    @Data
-    public class AppMetadataDTO {
-        private String companyId;
+    public void updateUserAppMetadata(String userId, AppMetadataDTO dto) {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> payload = Map.of("app_metadata", Map.of("companyId", dto.getCompanyId()));
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+        String url = "https://" + domain + "/api/v2/users/" + userId;
+        restTemplate.exchange(url, HttpMethod.PATCH, entity, Void.class);
+    }
+
+    public List<EnrichedUserDTO> fetchAllEnrichedUsers() {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        String url = UriComponentsBuilder
+                .fromUriString("https://" + domain + "/api/v2/users")
+                .queryParam("per_page", 100)
+                .toUriString();
+
+        ResponseEntity<Map[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map[].class);
+
+        Map[] users = response.getBody();
+        List<EnrichedUserDTO> result = new ArrayList<>();
+
+        for (Map user : users) {
+            EnrichedUserDTO dto = new EnrichedUserDTO();
+            dto.setUser_id((String) user.get("user_id"));
+            dto.setEmail((String) user.get("email"));
+            dto.setName((String) user.get("name"));
+            dto.setGiven_name((String) user.get("given_name"));
+            dto.setFamily_name((String) user.get("family_name"));
+
+            // app_metadata.companyId
+            Map<String, Object> metadata = (Map<String, Object>) user.get("app_metadata");
+            if (metadata != null && metadata.containsKey("companyId")) {
+                dto.setCompanyId((String) metadata.get("companyId"));
+            }
+
+            // Rollen separat laden
+            try {
+                List<String> roles = getUserRoles(dto.getUser_id());
+                dto.setRoles(roles);
+            } catch (Exception e) {
+                dto.setRoles(List.of("–"));
+            }
+
+            result.add(dto);
+        }
+
+        return result;
     }
 
 }

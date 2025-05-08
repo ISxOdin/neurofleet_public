@@ -1,73 +1,68 @@
 <script>
   import axios from "axios";
   import { onMount } from "svelte";
-  import { page } from "$app/state";
+  import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
 
-  const api_root = page.url.origin;
+  let users = [];
+  let companies = [];
 
-  let users = $state([]);
-  let selectedUser = $state(null);
-  let showEditModal = $state(false);
-  let currentRoles = $state([]);
-  let newRole = $state("");
-  let loading = $state(false);
+  let selectedUser = null;
+  let showEditModal = false;
+  let currentRoles = [];
+  let newRole = "";
+  let newCompanyId = "";
+  let apiRoot = "";
 
-  onMount(() => {
-    getUsers();
+  let currentPage = 1;
+  let totalPages = 0;
+  const pageSize = 20;
+  let loading = false;
+
+  onMount(async () => {
+    if (browser) apiRoot = window.location.origin;
+    await Promise.all([getUsers(), getCompanies()]);
   });
 
   async function getUsers() {
     loading = true;
     try {
-      const res = await axios.get(`${api_root}/api/auth0/users`, {
-        headers: { Authorization: "Bearer " + $jwt_token },
+      const { data } = await axios.get(`${apiRoot}/api/auth0/users`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
-
-      const rawUsers = res.data;
-
-      const usersWithRoles = await Promise.all(
-        rawUsers.map(async (user) => {
-          try {
-            const roleRes = await axios.get(
-              `${api_root}/api/auth0/users/${encodeURIComponent(user.user_id)}/roles`,
-              {
-                headers: { Authorization: "Bearer " + $jwt_token },
-              }
-            );
-            return { ...user, role: roleRes.data[0] || "–" };
-          } catch {
-            return { ...user, role: "–" };
-          }
-        })
-      );
-
-      users = usersWithRoles;
-    } catch (err) {
+      users = data.map((u) => ({ ...u, role: u.roles?.[0] || "–" }));
+    } catch (e) {
+      console.error("Could not load users", e);
       alert("Could not load users");
-      console.error(err);
     } finally {
       loading = false;
     }
   }
 
-  async function openEditModal(user) {
-    selectedUser = user;
-    showEditModal = true;
-
+  async function getCompanies(page = currentPage) {
+    loading = true;
     try {
-      const res = await axios.get(
-        `${api_root}/api/auth0/users/${encodeURIComponent(user.user_id)}/roles`,
-        {
-          headers: { Authorization: "Bearer " + $jwt_token },
-        }
-      );
-      currentRoles = res.data;
-      newRole = currentRoles[0] || "";
-    } catch (err) {
-      alert("Could not load roles");
-      console.error(err);
+      const url = `${apiRoot}/api/companies?pageNumber=${page}&pageSize=${pageSize}`;
+      const { data } = await axios.get(url, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
+      });
+      companies = data.content;
+      totalPages = data.totalPages;
+      currentPage = page;
+    } catch (error) {
+      console.error("Could not get companies", error);
+      alert("Could not get companies");
+    } finally {
+      loading = false;
     }
+  }
+
+  function openEditModal(user) {
+    selectedUser = user;
+    currentRoles = user.roles || [];
+    newRole = currentRoles[0] || "";
+    newCompanyId = "";
+    showEditModal = true;
   }
 
   function closeEditModal() {
@@ -75,39 +70,89 @@
     selectedUser = null;
     currentRoles = [];
     newRole = "";
+    newCompanyId = "";
   }
 
   async function assignExclusiveRole() {
-    if (!newRole) return;
-
-    const userId = selectedUser.user_id;
-
+    if (!newRole || !selectedUser) return;
+    const id = encodeURIComponent(selectedUser.user_id);
     try {
-      for (const role of currentRoles) {
-        await axios.delete(
-          `${api_root}/api/auth0/users/${encodeURIComponent(userId)}/roles/${role}`,
-          {
-            headers: { Authorization: "Bearer " + $jwt_token },
-          }
-        );
-      }
-
-      await axios.post(
-        `${api_root}/api/auth0/users/${encodeURIComponent(userId)}/roles/${newRole}`,
-        {},
-        { headers: { Authorization: "Bearer " + $jwt_token } }
+      // remove existing
+      await Promise.all(
+        currentRoles.map((r) =>
+          axios.delete(`${apiRoot}/api/auth0/users/${id}/roles/${r}`, {
+            headers: { Authorization: `Bearer ${$jwt_token}` },
+          })
+        )
       );
-
+      // add new
+      await axios.post(
+        `${apiRoot}/api/auth0/users/${id}/roles/${newRole}`,
+        {},
+        { headers: { Authorization: `Bearer ${$jwt_token}` } }
+      );
       alert("Role updated");
-      await openEditModal(selectedUser);
+      await getUsers();
       closeEditModal();
-      getUsers();
-    } catch (err) {
+    } catch (e) {
+      console.error("Failed to assign role", e);
       alert("Failed to assign role");
-      console.error(err);
+    }
+  }
+
+  async function updateCompany() {
+    if (!newCompanyId || !selectedUser) return;
+    const userId = encodeURIComponent(selectedUser.user_id);
+    try {
+      await axios.post(
+        `${apiRoot}/api/companies/${newCompanyId}/users/${userId}`,
+        {},
+        { headers: { Authorization: `Bearer ${$jwt_token}` } }
+      );
+      alert("Company assigned");
+      await getUsers();
+      closeEditModal();
+    } catch (e) {
+      console.error("Failed to assign company", e);
+      alert("Failed to assign company");
     }
   }
 </script>
+
+{#if loading}
+  <div class="d-flex justify-content-center my-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+{:else}
+  <table class="table table-striped">
+    <thead
+      ><tr
+        ><th>Name</th><th>Email</th><th>User ID</th><th>Role</th><th>Actions</th
+        ></tr
+      ></thead
+    >
+    <tbody>
+      {#each users as user}
+        <tr>
+          <td>{user.given_name} {user.family_name}</td>
+          <td>{user.email}</td>
+          <td>{user.user_id}</td>
+          <td>{user.role}</td>
+          <td>
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              onclick={() => openEditModal(user)}
+            >
+              <i class="bi bi-gear-fill"></i> Edit
+            </button>
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+{/if}
 
 {#if showEditModal}
   <div class="modal-backdrop show"></div>
@@ -117,30 +162,40 @@
     style="background-color: rgba(0,0,0,0.5)"
   >
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background-color: #4F5A65">
+      <div class="modal-content bg-dark text-light">
         <div class="modal-header">
-          <h5 class="modal-title">Edit User Role</h5>
-          <button type="button" class="btn-close" onclick={closeEditModal}
+          <h5 class="modal-title">Edit User</h5>
+          <button class="btn-close btn-close-white" onclick={closeEditModal}
           ></button>
         </div>
         <div class="modal-body">
           <p><strong>Email:</strong> {selectedUser.email}</p>
-
-          <label>Assigned Role</label>
+          <label>Role</label>
           <select class="form-select mb-3" bind:value={newRole}>
-            <option value="" disabled selected>-- Select role --</option>
+            <option disabled value="">-- Select role --</option>
             <option value="admin">admin</option>
             <option value="owner">owner</option>
             <option value="fleetmanager">fleetmanager</option>
+            <option value="driver">driver</option>
+            <option value="user">user</option>
           </select>
-
+          <button
+            class="btn btn-primary w-100 mb-3"
+            onclick={assignExclusiveRole}
+            disabled={!newRole}>Assign Role</button
+          >
+          <label>Company</label>
+          <select class="form-select mb-3" bind:value={newCompanyId}>
+            <option disabled value="">-- Select company --</option>
+            {#each companies as c}
+              <option value={c.id}>{c.name}</option>
+            {/each}
+          </select>
           <button
             class="btn btn-primary w-100"
-            onclick={assignExclusiveRole}
-            disabled={!newRole}
+            onclick={updateCompany}
+            disabled={!newCompanyId}>Assign Company</button
           >
-            Assign Role
-          </button>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick={closeEditModal}
@@ -150,55 +205,4 @@
       </div>
     </div>
   </div>
-{/if}
-
-<h1 class="mt-3">All Auth0 Users</h1>
-
-{#if loading}
-  <div class="d-flex justify-content-center my-4">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-{:else}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>User ID</th>
-        <th>Role</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each users as user}
-        <tr>
-          <td>{user.name}</td>
-          <td>{user.email}</td>
-          <td>{user.user_id}</td>
-          <td>{user.role}</td>
-          <td>
-            <div class="dropdown">
-              <button
-                class="btn btn-link text-dark p-0"
-                type="button"
-                data-bs-toggle="dropdown"
-              >
-                <i class="bi bi-gear-fill"></i>
-              </button>
-              <ul class="dropdown-menu">
-                <li>
-                  <button
-                    class="dropdown-item"
-                    onclick={() => openEditModal(user)}>Edit Role</button
-                  >
-                </li>
-              </ul>
-            </div>
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
 {/if}

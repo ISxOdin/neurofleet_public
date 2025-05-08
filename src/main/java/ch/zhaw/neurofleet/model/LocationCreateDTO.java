@@ -9,4 +9,5 @@ public class LocationCreateDTO {
     private String name;
     private String address;
     private String companyId;
+    private String fleetmanagerId;
 }

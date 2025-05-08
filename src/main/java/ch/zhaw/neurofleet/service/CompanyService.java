@@ -53,6 +53,31 @@ public class CompanyService {
         return companyRepository.save(company);
     }
 
+    /**
+     * Adds a user ID to the company's user list (if not already present).
+     */
+    public Company addUserToCompany(String companyId, String userId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new NoSuchElementException("Company not found"));
+        if (!company.getUserIds().contains(userId)) {
+            company.getUserIds().add(userId);
+            return companyRepository.save(company);
+        }
+        return company;
+    }
+
+    /**
+     * Removes a user ID from the company's user list (if present).
+     */
+    public Company removeUserFromCompany(String companyId, String userId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new NoSuchElementException("Company not found"));
+        if (company.getUserIds().remove(userId)) {
+            return companyRepository.save(company);
+        }
+        return company;
+    }
+
     private Coordinates geocodeAddress(String address) {
         String url = "https://maps.googleapis.com/maps/api/geocode/json?address="
                 + address.replace(" ", "+")

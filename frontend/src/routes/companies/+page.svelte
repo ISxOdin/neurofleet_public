@@ -1,97 +1,109 @@
 <script>
   import axios from "axios";
-  import { page } from "$app/state";
   import { onMount } from "svelte";
+  import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
 
-  // get the origin of current page, e.g. http://localhost:8080
-  const api_root = page.url.origin;
+  let apiRoot = "";
+  let users = [];
+  let userMap = {};
 
-  let currentPage = $state(1);
-  let nrOfPages = $state(0);
-  let defaultPageSize = $state(20);
+  let companies = [];
+  let currentPage = 1;
+  let totalPages = 0;
+  const pageSize = 20;
+  let loading = false;
 
-  let showEditModal = $state(false);
-  let editCompany = $state(null);
-  let users = $state([]);
-  let userMap = $state({});
+  let showEditModal = false;
+  let editCompany = null;
 
-  let companies = $state([]);
-  let company = $state({
-    id: null,
-    name: null,
-    email: null,
-    address: null,
-    latitude: null,
-    longitude: null,
-    owner: null,
+  onMount(async () => {
+    if (browser) apiRoot = window.location.origin;
+    await loadUsers();
+    await loadCompanies();
   });
 
-  onMount(() => {
-    getCompanies();
-    getUsers();
-  });
+  // Fetch all Auth0 users once
+  async function loadUsers() {
+    try {
+      loading = true;
+      const { data } = await axios.get(`${apiRoot}/api/auth0/users`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
+      });
+      users = data.map((u) => ({
+        id: u.user_id,
+        given_name: u.given_name || "",
+        family_name: u.family_name || "",
+        email: u.email,
+      }));
+      users.sort((a, b) => a.family_name.localeCompare(b.family_name));
+      userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+    } catch (error) {
+      console.error("Failed to load users", error);
+      alert("Failed to load users");
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Paginated companies
+  async function loadCompanies(page = currentPage) {
+    loading = true;
+    try {
+      const url = `${apiRoot}/api/companies?pageNumber=${page}&pageSize=${pageSize}`;
+      const { data } = await axios.get(url, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
+      });
+      companies = data.content;
+      totalPages = data.totalPages;
+      currentPage = page;
+    } catch (error) {
+      console.error("Could not get companies", error);
+      alert("Could not get companies");
+    } finally {
+      loading = false;
+    }
+  }
 
   function changePage(page) {
-    currentPage = page;
-    getCompanies();
+    if (page < 1 || page > totalPages) return;
+    loadCompanies(page);
   }
 
-  function getCompanies() {
-    let query = "?pageSize=" + defaultPageSize + "&pageNumber=" + currentPage;
-
-    var config = {
-      method: "get",
-      url: api_root + "/api/companies" + query,
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
-
-    axios(config)
-      .then(function (response) {
-        companies = response.data.content;
-        nrOfPages = response.data.totalPages;
-      })
-      .catch(function (error) {
-        alert("Could not get companies");
-        console.log(error);
+  // Create new company
+  let newCompany = { name: "", email: "", address: "" };
+  async function createCompany() {
+    try {
+      await axios.post(`${apiRoot}/api/companies`, newCompany, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${$jwt_token}`,
+        },
       });
+      alert("Company created");
+      newCompany = { name: "", email: "", address: "" };
+      loadCompanies(1);
+    } catch (error) {
+      console.error("Could not create company", error);
+      alert("Could not create company");
+    }
   }
 
-  function createCompany() {
-    var config = {
-      method: "post",
-      url: api_root + "/api/companies",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + $jwt_token,
-      },
-      data: company,
-    };
-
-    axios(config)
-      .then(function (response) {
-        alert("Company created");
-        getCompanies();
-      })
-      .catch(function (error) {
-        alert("Could not create Company");
-        console.log(error);
-      });
-  }
+  // Edit company modal
   function openEditModal(company) {
     editCompany = { ...company };
     showEditModal = true;
-    getUsers();
   }
+
   function closeEditModal() {
     showEditModal = false;
     editCompany = null;
   }
 
-  function submitEdit() {
-    axios
-      .put(
-        `${api_root}/api/companies/${editCompany.id}`,
+  async function submitEdit() {
+    try {
+      await axios.put(
+        `${apiRoot}/api/companies/${editCompany.id}`,
         {
           name: editCompany.name,
           email: editCompany.email,
@@ -101,227 +113,168 @@
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer " + $jwt_token,
+            Authorization: `Bearer ${$jwt_token}`,
           },
         }
-      )
-      .then(() => {
-        alert("Company updated successfully");
-        closeEditModal();
-        getCompanies();
-      })
-      .catch((err) => {
-        alert("Could not update company");
-        console.error(err);
-      });
-  }
-
-  function deleteCompany(companyId) {
-    if (confirm("Are you sure you want to delete this company?")) {
-      axios
-        .delete(`${api_root}/api/companies/${companyId}`, {
-          headers: { Authorization: "Bearer " + $jwt_token },
-        })
-        .then(() => {
-          alert("Company deleted");
-          getCompanies();
-        })
-        .catch((err) => {
-          alert("Could not delete company");
-          console.log(err);
-        });
+      );
+      alert("Company updated");
+      closeEditModal();
+      loadCompanies(currentPage);
+    } catch (error) {
+      console.error("Could not update company", error);
+      alert("Could not update company");
     }
   }
 
-  function getUsers() {
-    axios
-      .get(api_root + "/api/auth0/users", {
-        headers: { Authorization: "Bearer " + $jwt_token },
-      })
-      .then((res) => {
-        users = res.data.map((user) => ({
-          id: user.user_id,
-          label: user.email || user.name,
-          name: user.name,
-          email: user.email,
-        }));
-
-        userMap = users.reduce((acc, user) => {
-          acc[user.id] = user;
-          return acc;
-        }, {});
-      })
-      .catch((err) => {
-        alert("Failed to load Auth0 users");
-        console.error(err);
+  async function deleteCompany(id) {
+    if (!confirm("Delete this company?")) return;
+    try {
+      await axios.delete(`${apiRoot}/api/companies/${id}`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
+      alert("Company deleted");
+      loadCompanies(currentPage);
+    } catch (error) {
+      console.error("Could not delete company", error);
+      alert("Could not delete company");
+    }
   }
 </script>
 
+<!-- Edit Company Modal -->
 {#if showEditModal}
   <div class="modal-backdrop show"></div>
-  <div
-    class="modal d-block"
-    tabindex="-1"
-    style="background-color: rgba(0,0,0,0.5)"
-  >
+  <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background-color: #4F5A65">
+      <div class="modal-content bg-dark text-light">
         <div class="modal-header">
           <h5 class="modal-title">Edit Company</h5>
-          <button type="button" class="btn-close" onclick={closeEditModal}
+          <button class="btn-close btn-close-white" on:click={closeEditModal}
           ></button>
         </div>
         <div class="modal-body">
           <label>Name</label>
           <input class="form-control mb-2" bind:value={editCompany.name} />
-
           <label>Email</label>
           <input class="form-control mb-2" bind:value={editCompany.email} />
-
           <label>Address</label>
           <input class="form-control mb-2" bind:value={editCompany.address} />
           <label>Owner</label>
           <select class="form-select mb-2" bind:value={editCompany.owner}>
-            <option disabled selected value="">-- Select owner --</option>
-            {#each users as user}
-              <option value={user.id}>{user.label}</option>
+            <option value="">-- Select owner --</option>
+            {#each users as u}
+              <option value={u.id}
+                >{u.given_name} {u.family_name} ({u.email})</option
+              >
             {/each}
           </select>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick={closeEditModal}
+          <button class="btn btn-secondary" on:click={closeEditModal}
             >Cancel</button
           >
-          <button class="btn btn-primary" onclick={submitEdit}>Save</button>
+          <button class="btn btn-primary" on:click={submitEdit}>Save</button>
         </div>
       </div>
     </div>
   </div>
 {/if}
 
+<!-- Create Company Form -->
 <h1 class="mt-3">Create Company</h1>
-<form class="mb-5">
-  <div class="row mb-3">
-    <div class="col">
-      <label class="form-label" for="description">Name</label>
+<form on:submit|preventDefault={createCompany} class="mb-5">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Name</label>
+      <input class="form-control" bind:value={newCompany.name} required />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Email</label>
       <input
-        bind:value={company.name}
+        type="email"
         class="form-control"
-        id="description"
-        type="text"
+        bind:value={newCompany.email}
+        required
       />
     </div>
-  </div>
-  <div class="row mb-3">
-    <div class="col">
-      <label class="form-label" for="description">E-Mail</label>
-      <input
-        bind:value={company.email}
-        class="form-control"
-        id="description"
-        type="text"
-      />
+    <div class="col-md-4">
+      <label class="form-label">Address</label>
+      <input class="form-control" bind:value={newCompany.address} required />
     </div>
   </div>
-  <div class="row mb-3">
-    <div class="col">
-      <label class="form-label" for="description">Address</label>
-      <input
-        bind:value={company.address}
-        class="form-control"
-        id="description"
-        type="text"
-      />
-    </div>
-  </div>
-  <button type="button" class="btn btn-primary" onclick={createCompany}
-    >Submit</button
-  >
+  <button type="submit" class="btn btn-primary mt-3">Submit</button>
 </form>
 
+<!-- Companies Table -->
 <h1>All Companies</h1>
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">Name</th>
-      <th scope="col">Address</th>
-      <th scope="col">Longitude</th>
-      <th scope="col">Latitude</th>
-      <th scope="col">ID</th>
-      <th scope="col">Owner</th>
-      <th scope="col">E-Mail</th>
-      <th scope="col"></th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each companies as company}
+{#if loading}
+  <div class="d-flex justify-content-center my-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+{:else}
+  <table class="table table-striped">
+    <thead>
       <tr>
-        <td>{company.name}</td>
-        <td>{company.address}</td>
-        <td>{company.latitude}</td>
-        <td>{company.longitude}</td>
-        <td>{company.id}</td>
-        <td
-          >{userMap[company.owner]?.name ||
-            userMap[company.owner]?.email ||
-            "–"}</td
-        >
-        <td>{company.email}</td>
-        <td>
-          <div class="dropdown">
-            <button
-              class="btn btn-link text-dark p-0"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="bi bi-gear-fill"></i>
-            </button>
-            <ul class="dropdown-menu">
-              <li>
-                <button
-                  class="dropdown-item"
-                  onclick={() => openEditModal(company)}>Edit</button
-                >
-              </li>
-              <li>
-                <button
-                  class="dropdown-item text-danger"
-                  onclick={() => deleteCompany(company.id)}>Delete</button
-                >
-              </li>
-            </ul>
-          </div>
-        </td>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>ID</th>
+        <th>Owner</th>
+        <th>Email</th>
+        <th>Actions</th>
       </tr>
-    {/each}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {#each companies as c}
+        <tr>
+          <td>{c.name}</td>
+          <td>{c.address}</td>
+          <td>{c.latitude}</td>
+          <td>{c.longitude}</td>
+          <td>{c.id}</td>
+          <td
+            >{userMap[c.owner]?.given_name}
+            {userMap[c.owner]?.family_name || ""}</td
+          >
+          <td>{c.email}</td>
+          <td>
+            <button
+              class="btn btn-sm btn-outline-secondary me-2"
+              on:click={() => openEditModal(c)}>Edit</button
+            >
+            <button
+              class="btn btn-sm btn-outline-danger"
+              on:click={() => deleteCompany(c.id)}>Delete</button
+            >
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+{/if}
 
+<!-- Pagination -->
 <nav>
   <ul class="pagination justify-content-center">
-    <li class="page-item">
-      <a class="page-link" href="#" aria-label="Previous">
-        <span aria-hidden="true">&laquo;</span>
-      </a>
+    <li class="page-item" class:disabled={currentPage === 1}>
+      <button class="page-link" on:click={() => changePage(currentPage - 1)}
+        >&laquo;</button
+      >
     </li>
-    {#each Array(nrOfPages) as _, i}
-      <li class="page-item">
-        <button
-          class="page-link"
-          class:active={currentPage == i + 1}
-          onclick={() => {
-            changePage(i + 1);
-          }}
-          >{i + 1}
-        </button>
+    {#each Array(totalPages) as _, i}
+      <li class="page-item" class:active={currentPage === i + 1}>
+        <button class="page-link" on:click={() => changePage(i + 1)}
+          >{i + 1}</button
+        >
       </li>
     {/each}
-    <li class="page-item">
-      <a class="page-link" href="#" aria-label="Next">
-        <span aria-hidden="true">&raquo;</span>
-      </a>
+    <li class="page-item" class:disabled={currentPage === totalPages}>
+      <button class="page-link" on:click={() => changePage(currentPage + 1)}
+        >&raquo;</button
+      >
     </li>
   </ul>
 </nav>

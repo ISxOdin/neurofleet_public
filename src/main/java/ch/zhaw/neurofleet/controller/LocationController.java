@@ -1,5 +1,6 @@
 package ch.zhaw.neurofleet.controller;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -43,10 +45,15 @@ public class LocationController {
         }
 
         try {
+            String companyId = lDTO.getCompanyId();
+            if (userService.userHasAnyRole("owner")) {
+                companyId = userService.getCompanyIdOfCurrentUser();
+            }
             Location locationDAO = locationService.createLocation(
                     lDTO.getName(),
                     lDTO.getAddress(),
-                    lDTO.getCompanyId());
+                    companyId);
+
             Location location = locationRepository.save(locationDAO);
             return new ResponseEntity<>(location, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -56,10 +63,20 @@ public class LocationController {
 
     @GetMapping("/locations")
     public ResponseEntity<Page<Location>> getAllLocations(
-            @RequestParam(required = false, defaultValue = "1") Integer pageNumber,
-            @RequestParam(required = false, defaultValue = "5") Integer pageSize) {
-        Page<Location> allLocations = locationRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
-        return new ResponseEntity<>(allLocations, HttpStatus.OK);
+            @RequestParam(defaultValue = "1") Integer pageNumber,
+            @RequestParam(defaultValue = "5") Integer pageSize) {
+
+        Page<Location> locations;
+        if (userService.userHasAnyRole("admin")) {
+            locations = locationRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
+        } else if (userService.userHasAnyRole("owner")) {
+            String companyId = userService.getCompanyIdOfCurrentUser();
+            locations = locationRepository.findAllByCompanyId(companyId, PageRequest.of(pageNumber - 1, pageSize));
+        } else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        return new ResponseEntity<>(locations, HttpStatus.OK);
     }
 
     @GetMapping("/locations/{id}")
@@ -69,6 +86,24 @@ public class LocationController {
             return new ResponseEntity<>(c.get(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/locations/{id}")
+    public ResponseEntity<Location> updateLocation(
+            @PathVariable String id,
+            @RequestBody LocationCreateDTO dto) {
+        if (!userService.userHasAnyRole("admin", "owner")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        try {
+            Location updated = locationService.updateLocation(id, dto);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

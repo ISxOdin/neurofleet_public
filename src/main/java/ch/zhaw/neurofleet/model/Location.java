@@ -26,4 +26,5 @@ public class Location {
     @NonNull
     private String companyId;
 
+    private String fleetmanagerId;
 }
