@@ -93,7 +93,7 @@
     }
   }
 
-  async function createLocation(data) {
+  async function createLocation(data, id) {
     if (!myCompanyId) {
       return alert("You don't belong to any company");
     }
@@ -102,7 +102,7 @@
       companyId: myCompanyId,
     };
     try {
-      await axios.post(`${apiRoot}/api/locations`, payload, {
+      await axios.post(`${apiRoot}/api/locations/${id}`, payload, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
       alert("Location created");
@@ -267,7 +267,7 @@
               aria-labelledby="userDropdown"
             >
               <li>
-                <a class="dropdown-item" onclick={() => openEditModal(loc)}
+                <a class="dropdown-item" onclick={() => openEditModal(loc, loc.id)}
                   >Edit</a
                 >
               </li>
