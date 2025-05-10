@@ -127,7 +127,7 @@
     </div>
   </div>
 {:else}
-  <table class="table table-striped">
+  <table class="table table-hover">
     <thead
       ><tr
         ><th>Name</th><th>Email</th><th>User ID</th><th>Role</th><th>Actions</th

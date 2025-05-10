@@ -228,7 +228,7 @@
     </div>
   </div>
 {:else}
-  <table class="table table-striped">
+  <table class="table table-hover">
     <thead>
       <tr
         ><th>Name</th><th>Address</th><th>Lon</th><th>Lat</th><th>ID</th><th
@@ -250,14 +250,34 @@
             {userMap[loc.fleetmanagerId]?.family_name}</td
           >
           <td>
-            <button
-              class="btn btn-sm btn-outline-secondary"
-              onclick={() => openEditModal(loc)}>Edit</button
+            <a
+              href="#"
+              class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+              id="userDropdown"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
             >
             <button
-              class="btn btn-sm btn-outline-danger"
-              onclick={() => deleteLocation(loc.id)}>Delete</button
+              class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-gear-fill"></i> Edit
+            </button>
+            </a>
+            <ul
+              class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
+              aria-labelledby="userDropdown"
             >
+              <li>
+                <a class="dropdown-item" onclick={() => openEditModal(loc)}
+                  >Edit</a
+                >
+              </li>
+              <li>
+                <a class="dropdown-item text-danger" onclick={() => deleteLocation(loc.id)}
+                  >Delete</a
+                >
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+            </ul>
           </td>
         </tr>
       {/each}
