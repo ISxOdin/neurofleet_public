@@ -9,13 +9,18 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import ch.zhaw.neurofleet.model.Company;
+import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
+import ch.zhaw.neurofleet.repository.LocationRepository;
 
 @Service
 public class UserService {
 
     @Autowired
     private CompanyRepository companyRepository;
+
+    @Autowired
+    private LocationRepository locationRepository;
 
     public boolean userHasAnyRole(String... roles) {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -28,11 +33,19 @@ public class UserService {
 
     public String getCompanyIdOfCurrentUser() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String me = jwt.getSubject(); // sub
-        return companyRepository
+        String me = jwt.getSubject();
+                return companyRepository
                 .findByUserIdsContaining(me)
                 .map(Company::getId)
                 .orElseThrow(() -> new IllegalStateException("No company found for user " + me));
+    }
+    public String getLocationIdOfFleetManager() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String me = jwt.getSubject();
+                return locationRepository
+                .findByFleetmanagerId(me)
+                .map(Location::getId)
+                .orElseThrow(() -> new IllegalStateException("No location found for user " + me));
     }
 
 }

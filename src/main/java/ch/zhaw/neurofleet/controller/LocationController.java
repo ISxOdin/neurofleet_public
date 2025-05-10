@@ -81,7 +81,6 @@ public class LocationController {
         if (!userService.userHasAnyRole("admin", "owner")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        // owners only own company
         if (userService.userHasAnyRole("owner")) {
             String cid = userService.getCompanyIdOfCurrentUser();
             if (!locationRepository.existsByIdAndCompanyId(id, cid)) {
