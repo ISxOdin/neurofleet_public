@@ -23,7 +23,6 @@
     await getCompanies();
   });
 
-  // Fetch all Auth0 users once
   async function getUsers() {
     try {
       loading = true;

@@ -250,18 +250,11 @@
             {userMap[loc.fleetmanagerId]?.family_name}</td
           >
           <td>
-            <a
-              href="#"
-              class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-              id="userDropdown"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
+            
             <button
-              class="btn btn-sm btn-outline-secondary">
-              <i class="bi bi-gear-fill"></i> Edit
+            class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-gear-fill"></i> Edit
             </button>
-            </a>
             <ul
               class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
               aria-labelledby="userDropdown"

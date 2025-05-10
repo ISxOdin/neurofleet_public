@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,6 +37,13 @@ public class VehicleController {
             @RequestBody VehicleCreateDTO vDTO) {
         if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        if (userService.userHasAnyRole("owner")) {
+            vDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
+        }
+        if (userService.userHasAnyRole("fleetmanager")) {
+            vDTO.setLocationId(userService.getLocationIdOfFleetManager());
+            vDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
         }
         Vehicle vDAO = new Vehicle(
                 vDTO.getLicensePlate(),
@@ -65,6 +73,57 @@ public class VehicleController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    @PutMapping("/vehicles/{id}")
+    public ResponseEntity<Vehicle> updateVehicle(
+            @PathVariable String id,
+            @RequestBody VehicleCreateDTO vDTO) {
+    
+        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+    
+        Optional<Vehicle> existingVehicleOpt = vehicleRepository.findById(id);
+        if (vehicleRepository.findById(id).isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    
+        Vehicle existingVehicle = existingVehicleOpt.get();
+    
+        if (userService.userHasAnyRole("owner")) {
+            String userCompanyId = userService.getCompanyIdOfCurrentUser();
+            if (!existingVehicle.getCompanyId().equals(userCompanyId)) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+            vDTO.setCompanyId(userCompanyId);
+        }
+    
+        if (userService.userHasAnyRole("fleetmanager")) {
+            String userCompanyId = userService.getCompanyIdOfCurrentUser();
+            String userLocationId = userService.getLocationIdOfFleetManager();
+    
+            if (!existingVehicle.getCompanyId().equals(userCompanyId) ||
+                !existingVehicle.getLocationId().equals(userLocationId)) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+            vDTO.setCompanyId(userCompanyId);
+            vDTO.setLocationId(userLocationId);
+        }
+    
+        Vehicle updatedVehicle = new Vehicle(
+                vDTO.getLicensePlate(),
+                vDTO.getVin(),
+                vDTO.getType(),
+                vDTO.getCapacity(),
+                vDTO.getLocationId(),
+                vDTO.getCompanyId()
+        );
+        updatedVehicle.setId(id);
+    
+        Vehicle saved = vehicleRepository.save(updatedVehicle);
+        return new ResponseEntity<>(saved, HttpStatus.OK);
+    }
+    
 
     @DeleteMapping("/vehicles/{id}")
     public ResponseEntity<String> deleteVehicleById(@PathVariable String id) {
