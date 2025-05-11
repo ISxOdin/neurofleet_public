@@ -24,16 +24,17 @@
   let selectedVehicle = $state(null);
 
   onMount(() => {
-    if ($user.user_roles?.[0] === "admin") {
+    if ($user.user_roles.includes("admin")) {
       getCompanies();
-    } else if ($user.role$user.user_roles?.[0] === "owner") {
+    } else if ($user.user_roles.includes("owner")) {
       vehicle.companyId = $user.companyId;
       getLocations($user.companyId);
-    } else if ($user.user_roles?.[0] === "fleetmanager") {
+    } else if ($user.user_roles.includes("fleetmanager")) {
       vehicle.companyId = $user.companyId;
       vehicle.locationId = $user.locationId;
     }
     getVehicles();
+    console.log("User roles:", $user.user_roles);
   });
 
   function getCompanies() {
