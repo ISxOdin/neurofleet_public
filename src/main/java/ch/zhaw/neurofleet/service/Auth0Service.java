@@ -1,12 +1,12 @@
 package ch.zhaw.neurofleet.service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ch.zhaw.neurofleet.model.AppMetadataDTO;
-import ch.zhaw.neurofleet.model.Auth0RoleDTO;
 import ch.zhaw.neurofleet.model.Auth0UserDTO;
-import ch.zhaw.neurofleet.model.EnrichedUserDTO;
 
 @Service
 public class Auth0Service {
@@ -40,50 +37,59 @@ public class Auth0Service {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public List<Auth0UserDTO> fetchAllUsers() {
+    public List<Auth0UserDTO> getAllUsers() {
         String token = getAccessToken();
-
+    
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
+    
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-
+    
         String url = UriComponentsBuilder
                 .fromUriString("https://" + domain + "/api/v2/users")
                 .queryParam("per_page", 100)
                 .toUriString();
-
+    
         ResponseEntity<Auth0UserDTO[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 entity,
                 Auth0UserDTO[].class);
-
-        return Arrays.asList(Objects.requireNonNull(response.getBody()));
+    
+        List<Auth0UserDTO> users = Arrays.asList(Objects.requireNonNull(response.getBody()));
+    
+        for (Auth0UserDTO dto : users) {
+            try {
+                List<String> roles = getUserRoles(dto.getUser_id());
+                dto.setRoles(roles);
+            } catch (Exception e) {
+                dto.setRoles(List.of("–"));
+            }
+        }
+    
+        return users;
     }
+    
 
     public List<String> getUserRoles(String userId) {
-        String token = getAccessToken();
+    String token = getAccessToken();
+    String url = "https://" + domain + "/api/v2/users/" + userId + "/roles";
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(token);
+    headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+    HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = "https://" + domain + "/api/v2/users/" + userId + "/roles";
+    ResponseEntity<Map<String, Object>[]> response = restTemplate.exchange(
+        url, HttpMethod.GET, entity, (Class<Map<String, Object>[]>) (Class<?>) Map[].class);
 
-        ResponseEntity<Auth0RoleDTO[]> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                Auth0RoleDTO[].class);
+    return Arrays.stream(response.getBody())
+            .map(role -> (String) role.get("name"))
+            .collect(Collectors.toList());
+}
 
-        return Arrays.stream(response.getBody())
-                .map(Auth0RoleDTO::getName)
-                .toList();
-    }
 
     private String getAccessToken() {
         String url = "https://" + domain + "/oauth/token";
@@ -164,91 +170,4 @@ public class Auth0Service {
 
         restTemplate.exchange(deleteUrl, HttpMethod.DELETE, deleteEntity, Void.class);
     }
-
-    public AppMetadataDTO getUserAppMetadata(String userId) {
-        String token = getAccessToken();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        String url = "https://" + domain + "/api/v2/users/" + userId;
-
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
-
-        Map<String, Object> body = response.getBody();
-        Map<String, Object> metadata = (Map<String, Object>) body.get("app_metadata");
-
-        AppMetadataDTO dto = new AppMetadataDTO();
-        if (metadata != null) {
-            dto.setCompanyId((String) metadata.getOrDefault("companyId", ""));
-        } else {
-            dto.setCompanyId("");
-        }
-
-        return dto;
-    }
-
-    public void updateUserAppMetadata(String userId, AppMetadataDTO dto) {
-        String token = getAccessToken();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> payload = Map.of("app_metadata", Map.of("companyId", dto.getCompanyId()));
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
-
-        String url = "https://" + domain + "/api/v2/users/" + userId;
-        restTemplate.exchange(url, HttpMethod.PATCH, entity, Void.class);
-    }
-
-    public List<EnrichedUserDTO> fetchAllEnrichedUsers() {
-        String token = getAccessToken();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        String url = UriComponentsBuilder
-                .fromUriString("https://" + domain + "/api/v2/users")
-                .queryParam("per_page", 100)
-                .toUriString();
-
-        ResponseEntity<Map[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map[].class);
-
-        Map[] users = response.getBody();
-        List<EnrichedUserDTO> result = new ArrayList<>();
-
-        for (Map user : users) {
-            EnrichedUserDTO dto = new EnrichedUserDTO();
-            dto.setUser_id((String) user.get("user_id"));
-            dto.setEmail((String) user.get("email"));
-            dto.setName((String) user.get("name"));
-            dto.setGiven_name((String) user.get("given_name"));
-            dto.setFamily_name((String) user.get("family_name"));
-
-            // app_metadata.companyId
-            Map<String, Object> metadata = (Map<String, Object>) user.get("app_metadata");
-            if (metadata != null && metadata.containsKey("companyId")) {
-                dto.setCompanyId((String) metadata.get("companyId"));
-            }
-
-            // Rollen separat laden
-            try {
-                List<String> roles = getUserRoles(dto.getUser_id());
-                dto.setRoles(roles);
-            } catch (Exception e) {
-                dto.setRoles(List.of("–"));
-            }
-
-            result.add(dto);
-        }
-
-        return result;
-    }
-
 }
