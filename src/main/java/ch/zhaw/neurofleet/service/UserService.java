@@ -2,6 +2,7 @@ package ch.zhaw.neurofleet.service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import ch.zhaw.neurofleet.model.Company;
 import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.model.User;
+import ch.zhaw.neurofleet.model.UserDTO;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
 import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.repository.UserRepository;
@@ -62,6 +64,17 @@ public class UserService {
 
         return userRepository
                 .findByAuth0Id(auth0Id)
+                .orElseThrow(() -> new IllegalStateException("No User for: " + auth0Id));
+    }
+
+    public User updateUser(String auth0Id, UserDTO user) {
+        return userRepository.findByAuth0Id(auth0Id)
+                .map(existingUser -> {
+                    existingUser.setCompanyId(user.getCompanyId());
+                    existingUser.setLocationId(user.getLocationId());
+                    existingUser.setVehicleId(user.getVehicleId());
+                    return userRepository.save(existingUser);
+                })
                 .orElseThrow(() -> new IllegalStateException("No User for: " + auth0Id));
     }
 

@@ -3,11 +3,13 @@ package ch.zhaw.neurofleet.service;
 import ch.zhaw.neurofleet.model.Company;
 import ch.zhaw.neurofleet.model.CompanyCreateDTO;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
+import ch.zhaw.neurofleet.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.Getter;
 
 import java.util.NoSuchElementException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -16,7 +18,12 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class CompanyService {
 
-    private final CompanyRepository companyRepository;
+    @Autowired
+    CompanyRepository companyRepository;
+
+    @Autowired
+    UserRepository userRepository;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${google.maps.api.key}")
