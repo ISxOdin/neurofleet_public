@@ -75,7 +75,7 @@
   function createVehicle() {
     const payload = { ...vehicle };
 
-    if ($user.role !== "admin") {
+    if (!$user.user_roles.includes("admin")) {
       delete payload.companyId;
       delete payload.locationId;
     }
@@ -122,7 +122,7 @@
   function saveEdit() {
     const payload = { ...selectedVehicle };
 
-    if ($user.role !== "admin") {
+    if (!$user.user_roles.includes("admin")) {
       delete payload.companyId;
       delete payload.locationId;
     }
@@ -149,7 +149,7 @@
     selectedVehicle = null;
   }
 
-  if ($user.user_roles?.[0] === "admin" && vehicle.companyId) {
+  if ($user.user_roles.includes("admin") && vehicle.companyId) {
     getLocations(vehicle.companyId);
   }
 </script>
@@ -187,7 +187,7 @@
     />
   </div>
 
-  {#if $user.user_roles?.[0] === "admin"}
+  {#if $user.user_roles.includes("admin")}
     <div class="mb-3">
       <label>Company</label>
       <select class="form-select" bind:value={vehicle.companyId}>
@@ -199,7 +199,7 @@
     </div>
   {/if}
 
-  {#if $user.user_roles?.[0] === "admin" || $user.user_roles?.[0] === "owner"}
+  {#if $user.user_roles.includes("admin") || $user.user_roles.includes("owner")}
     <div class="mb-3">
       <label>Location</label>
       <select class="form-select" bind:value={vehicle.locationId}>
@@ -333,7 +333,7 @@
                   <option value="OUT_OF_SERVICE">Out of service</option>
                 </select>
               </div>
-              {#if $user.user_roles?.[0] === "admin"}
+              {#if $user.user_roles.includes("admin")}
                 <div class="mb-3">
                   <label>Company</label>
                   <select class="form-select" bind:value={vehicle.companyId}>
@@ -345,7 +345,7 @@
                 </div>
               {/if}
 
-              {#if $user.user_roles?.[0] === "admin" || $user.user_roles?.[0] === "owner"}
+              {#if $user.user_roles.includes("admin") || $user.user_roles.includes("owner")}
                 <div class="mb-3">
                   <label>Location</label>
                   <select class="form-select" bind:value={vehicle.locationId}>
