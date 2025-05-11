@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 
 import ch.zhaw.neurofleet.model.Company;
 import ch.zhaw.neurofleet.model.Location;
+import ch.zhaw.neurofleet.model.User;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
 import ch.zhaw.neurofleet.repository.LocationRepository;
+import ch.zhaw.neurofleet.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -21,6 +23,11 @@ public class UserService {
 
     @Autowired
     private LocationRepository locationRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    // Auth0 Methods
 
     public boolean userHasAnyRole(String... roles) {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -46,6 +53,16 @@ public class UserService {
                 .findByFleetmanagerId(me)
                 .map(Location::getId)
                 .orElseThrow(() -> new IllegalStateException("No location found for user " + me));
+    }
+
+    // MongoDB Methods
+    public User getUserByAuthId() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String auth0Id = jwt.getSubject();
+
+        return userRepository
+                .findByAuth0Id(auth0Id)
+                .orElseThrow(() -> new IllegalStateException("No User for: " + auth0Id));
     }
 
 }
