@@ -11,8 +11,6 @@
   let loading = false;
   let apiRoot = "";
 
-  let mySub;
-  let myRole;
   let myCompanyId;
 
   let showEditModal = false;
@@ -26,10 +24,6 @@
     if (browser) {
       apiRoot = window.location.origin;
     }
-    const u = $user;
-    mySub = u.sub;
-    myRole = u.user_roles?.[0] || null;
-
     await getCompanies();
     await getUsers();
     await getLocations();
@@ -43,7 +37,7 @@
       });
       companies = response.data.content || response.data;
 
-      const myCo = companies.find((c) => c.userIds?.includes(mySub));
+      const myCo = companies.find((c) => c.userIds?.includes($user.sub));
       myCompanyId = myCo?.id || null;
     } catch (err) {
       console.error("Could not load companies", err);
