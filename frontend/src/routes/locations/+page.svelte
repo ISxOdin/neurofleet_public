@@ -68,7 +68,7 @@
       loading = false;
     }
   }
-
+  
   async function getLocations(page = currentPage) {
     loading = true;
     try {

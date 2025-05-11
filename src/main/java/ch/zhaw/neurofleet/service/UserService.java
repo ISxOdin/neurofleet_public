@@ -2,7 +2,6 @@ package ch.zhaw.neurofleet.service;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,6 +39,11 @@ public class UserService {
         return Arrays.stream(roles).anyMatch(userRoles::contains);
     }
 
+    public String getAuthIdOfCurrentUser() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return jwt.getSubject();
+
+    }
     public String getCompanyIdOfCurrentUser() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String me = jwt.getSubject();
@@ -48,11 +52,11 @@ public class UserService {
                 .map(Company::getId)
                 .orElseThrow(() -> new IllegalStateException("No company found for user " + me));
     }
-    public String getLocationIdOfFleetManager() {
+    public String getLocationIdOfCurrentUser() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String me = jwt.getSubject();
                 return locationRepository
-                .findByFleetmanagerId(me)
+                .findFirstByFleetmanagerId(me)
                 .map(Location::getId)
                 .orElseThrow(() -> new IllegalStateException("No location found for user " + me));
     }

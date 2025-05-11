@@ -9,60 +9,86 @@
   let vehicle = {
     licensePlate: "",
     vin: "",
-    type: "",
-    capacity: 0,
+    vehicleType: "",
     locationId: "",
     companyId: "",
   };
 
-  let vehicles = $state([]);
-  let companies = $state([]);
-  let locations = $state([]);
+  let currentPage = 1;
+  let nrOfPages = 0;
+  let defaultPageSize = 20;
 
-  let loading = $state(false);
-  let showModal = $state(false);
-  let selectedVehicle = $state(null);
+  let myCompanyId = null;
+  let myLocationId = null;
 
-  onMount(() => {
-    if ($user.user_roles.includes("admin")) {
-      getCompanies();
-    } else if ($user.user_roles.includes("owner")) {
-      vehicle.companyId = $user.companyId;
-      getLocations($user.companyId);
-    } else if ($user.user_roles.includes("fleetmanager")) {
-      vehicle.companyId = $user.companyId;
-      vehicle.locationId = $user.locationId;
+  let vehicles = [];
+  let companies = [];
+  let locations = [];
+  let types = [];
+
+  let loading = false;
+  let showModal = false;
+  let selectedVehicle = null;
+
+  const isAdmin = $user.user_roles.includes("admin");
+  const isOwner = $user.user_roles.includes("owner");
+  const isFleet = $user.user_roles.includes("fleetmanager");
+  const sub = encodeURIComponent($user.sub);
+
+  $: selectedTypeInfo = types.find((t) => t.name === vehicle.vehicleType);
+  $: selectedEditTypeInfo = types.find((t) => t.name === selectedVehicle?.vehicleType);
+
+  onMount(async () => {
+    await getCompanies();
+    await getLocations();
+    await getVehicles();
+    await getTypes();
+
+    if (isOwner) {
+      vehicle.companyId = myCompanyId;
+    } else if (isFleet) {
+      vehicle.companyId = myCompanyId;
+      vehicle.locationId = myLocationId;
     }
-    getVehicles();
-    console.log("User roles:", $user.user_roles);
   });
 
-  function getCompanies() {
-    axios
-      .get(api_root + "/api/companies", {
+  async function getCompanies() {
+    try {
+      const res = await axios.get(api_root + "/api/companies", {
         headers: { Authorization: "Bearer " + $jwt_token },
-      })
-      .then((response) => {
-        companies = response.data;
-      })
-      .catch(() => alert("Could not load companies"));
+      });
+      companies = res.data.content;
+      const myCo =
+        companies.find((c) => c.userIds?.includes($user.sub)) ||
+        companies.find((c) => c.owner === $user.sub);
+      myCompanyId = myCo?.id || null;
+    } catch (e) {
+      alert("Could not load companies");
+    }
   }
 
-  function getLocations(companyId) {
-    axios
-      .get(api_root + "/api/locations?companyId=" + companyId, {
+  async function getLocations() {
+    try {
+      const res = await axios.get(api_root + "/api/locations", {
         headers: { Authorization: "Bearer " + $jwt_token },
-      })
-      .then((response) => {
-        locations = response.data;
-      })
-      .catch(() => alert("Could not load locations"));
+      });
+
+      locations = res.data.content;
+
+      const myLo =
+        locations.find((l) => l.userIds?.includes($user.sub)) ||
+        locations.find((l) => l.fleetmanagerId === $user.sub);
+
+      myLocationId = myLo?.id || null;
+    } catch (e) {
+      alert("Could not load locations");
+    }
   }
 
   function getVehicles() {
     loading = true;
     axios
-      .get(api_root + "/api/vehicles?pageNumber=1&pageSize=100", {
+      .get(api_root + "/api/vehicles", {
         headers: { Authorization: "Bearer " + $jwt_token },
       })
       .then((res) => {
@@ -73,12 +99,9 @@
   }
 
   function createVehicle() {
-    const payload = { ...vehicle };
-
-    if (!$user.user_roles.includes("admin")) {
-      delete payload.companyId;
-      delete payload.locationId;
-    }
+    const payload = {
+      ...vehicle,
+    };
 
     axios
       .post(api_root + "/api/vehicles", payload, {
@@ -122,11 +145,6 @@
   function saveEdit() {
     const payload = { ...selectedVehicle };
 
-    if (!$user.user_roles.includes("admin")) {
-      delete payload.companyId;
-      delete payload.locationId;
-    }
-
     axios
       .put(api_root + "/api/vehicles/" + selectedVehicle.id, payload, {
         headers: {
@@ -149,13 +167,19 @@
     selectedVehicle = null;
   }
 
-  if ($user.user_roles.includes("admin") && vehicle.companyId) {
-    getLocations(vehicle.companyId);
+  function getTypes() {
+    axios
+      .get(api_root + "/api/vehicles/types", {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
+      .then((res) => {
+        types = res.data;
+      })
+      .catch(() => alert("Could not load vehicle types"));
   }
 </script>
 
 <h1>Create Vehicle</h1>
-
 <form onsubmit={createVehicle}>
   <div class="mb-3">
     <label>License Plate</label><input
@@ -172,26 +196,30 @@
     />
   </div>
   <div class="mb-3">
-    <label>Type</label><input
-      class="form-control"
-      bind:value={vehicle.type}
-      required
-    />
+    <label>Type</label>
+    <select class="form-select" bind:value={vehicle.vehicleType}>
+      <option disabled selected value={null}>Select type</option>
+      {#each types as type}
+        <option value={type.name}>{type.label}</option>
+      {/each}
+    </select>
   </div>
   <div class="mb-3">
-    <label>Capacity</label><input
-      type="number"
+    <label>Capacity (kg)</label>
+    <input
       class="form-control"
-      bind:value={vehicle.capacity}
-      required
+      type="number"
+      value={selectedTypeInfo?.capacityKg ?? ""}
+      readonly
+      disabled
     />
   </div>
 
-  {#if $user.user_roles.includes("admin")}
+  {#if isAdmin}
     <div class="mb-3">
       <label>Company</label>
       <select class="form-select" bind:value={vehicle.companyId}>
-        <option disabled selected value="">Select company</option>
+        <option disabled selected value={null}>Select company</option>
         {#each companies as company}
           <option value={company.id}>{company.name}</option>
         {/each}
@@ -199,11 +227,11 @@
     </div>
   {/if}
 
-  {#if $user.user_roles.includes("admin") || $user.user_roles.includes("owner")}
+  {#if isAdmin || isOwner}
     <div class="mb-3">
       <label>Location</label>
       <select class="form-select" bind:value={vehicle.locationId}>
-        <option disabled selected value="">Select location</option>
+        <option disabled selected value={null}>Select location</option>
         {#each locations as location}
           <option value={location.id}>{location.name}</option>
         {/each}
@@ -213,9 +241,7 @@
 
   <button type="submit" class="btn btn-primary">Create</button>
 </form>
-
 <hr />
-
 <h2>Vehicles</h2>
 
 {#if loading}
@@ -244,9 +270,9 @@
           <td>{v.vin}</td>
           <td>{v.type}</td>
           <td>{v.capacity}</td>
-          <td>{v.status}</td>
-          <td>{v.companyId}</td>
-          <td>{v.locationId}</td>
+          <td>{v.state}</td>
+          <td>{companies.find((c) => c.id === v.companyId)?.name}</td>
+          <td>{locations.find((l) => l.id === v.locationId)?.name}</td>
           <td>
             <div class="dropdown">
               <button
@@ -308,24 +334,30 @@
               </div>
             </div>
             <div class="row mt-2">
-              <div class="col">
-                <label>Type</label><input
-                  class="form-control"
-                  bind:value={selectedVehicle.type}
-                />
+              <div class="mb-3">
+                <label>Type</label>
+                <select class="form-select" bind:value={vehicle.vehicleType}>
+                  <option disabled selected value={null}>Select type</option>
+                  {#each types as type}
+                    <option value={type.name}>{type.label}</option>
+                  {/each}
+                </select>
               </div>
-              <div class="col">
-                <label>Capacity</label><input
-                  type="number"
+              <div class="mb-3">
+                <label>Capacity (kg)</label>
+                <input
                   class="form-control"
-                  bind:value={selectedVehicle.capacity}
+                  type="number"
+                  value={selectedEditTypeInfo?.capacityKg ?? ""}
+                  readonly
+                  disabled
                 />
               </div>
             </div>
             <div class="row mt-2">
               <div class="col">
                 <label>Status</label>
-                <select class="form-select" bind:value={selectedVehicle.status}>
+                <select class="form-select" bind:value={selectedVehicle.state}>
                   <option value="AVAILABLE">Available</option>
                   <option value="ON_ROUTE">On Route</option>
                   <option value="DROPPING_OFF">Dropping Off</option>
@@ -333,10 +365,13 @@
                   <option value="OUT_OF_SERVICE">Out of service</option>
                 </select>
               </div>
-              {#if $user.user_roles.includes("admin")}
+              {#if isAdmin}
                 <div class="mb-3">
                   <label>Company</label>
-                  <select class="form-select" bind:value={vehicle.companyId}>
+                  <select
+                    class="form-select"
+                    bind:value={selectedVehicle.companyId}
+                  >
                     <option disabled selected value="">Select company</option>
                     {#each companies as company}
                       <option value={company.id}>{company.name}</option>
@@ -345,10 +380,13 @@
                 </div>
               {/if}
 
-              {#if $user.user_roles.includes("admin") || $user.user_roles.includes("owner")}
+              {#if isAdmin || isOwner}
                 <div class="mb-3">
                   <label>Location</label>
-                  <select class="form-select" bind:value={vehicle.locationId}>
+                  <select
+                    class="form-select"
+                    bind:value={selectedVehicle.locationId}
+                  >
                     <option disabled selected value="">Select location</option>
                     {#each locations as location}
                       <option value={location.id}>{location.name}</option>

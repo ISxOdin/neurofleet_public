@@ -10,8 +10,13 @@ import lombok.Setter;
 public class VehicleCreateDTO {
     private String licensePlate;
     private String vin;
-    private String type;
-    private int capacity;    
     private String locationId;
     private String companyId;
+    private VehicleState state;
+    private VehicleType vehicleType;
+    
+    public int getCapacity() {
+        return vehicleType != null ? vehicleType.getCapacityKg() : 0;
+    }
+
 }
