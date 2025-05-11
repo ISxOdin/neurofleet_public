@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.model.LocationCreateDTO;
 import ch.zhaw.neurofleet.repository.LocationRepository;
+import ch.zhaw.neurofleet.service.Auth0Service;
 import ch.zhaw.neurofleet.service.LocationService;
 import ch.zhaw.neurofleet.service.UserService;
 
@@ -70,6 +71,9 @@ public class LocationController {
         } else if (userService.userHasAnyRole("owner")) {
             String cid = userService.getCompanyIdOfCurrentUser();
             page = locationRepository.findAllByCompanyId(cid, pr);
+        } else if (userService.userHasAnyRole("fleetmanager")) {
+            String lid = userService.getAuthIdOfCurrentUser();
+            page = locationRepository.findAllByFleetmanagerId(lid, pr);
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

@@ -1,26 +1,25 @@
 package ch.zhaw.neurofleet.controller;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import ch.zhaw.neurofleet.model.Vehicle;
 import ch.zhaw.neurofleet.model.VehicleCreateDTO;
+import ch.zhaw.neurofleet.model.VehicleType;
+import ch.zhaw.neurofleet.model.VehicleTypeDTO;
 import ch.zhaw.neurofleet.repository.VehicleRepository;
 import ch.zhaw.neurofleet.service.UserService;
+import ch.zhaw.neurofleet.service.VehicleService;
 
 @RestController
 @RequestMapping("/api")
@@ -30,112 +29,131 @@ public class VehicleController {
     private VehicleRepository vehicleRepository;
 
     @Autowired
-    UserService userService;
+    private UserService userService;
+
+    @Autowired
+    private VehicleService vehicleService;
 
     @PostMapping("/vehicles")
-    public ResponseEntity<Vehicle> createVehicle(
-            @RequestBody VehicleCreateDTO vDTO) {
+    public ResponseEntity<Vehicle> createVehicle(@RequestBody VehicleCreateDTO vDTO) {
         if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
+        if (vDTO.getVehicleType() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         if (userService.userHasAnyRole("owner")) {
             vDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
         }
+
         if (userService.userHasAnyRole("fleetmanager")) {
-            vDTO.setLocationId(userService.getLocationIdOfFleetManager());
             vDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
+            vDTO.setLocationId(userService.getLocationIdOfCurrentUser());
         }
+
         Vehicle vDAO = new Vehicle(
-                vDTO.getLicensePlate(),
-                vDTO.getVin(),
-                vDTO.getType(),
-                vDTO.getCapacity(),
-                vDTO.getLocationId(),
-                vDTO.getCompanyId());
+            vDTO.getLicensePlate(),
+            vDTO.getVin(),
+            vDTO.getLocationId(),
+            vDTO.getCompanyId()
+        );
+        vDAO.setCapacity(vDTO.getVehicleType().getCapacityKg());
+
         Vehicle v = vehicleRepository.save(vDAO);
-        return new ResponseEntity<>(v, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(v);
     }
 
     @GetMapping("/vehicles")
     public ResponseEntity<Page<Vehicle>> getVehicles(
-            @RequestParam(required = false, defaultValue = "1") Integer pageNumber,
-            @RequestParam(required = false, defaultValue = "5") Integer pageSize) {
-        Page<Vehicle> allCompanies = vehicleRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
-        return new ResponseEntity<>(allCompanies, HttpStatus.OK);
+        @RequestParam(defaultValue = "1") int pageNumber,
+        @RequestParam(defaultValue = "5") int pageSize
+    ) {
+        PageRequest pr = PageRequest.of(pageNumber - 1, pageSize);
+        Page<Vehicle> page;
+
+        if (userService.userHasAnyRole("admin")) {
+            page = vehicleRepository.findAll(pr);
+        } else if (userService.userHasAnyRole("owner")) {
+            String cid = userService.getCompanyIdOfCurrentUser();
+            page = vehicleRepository.findAllByCompanyId(cid, pr);
+        } else if (userService.userHasAnyRole("fleetmanager")) {
+            String cid = userService.getCompanyIdOfCurrentUser();
+            String lid = userService.getLocationIdOfCurrentUser();
+            page = vehicleRepository.findAllByCompanyIdAndLocationId(cid, lid, pr);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping("/vehicles/{id}")
     public ResponseEntity<Vehicle> getVehicleById(@PathVariable String id) {
-        Optional<Vehicle> c = vehicleRepository.findById(id);
-        if (c.isPresent()) {
-            return new ResponseEntity<>(c.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        Optional<Vehicle> opt = vehicleRepository.findById(id);
+        if (opt.isEmpty()) return ResponseEntity.notFound().build();
+
+        Vehicle v = opt.get();
+
+        if (userService.userHasAnyRole("owner") &&
+            !v.getCompanyId().equals(userService.getCompanyIdOfCurrentUser())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
+        if (userService.userHasAnyRole("fleetmanager") &&
+            (!v.getCompanyId().equals(userService.getCompanyIdOfCurrentUser()) ||
+             !v.getLocationId().equals(userService.getLocationIdOfCurrentUser()))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return ResponseEntity.ok(v);
     }
 
     @PutMapping("/vehicles/{id}")
-    public ResponseEntity<Vehicle> updateVehicle(
-            @PathVariable String id,
-            @RequestBody VehicleCreateDTO vDTO) {
-    
+    public ResponseEntity<Vehicle> updateVehicle(@PathVariable String id, @RequestBody VehicleCreateDTO dto) {
         if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-    
-        Optional<Vehicle> existingVehicleOpt = vehicleRepository.findById(id);
-        if (vehicleRepository.findById(id).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        try {
+            Vehicle updated = vehicleService.updateVehicle(id, dto);
+            return ResponseEntity.ok(updated);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-    
-        Vehicle existingVehicle = existingVehicleOpt.get();
-    
-        if (userService.userHasAnyRole("owner")) {
-            String userCompanyId = userService.getCompanyIdOfCurrentUser();
-            if (!existingVehicle.getCompanyId().equals(userCompanyId)) {
-                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-            }
-            vDTO.setCompanyId(userCompanyId);
-        }
-    
-        if (userService.userHasAnyRole("fleetmanager")) {
-            String userCompanyId = userService.getCompanyIdOfCurrentUser();
-            String userLocationId = userService.getLocationIdOfFleetManager();
-    
-            if (!existingVehicle.getCompanyId().equals(userCompanyId) ||
-                !existingVehicle.getLocationId().equals(userLocationId)) {
-                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-            }
-            vDTO.setCompanyId(userCompanyId);
-            vDTO.setLocationId(userLocationId);
-        }
-    
-        Vehicle updatedVehicle = new Vehicle(
-                vDTO.getLicensePlate(),
-                vDTO.getVin(),
-                vDTO.getType(),
-                vDTO.getCapacity(),
-                vDTO.getLocationId(),
-                vDTO.getCompanyId()
-        );
-        updatedVehicle.setId(id);
-    
-        Vehicle saved = vehicleRepository.save(updatedVehicle);
-        return new ResponseEntity<>(saved, HttpStatus.OK);
     }
-    
 
     @DeleteMapping("/vehicles/{id}")
     public ResponseEntity<String> deleteVehicleById(@PathVariable String id) {
         if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
         if (vehicleRepository.existsById(id)) {
             vehicleRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body("DELETED");
+            return ResponseEntity.ok("DELETED");
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
+    @GetMapping("/vehicles/types")
+    public ResponseEntity<List<VehicleTypeDTO>> getVehicleTypes() {
+        List<VehicleTypeDTO> list = Arrays.stream(VehicleType.values())
+            .map(vt -> new VehicleTypeDTO(
+                vt.name(),
+                vt.getLabel(),
+                vt.getCapacityKg(),
+                vt.getLiftCapacityKg(),
+                vt.getPalletCount()))
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(list);
+    }
 }

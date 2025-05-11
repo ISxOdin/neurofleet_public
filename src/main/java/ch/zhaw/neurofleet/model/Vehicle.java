@@ -21,13 +21,11 @@ public class Vehicle {
     @NonNull
     private String vin;
     @NonNull
-    private String type;
-    @NonNull
-    private int capacity;
-    private VehicleState status = VehicleState.AVAILABLE;
-    @NonNull
     private String locationId;
     @NonNull
     private String companyId;
+    private VehicleType vehicleType;
+    private int capacity;
+    private VehicleState state = VehicleState.AVAILABLE;
 
 }
