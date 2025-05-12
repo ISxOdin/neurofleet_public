@@ -37,6 +37,8 @@
 
   $: selectedTypeInfo = types.find((t) => t.name === vehicle.vehicleType);
   $: selectedEditTypeInfo = types.find((t) => t.name === selectedVehicle?.vehicleType);
+  $: vinValid = /^[A-HJ-NPR-Z0-9]{17}$/.test(vehicle.vin);
+
 
   onMount(async () => {
     await getCompanies();
@@ -96,6 +98,17 @@
       })
       .catch(() => alert("Could not load vehicles"))
       .finally(() => (loading = false));
+  }
+
+  function getTypes() {
+    axios
+      .get(api_root + "/api/vehicles/types", {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
+      .then((res) => {
+        types = res.data;
+      })
+      .catch(() => alert("Could not load vehicle types"));
   }
 
   function createVehicle() {
@@ -167,16 +180,11 @@
     selectedVehicle = null;
   }
 
-  function getTypes() {
-    axios
-      .get(api_root + "/api/vehicles/types", {
-        headers: { Authorization: "Bearer " + $jwt_token },
-      })
-      .then((res) => {
-        types = res.data;
-      })
-      .catch(() => alert("Could not load vehicle types"));
-  }
+  function isValidVIN(vin) {
+  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
+  return vinRegex.test(vin);
+}
+
 </script>
 
 <h1>Create Vehicle</h1>
@@ -186,19 +194,30 @@
       class="form-control"
       bind:value={vehicle.licensePlate}
       required
+      placeholder="ZH 1234"
     />
   </div>
   <div class="mb-3">
-    <label>VIN</label><input
+    <label>VIN</label>
+    <input
       class="form-control"
       bind:value={vehicle.vin}
+      maxlength="17"
       required
+      style="border-color: {vehicle.vin && !vinValid ? 'red' : ''}"
+      placeholder="1HGCM82633A123456"
     />
+    {#if vehicle.vin && !vinValid}
+      <small style="color: red">
+        VIN must be 17 characters, no I, O or Q
+      </small>
+    {/if}
   </div>
+  
   <div class="mb-3">
     <label>Type</label>
     <select class="form-select" bind:value={vehicle.vehicleType}>
-      <option disabled selected value={null}>Select type</option>
+      <option disabled selected value="">Select type</option>
       {#each types as type}
         <option value={type.name}>{type.label}</option>
       {/each}
@@ -219,7 +238,7 @@
     <div class="mb-3">
       <label>Company</label>
       <select class="form-select" bind:value={vehicle.companyId}>
-        <option disabled selected value={null}>Select company</option>
+        <option disabled selected value="">Select company</option>
         {#each companies as company}
           <option value={company.id}>{company.name}</option>
         {/each}
@@ -231,7 +250,7 @@
     <div class="mb-3">
       <label>Location</label>
       <select class="form-select" bind:value={vehicle.locationId}>
-        <option disabled selected value={null}>Select location</option>
+        <option disabled selected value="">Select location</option>
         {#each locations as location}
           <option value={location.id}>{location.name}</option>
         {/each}

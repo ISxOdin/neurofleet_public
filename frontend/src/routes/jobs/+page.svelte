@@ -131,6 +131,7 @@
       class="form-control"
       id="description"
       type="text"
+      placeholder="Description"
     />
   </div>
 

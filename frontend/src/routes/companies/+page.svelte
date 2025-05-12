@@ -153,11 +153,11 @@
         </div>
         <div class="modal-body">
           <label>Name</label>
-          <input class="form-control mb-2" bind:value={editCompany.name} />
+          <input class="form-control mb-2" bind:value={editCompany.name} placeholder="Neurofleet AG"/>
           <label>Email</label>
-          <input class="form-control mb-2" bind:value={editCompany.email} />
+          <input class="form-control mb-2" bind:value={editCompany.email} type="email"  placeholder="maxmusterman@neurofleet.com"/>
           <label>Address</label>
-          <input class="form-control mb-2" bind:value={editCompany.address} />
+          <input class="form-control mb-2" bind:value={editCompany.address} placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"/>
           <label>Owner</label>
           <select class="form-select mb-2" bind:value={editCompany.owner}>
             <option value="">-- Select owner --</option>
@@ -185,7 +185,7 @@
   <div class="row g-3">
     <div class="col-md-4">
       <label class="form-label">Name</label>
-      <input class="form-control" bind:value={newCompany.name} required />
+      <input class="form-control" bind:value={newCompany.name} required placeholder="Neurofleet AG"/>
     </div>
     <div class="col-md-4">
       <label class="form-label">Email</label>
@@ -194,11 +194,12 @@
         class="form-control"
         bind:value={newCompany.email}
         required
+        placeholder="maxmustermann@neurofleet.com"
       />
     </div>
     <div class="col-md-4">
       <label class="form-label">Address</label>
-      <input class="form-control" bind:value={newCompany.address} required />
+      <input class="form-control" bind:value={newCompany.address} required placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"/>
     </div>
   </div>
   <button type="submit" class="btn btn-primary mt-3">Submit</button>

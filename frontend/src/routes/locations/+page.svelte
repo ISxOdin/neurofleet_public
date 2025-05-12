@@ -199,6 +199,7 @@
       <label>Name</label><input
         class="form-control"
         bind:value={location.name}
+        placeholder="Zurich HQ"
       />
     </div>
   </div>
@@ -207,6 +208,7 @@
       <label>Address</label><input
         class="form-control"
         bind:value={location.address}
+        placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"
       />
     </div>
   </div>
