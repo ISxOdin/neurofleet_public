@@ -59,6 +59,7 @@ public class VehicleController {
             vDTO.getLocationId(),
             vDTO.getCompanyId()
         );
+        vDAO.setVehicleType(vDTO.getVehicleType());
         vDAO.setCapacity(vDTO.getVehicleType().getCapacityKg());
 
         Vehicle v = vehicleRepository.save(vDAO);
