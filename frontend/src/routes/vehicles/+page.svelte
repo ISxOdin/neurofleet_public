@@ -255,7 +255,8 @@
     <thead>
       <tr>
         <th>License Plate</th>
-        <th>VIN</th><th>Type</th>
+        <th>VIN</th>
+        <th>Type</th>
         <th>Capacity</th>
         <th>Status</th>
         <th>Company</th>
@@ -268,7 +269,7 @@
         <tr>
           <td>{v.licensePlate}</td>
           <td>{v.vin}</td>
-          <td>{v.type}</td>
+          <td>{v.vehicleType}</td>
           <td>{v.capacity}</td>
           <td>{v.state}</td>
           <td>{companies.find((c) => c.id === v.companyId)?.name}</td>
@@ -336,7 +337,7 @@
             <div class="row mt-2">
               <div class="mb-3">
                 <label>Type</label>
-                <select class="form-select" bind:value={vehicle.vehicleType}>
+                <select class="form-select" bind:value={selectedVehicle.vehicleType}>
                   <option disabled selected value={null}>Select type</option>
                   {#each types as type}
                     <option value={type.name}>{type.label}</option>
