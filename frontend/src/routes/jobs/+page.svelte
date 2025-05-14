@@ -35,6 +35,7 @@
   let showModal = false;
   let scheduledTime = "";
   let lastOriginId = "";
+  let lastCompanyId = "";
 
   let job = {
     description: "",
@@ -48,7 +49,8 @@
 
   const sub = encodeURIComponent($user.sub);
 
-  $: if (job.companyId) {
+  $: if (job.companyId !== lastCompanyId) {
+    lastCompanyId = job.companyId;
     job.originId = "";
     job.destinationId = "";
     job.vehicleId = "";
@@ -114,17 +116,18 @@
     }
   }
 
-  function getVehicles() {
+  async function getVehicles() {
     loading = true;
-    axios
-      .get(api_root + "/api/vehicles", {
+    try {
+      const res = await axios.get(api_root + "/api/vehicles", {
         headers: { Authorization: "Bearer " + $jwt_token },
-      })
-      .then((res) => {
-        vehicles = res.data.content;
-      })
-      .catch(() => alert("Could not load vehicles"))
-      .finally(() => (loading = false));
+      });
+      vehicles = res.data.content;
+    } catch {
+      alert("Could not load vehicles");
+    } finally {
+      loading = false;
+    }
   }
 
   function getTypes() {
@@ -146,15 +149,9 @@
       .then((res) => {
         jobs = res.data.content;
       })
-      .catch(() => alert("Could not load vehicle types"));
-
-    axios(config)
-      .then(function (response) {
-        jobs = response.data.content;
-      })
-      .catch(function (error) {
-        alert("Could not get jobs");
-        console.log(error);
+      .catch((error) => {
+        alert("Could not load jobs");
+        console.error(error);
       });
   }
 
