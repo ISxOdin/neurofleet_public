@@ -29,5 +29,5 @@ public class Job {
     private String vehicleId;
     @NonNull
     private String companyId;
-    private JobState jobstate = JobState.NEW;
+    private JobState jobState = JobState.NEW;
 }
