@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.model.LocationCreateDTO;
 import ch.zhaw.neurofleet.repository.LocationRepository;
-import ch.zhaw.neurofleet.service.Auth0Service;
 import ch.zhaw.neurofleet.service.LocationService;
 import ch.zhaw.neurofleet.service.UserService;
 
@@ -121,9 +120,6 @@ public class LocationController {
         }
     }
 
-    /**
-     * Delete a Location. Owners can delete only their own company's locations.
-     */
     @DeleteMapping("/locations/{id}")
     public ResponseEntity<Void> deleteLocation(@PathVariable String id) {
         if (!userService.userHasAnyRole("admin", "owner")) {
