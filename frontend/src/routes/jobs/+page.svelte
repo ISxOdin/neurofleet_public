@@ -36,6 +36,7 @@
   let scheduledTime = "";
   let lastOriginId = "";
   let lastCompanyId = "";
+  let selectedJob = null;
 
   let job = {
     description: "",
@@ -176,6 +177,29 @@
         console.log(error);
       });
   }
+
+  function openEditJob(jobData) {
+    selectedJob = { ...jobData };
+    showModal = true;
+  }
+
+  function deleteJob(jobId) {
+    if (!confirm("Are you sure you want to delete this job?")) return;
+
+    axios
+      .delete(`${api_root}/api/jobs/${jobId}`, {
+        headers: {
+          Authorization: `Bearer ${$jwt_token}`,
+        },
+      })
+      .then(() => {
+        alert("Job deleted");
+        getJobs();
+      })
+      .catch(() => {
+        alert("Deletion failed");
+      });
+  }
 </script>
 
 <h1 class="mt-3">Create Job</h1>
@@ -251,6 +275,7 @@
       <th scope="col">Destination</th>
       <th scope="col">Vehicle</th>
       <th scope="col">State</th>
+      <th scope="col">Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -263,6 +288,30 @@
         <td>{locations.find((l) => l.id === j.destinationId)?.name}</td>
         <td>{vehicles.find((v) => v.id === j.vehicleId)?.licensePlate}</td>
         <td>{j.jobstate}</td>
+        <td>
+          <div class="dropdown">
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              type="button"
+              data-bs-toggle="dropdown"
+            >
+              <i class="bi bi-gear-fill"></i> Edit
+            </button>
+            <ul
+              class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
+            >
+              <li>
+                <a class="dropdown-item" onclick={() => openEditJob(j)}>Edit</a>
+              </li>
+              <li>
+                <a
+                  class="dropdown-item text-danger"
+                  onclick={() => deleteJob(j.id)}>Delete</a
+                >
+              </li>
+            </ul>
+          </div>
+        </td>
       </tr>
     {/each}
   </tbody>
