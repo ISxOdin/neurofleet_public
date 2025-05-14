@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
+  import EditCompanyModal from "$lib/components/modals/EditCompanyModal.svelte";
 
   let apiRoot = "";
   let users = [];
@@ -99,23 +100,14 @@
     editCompany = null;
   }
 
-  async function submitEdit() {
+  async function submitEdit(updated) {
     try {
-      await axios.put(
-        `${apiRoot}/api/companies/${editCompany.id}`,
-        {
-          name: editCompany.name,
-          email: editCompany.email,
-          address: editCompany.address,
-          owner: editCompany.owner,
+      await axios.put(`${apiRoot}/api/companies/${updated.id}`, updated, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${$jwt_token}`,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${$jwt_token}`,
-          },
-        }
-      );
+      });
       alert("Company updated");
       closeEditModal();
       getCompanies(currentPage);
@@ -140,43 +132,13 @@
   }
 </script>
 
-<!-- Edit Company Modal -->
-{#if showEditModal}
-  <div class="modal-backdrop show"></div>
-  <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-light">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Company</h5>
-          <button class="btn-close btn-close-white" onclick={closeEditModal}
-          ></button>
-        </div>
-        <div class="modal-body">
-          <label>Name</label>
-          <input class="form-control mb-2" bind:value={editCompany.name} placeholder="Neurofleet AG"/>
-          <label>Email</label>
-          <input class="form-control mb-2" bind:value={editCompany.email} type="email"  placeholder="maxmusterman@neurofleet.com"/>
-          <label>Address</label>
-          <input class="form-control mb-2" bind:value={editCompany.address} placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"/>
-          <label>Owner</label>
-          <select class="form-select mb-2" bind:value={editCompany.owner}>
-            <option value="">-- Select owner --</option>
-            {#each users as u}
-              <option value={u.id}
-                >{u.given_name} {u.family_name} ({u.email})</option
-              >
-            {/each}
-          </select>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick={closeEditModal}
-            >Cancel</button
-          >
-          <button class="btn btn-primary" onclick={submitEdit}>Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
+{#if showEditModal && editCompany}
+  <EditCompanyModal
+    company={editCompany}
+    {users}
+    on:cancel={closeEditModal}
+    on:save={(e) => submitEdit(e.detail)}
+  />
 {/if}
 
 <!-- Create Company Form -->
@@ -185,7 +147,12 @@
   <div class="row g-3">
     <div class="col-md-4">
       <label class="form-label">Name</label>
-      <input class="form-control" bind:value={newCompany.name} required placeholder="Neurofleet AG"/>
+      <input
+        class="form-control"
+        bind:value={newCompany.name}
+        required
+        placeholder="Neurofleet AG"
+      />
     </div>
     <div class="col-md-4">
       <label class="form-label">Email</label>
@@ -199,7 +166,12 @@
     </div>
     <div class="col-md-4">
       <label class="form-label">Address</label>
-      <input class="form-control" bind:value={newCompany.address} required placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"/>
+      <input
+        class="form-control"
+        bind:value={newCompany.address}
+        required
+        placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"
+      />
     </div>
   </div>
   <button type="submit" class="btn btn-primary mt-3">Submit</button>
@@ -248,10 +220,9 @@
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-            <button
-              class="btn btn-sm btn-outline-secondary">
-              <i class="bi bi-gear-fill"></i> Edit
-            </button>
+              <button class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-gear-fill"></i> Edit
+              </button>
             </a>
             <ul
               class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
@@ -263,8 +234,9 @@
                 >
               </li>
               <li>
-                <a class="dropdown-item text-danger" onclick={() => deleteLocation(c.id)}
-                  >Delete</a
+                <a
+                  class="dropdown-item text-danger"
+                  onclick={() => deleteCompany(c.id)}>Delete</a
                 >
               </li>
               <li><hr class="dropdown-divider" /></li>

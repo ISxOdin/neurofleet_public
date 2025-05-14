@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { jwt_token, user, isAuthenticated } from "../../store";
+  import EditLocationModal from "$lib/components/modals/EditLocationModal.svelte";
 
   let currentPage = 1;
   let defaultPageSize = 20;
@@ -117,13 +118,11 @@
     editLocation = null;
   }
 
-  async function submitEdit() {
+  async function submitEdit(updated) {
     try {
-      await axios.put(
-        `${apiRoot}/api/locations/${editLocation.id}`,
-        editLocation,
-        { headers: { Authorization: `Bearer ${$jwt_token}` } }
-      );
+      await axios.put(`${apiRoot}/api/locations/${updated.id}`, updated, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
+      });
       alert("Location updated successfully");
       closeEditModal();
       await getLocations();
@@ -148,43 +147,14 @@
   }
 </script>
 
-{#if showEditModal}
-  <div class="modal-backdrop show"></div>
-  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-light">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Location</h5>
-          <button class="btn-close btn-close-white" onclick={closeEditModal}
-          ></button>
-        </div>
-        <div class="modal-body">
-          <label>Name</label>
-          <input class="form-control mb-2" bind:value={editLocation.name} />
-          <label>Address</label>
-          <input class="form-control mb-2" bind:value={editLocation.address} />
-          <label>Fleet Manager</label>
-          <select
-            class="form-select mb-2"
-            bind:value={editLocation.fleetmanagerId}
-          >
-            <option disabled value="">-- Select Fleet Manager --</option>
-            {#each users.filter((u) => u.role === "fleetmanager" && u.companyId === myCompanyId) as fm}
-              <option value={fm.user_id}
-                >{fm.given_name} {fm.family_name} ({fm.email})</option
-              >
-            {/each}
-          </select>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick={closeEditModal}
-            >Cancel</button
-          >
-          <button class="btn btn-primary" onclick={submitEdit}>Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
+{#if showEditModal && editLocation}
+  <EditLocationModal
+    location={editLocation}
+    {users}
+    companyId={myCompanyId}
+    on:cancel={closeEditModal}
+    on:save={(e) => submitEdit(e.detail)}
+  />
 {/if}
 
 <!-- Create Form -->

@@ -12,6 +12,7 @@
   import { page } from "$app/state";
   import CompanySelect from "$lib/components/forms/CompanySelect.svelte";
   import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
+  import EditVehicleModal from "$lib/components/modals/EditVehicleModal.svelte";
 
   const api_root = page.url.origin;
 
@@ -162,11 +163,9 @@
     showModal = true;
   }
 
-  function saveEdit() {
-    const payload = { ...selectedVehicle };
-
+  function saveEdit(updatedVehicle) {
     axios
-      .put(api_root + "/api/vehicles/" + selectedVehicle.id, payload, {
+      .put(`${api_root}/api/vehicles/${updatedVehicle.id}`, updatedVehicle, {
         headers: {
           Authorization: "Bearer " + $jwt_token,
           "Content-Type": "application/json",
@@ -174,7 +173,7 @@
       })
       .then(() => {
         alert("Vehicle updated");
-        showModal = false;
+        closeModal();
         getVehicles();
       })
       .catch(() => {
@@ -323,102 +322,13 @@
   </table>
 {/if}
 
-{#if showModal}
-  <div
-    class="modal fade show d-block"
-    tabindex="-1"
-    style="background: rgba(0, 0, 0, 0.5);"
-  >
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content bg-dark text-light">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Vehicle</h5>
-          <button type="button" class="btn-close" onclick={closeModal}></button>
-        </div>
-        <div class="modal-body">
-          <form>
-            <div class="row">
-              <div class="col">
-                <label class="form-label" for="licencePlate"
-                  >License Plate</label
-                >
-                <input
-                  class="form-control"
-                  bind:value={selectedVehicle.licensePlate}
-                />
-              </div>
-              <div class="col">
-                <label class="form-label" for="vin">VIN</label><input
-                  class="form-control"
-                  bind:value={selectedVehicle.vin}
-                />
-              </div>
-            </div>
-            <div class="row mt-2">
-              <div class="mb-3">
-                <label class="form-label" for="type">Type</label>
-                <select
-                  class="form-select"
-                  bind:value={selectedVehicle.vehicleType}
-                >
-                  <option disabled selected value={null}>Select type</option>
-                  {#each types as type}
-                    <option value={type.name}>{type.label}</option>
-                  {/each}
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label" for="capacity">Capacity (kg)</label>
-                <input
-                  class="form-control"
-                  type="number"
-                  value={selectedEditTypeInfo?.capacityKg ?? ""}
-                  readonly
-                  disabled
-                />
-              </div>
-            </div>
-            <div class="mb-3 mt-2">
-              <label class="form-label" for="status">Status</label>
-              <select class="form-select" bind:value={selectedVehicle.state}>
-                <option value="AVAILABLE">Available</option>
-                <option value="ON_ROUTE">On Route</option>
-                <option value="DROPPING_OFF">Dropping Off</option>
-                <option value="INACTIVE">Inactive</option>
-                <option value="OUT_OF_SERVICE">Out of service</option>
-              </select>
-            </div>
-            <div class="mb-3 mt-2">
-              {#if isAdmin}
-                <CompanySelect
-                  bind:bindValue={selectedVehicle.companyId}
-                  {companies}
-                />
-              {/if}
-            </div>
-
-            {#if hasAnyRole("admin", "owner")}
-              <LocationSelect
-                bind:bindValue={selectedVehicle.locationId}
-                locations={locations.filter(
-                  (loc) => loc.companyId === selectedVehicle.companyId
-                )}
-              />
-              {#if selectedVehicle.companyId && locations.filter((loc) => loc.companyId === selectedVehicle.companyId).length === 0}
-                <div class="text-muted mb-3">
-                  <p style="color: red">
-                    No locations available for selected company
-                  </p>
-                </div>
-              {/if}
-            {/if}
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick={closeModal}>Cancel</button>
-          <button class="btn btn-primary" onclick={saveEdit}>Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
+{#if showModal && selectedVehicle}
+  <EditVehicleModal
+    vehicle={selectedVehicle}
+    {companies}
+    {locations}
+    {types}
+    on:cancel={closeModal}
+    on:save={(e) => saveEdit(e.detail)}
+  />
 {/if}

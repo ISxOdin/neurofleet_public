@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
+  import EditUserModal from "$lib/components/modals/EditUserModal.svelte";
 
   let users = [];
   let companies = [];
@@ -73,48 +74,44 @@
     newCompanyId = "";
   }
 
-  async function assignExclusiveRole() {
-    if (!newRole || !selectedUser) return;
-    const id = encodeURIComponent(selectedUser.user_id);
-    try {
-      // remove existing
-      await Promise.all(
-        currentRoles.map((r) =>
-          axios.delete(`${apiRoot}/api/auth0/users/${id}/roles/${r}`, {
-            headers: { Authorization: `Bearer ${$jwt_token}` },
-          })
-        )
-      );
-      // add new
-      await axios.post(
-        `${apiRoot}/api/auth0/users/${id}/roles/${newRole}`,
-        {},
-        { headers: { Authorization: `Bearer ${$jwt_token}` } }
-      );
-      alert("Role updated");
-      await getUsers();
-      closeEditModal();
-    } catch (e) {
-      console.error("Failed to assign role", e);
-      alert("Failed to assign role");
-    }
-  }
+  async function saveEditedUser({ userId, selectedRole, selectedCompanyId }) {
+    const id = encodeURIComponent(userId);
 
-  async function updateCompany() {
-    if (!newCompanyId || !selectedUser) return;
-    const userId = encodeURIComponent(selectedUser.user_id);
+    const currentUser = users.find((u) => u.user_id === userId);
+    const currentCompanyId = currentUser?.companyId;
+    const currentRoles = [currentUser?.role].filter(Boolean); // falls null
+
     try {
-      await axios.post(
-        `${apiRoot}/api/companies/${newCompanyId}/users/${userId}`,
-        {},
-        { headers: { Authorization: `Bearer ${$jwt_token}` } }
-      );
-      alert("Company assigned");
+      if (selectedRole && selectedRole !== currentRoles[0]) {
+        await Promise.all(
+          currentRoles.map((r) =>
+            axios.delete(`${apiRoot}/api/auth0/users/${id}/roles/${r}`, {
+              headers: { Authorization: `Bearer ${$jwt_token}` },
+            })
+          )
+        );
+
+        await axios.post(
+          `${apiRoot}/api/auth0/users/${id}/roles/${selectedRole}`,
+          {},
+          { headers: { Authorization: `Bearer ${$jwt_token}` } }
+        );
+      }
+
+      if (selectedCompanyId && selectedCompanyId !== currentCompanyId) {
+        await axios.post(
+          `${apiRoot}/api/companies/${selectedCompanyId}/users/${id}`,
+          {},
+          { headers: { Authorization: `Bearer ${$jwt_token}` } }
+        );
+      }
+
+      alert("User updated");
       await getUsers();
       closeEditModal();
     } catch (e) {
-      console.error("Failed to assign company", e);
-      alert("Failed to assign company");
+      console.error("Failed to update user", e);
+      alert("Failed to update user");
     }
   }
 </script>
@@ -155,55 +152,12 @@
   </table>
 {/if}
 
-{#if showEditModal}
-  <div class="modal-backdrop show"></div>
-  <div
-    class="modal d-block"
-    tabindex="-1"
-    style="background-color: rgba(0,0,0,0.5)"
-  >
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-light">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit User</h5>
-          <button class="btn-close btn-close-white" onclick={closeEditModal}
-          ></button>
-        </div>
-        <div class="modal-body">
-          <p><strong>Email:</strong> {selectedUser.email}</p>
-          <label>Role</label>
-          <select class="form-select mb-3" bind:value={newRole}>
-            <option disabled value="">-- Select role --</option>
-            <option value="admin">admin</option>
-            <option value="owner">owner</option>
-            <option value="fleetmanager">fleetmanager</option>
-            <option value="driver">driver</option>
-            <option value="user">user</option>
-          </select>
-          <button
-            class="btn btn-primary w-100 mb-3"
-            onclick={assignExclusiveRole}
-            disabled={!newRole}>Assign Role</button
-          >
-          <label>Company</label>
-          <select class="form-select mb-3" bind:value={newCompanyId}>
-            <option disabled value="">-- Select company --</option>
-            {#each companies as c}
-              <option value={c.id}>{c.name}</option>
-            {/each}
-          </select>
-          <button
-            class="btn btn-primary w-100"
-            onclick={updateCompany}
-            disabled={!newCompanyId}>Assign Company</button
-          >
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick={closeEditModal}
-            >Close</button
-          >
-        </div>
-      </div>
-    </div>
-  </div>
+{#if showEditModal && selectedUser}
+  <EditUserModal
+    user={selectedUser}
+    roles={["admin", "owner", "fleetmanager"]}
+    {companies}
+    on:cancel={closeEditModal}
+    on:save={(e) => saveEditedUser(e.detail)}
+  />
 {/if}
