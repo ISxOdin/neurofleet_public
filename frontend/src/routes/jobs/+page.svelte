@@ -15,6 +15,7 @@
   import CompanySelect from "$lib/components/forms/CompanySelect.svelte";
   import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
   import VehicleSelect from "$lib/components/forms/VehicleSelect.svelte";
+  import EditJobModal from "$lib/components/modals/EditJobModal.svelte";
 
   const api_root = page.url.origin;
 
@@ -183,6 +184,11 @@
     showModal = true;
   }
 
+  function closeEditJobModal() {
+    showModal = false;
+    selectedJob = null;
+  }
+
   function deleteJob(jobId) {
     if (!confirm("Are you sure you want to delete this job?")) return;
 
@@ -198,6 +204,24 @@
       })
       .catch(() => {
         alert("Deletion failed");
+      });
+  }
+
+  function saveEditedJob(jobData) {
+    axios
+      .put(`${api_root}/api/jobs/${jobData.id}`, jobData, {
+        headers: {
+          Authorization: `Bearer ${$jwt_token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      .then(() => {
+        alert("Job updated");
+        closeEditJobModal();
+        getJobs();
+      })
+      .catch(() => {
+        alert("Update failed");
       });
   }
 </script>
@@ -316,3 +340,13 @@
     {/each}
   </tbody>
 </table>
+
+{#if showModal}
+  <EditJobModal
+    {selectedJob}
+    {locations}
+    {vehicles}
+    on:close={closeEditJobModal}
+    on:save={(e) => saveEditedJob(e.detail)}
+  />
+{/if}
