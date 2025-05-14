@@ -10,6 +10,10 @@
 | Chart mit Iterations und Labels         | [Iterations](https://github.com/users/ISxOdin/projects/2/insights/2) |
 | SonarQube         | [Tbd]() |
 
+![Workflow](https://github.com/ISxOdin/neurofleet/actions/workflows/ci.yaml/badge.svg)
+![Coverage](https://github.com/ISxOdin/neurofleet/blob/main/.github/badges/jacoco.svg) 
+![Branches](https://github.com/ISxOdin/neurofleet/blob/main/.github/badges/branches.svg)
+
 Was sind die Kernideen?
 
 1. KI-gestützte Transportkapazitätsprognose
