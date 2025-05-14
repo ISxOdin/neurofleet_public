@@ -34,6 +34,7 @@
   let loading = false;
   let showModal = false;
   let scheduledTime = "";
+  let lastOriginId = "";
 
   let job = {
     description: "",
@@ -46,6 +47,18 @@
   };
 
   const sub = encodeURIComponent($user.sub);
+
+  $: if (job.companyId) {
+    job.originId = "";
+    job.destinationId = "";
+    job.vehicleId = "";
+  }
+
+  $: if (job.originId !== lastOriginId) {
+    lastOriginId = job.originId;
+    job.destinationId = "";
+    job.vehicleId = "";
+  }
 
   onMount(async () => {
     await getCompanies();
@@ -126,15 +139,18 @@
   }
 
   function getJobs() {
-    var config = {
-      method: "get",
-      url: api_root + "/api/jobs",
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
+    axios
+      .get(api_root + "/api/jobs", {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
+      .then((res) => {
+        jobs = res.data.content;
+      })
+      .catch(() => alert("Could not load vehicle types"));
 
     axios(config)
       .then(function (response) {
-        jobs = response.data;
+        jobs = response.data.content;
       })
       .catch(function (error) {
         alert("Could not get jobs");
@@ -201,11 +217,12 @@
       label="Origin"
       id="originId"
     />
-    {#if locations.filter((loc) => loc.companyId === job.companyId).length === 0}
+    {#if job.companyId && locations.filter((loc) => loc.companyId === job.companyId).length === 0}
       <div class="text-muted mb-3">
         <p style="color: red">No locations available for selected company</p>
       </div>
     {/if}
+
     <LocationSelect
       bind:bindValue={job.destinationId}
       locations={locations.filter(
@@ -232,6 +249,7 @@
     <tr>
       <th scope="col">Description</th>
       <th scope="col">Scheduled Time</th>
+      <th scope="col">Company</th>
       <th scope="col">Origin</th>
       <th scope="col">Destination</th>
       <th scope="col">Vehicle</th>
@@ -239,14 +257,15 @@
     </tr>
   </thead>
   <tbody>
-    {#each jobs as job}
+    {#each jobs as j}
       <tr>
-        <td>{job.description}</td>
-        <td>{job.scheduledtime}</td>
-        <td>{job.origin}</td>
-        <td>{job.destination}</td>
-        <td>{job.vehicle}</td>
-        <td>{job.state}</td>
+        <td>{j.description}</td>
+        <td>{j.scheduledTime}</td>
+        <td>{companies.find((c) => c.id === j.companyId)?.name}</td>
+        <td>{locations.find((l) => l.id === j.originId)?.name}</td>
+        <td>{locations.find((l) => l.id === j.destinationId)?.name}</td>
+        <td>{vehicles.find((v) => v.id === j.vehicleId)?.licensePlate}</td>
+        <td>{j.jobstate}</td>
       </tr>
     {/each}
   </tbody>
