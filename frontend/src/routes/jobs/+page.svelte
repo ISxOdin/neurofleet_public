@@ -3,6 +3,8 @@
   import { page } from "$app/state";
   import { onMount } from "svelte";
   import { jwt_token } from "../../store";
+  import flatpickr from "flatpickr";
+  import "flatpickr/dist/flatpickr.min.css";
 
   // get the origin of current page, e.g. http://localhost:8080
   const api_root = page.url.origin;
@@ -11,6 +13,7 @@
   let jobs = $state([]);
   let locations = $state([]);
   let vehicles = $state([]);
+  let scheduledTime = "";
 
   let job = $state({
     description: null,
@@ -24,6 +27,11 @@
   onMount(() => {
     getCompanies();
     getJobs();
+    flatpickr("#scheduledTime", {
+      enableTime: true,
+      dateFormat: "Y-m-d\\TH:i",
+      time_24hr: true,
+    });
   });
 
   function getCompanies() {
@@ -61,43 +69,42 @@
   }
 
   function getLocations() {
-  if (!job.companyId) return;
+    if (!job.companyId) return;
 
-  var config = {
-    method: "get",
-    url: api_root + "/api/locations?companyId=" + job.companyId,
-    headers: { Authorization: "Bearer " + $jwt_token },
-  };
+    var config = {
+      method: "get",
+      url: api_root + "/api/locations?companyId=" + job.companyId,
+      headers: { Authorization: "Bearer " + $jwt_token },
+    };
 
-  axios(config)
-    .then(function (response) {
-      locations = response.data;
-    })
-    .catch(function (error) {
-      alert("Could not get locations");
-      console.log(error);
-    });
-}
-
+    axios(config)
+      .then(function (response) {
+        locations = response.data;
+      })
+      .catch(function (error) {
+        alert("Could not get locations");
+        console.log(error);
+      });
+  }
 
   function getVehicles() {
-  if (!job.companyId) return;
+    if (!job.companyId) return;
 
-  var config = {
-    method: "get",
-    url: api_root + "/api/vehicles?companyId=" + job.companyId,
-    headers: { Authorization: "Bearer " + $jwt_token },
-  };
+    var config = {
+      method: "get",
+      url: api_root + "/api/vehicles?companyId=" + job.companyId,
+      headers: { Authorization: "Bearer " + $jwt_token },
+    };
 
-  axios(config)
-    .then(function (response) {
-      vehicles = response.data;
-    })
-    .catch(function (error) {
-      alert("Could not get vehicles");
-      console.log(error);
-    });
-}
+    axios(config)
+      .then(function (response) {
+        vehicles = response.data;
+      })
+      .catch(function (error) {
+        alert("Could not get vehicles");
+        console.log(error);
+      });
+  }
 
   function createJob() {
     var config = {
@@ -135,13 +142,15 @@
     />
   </div>
 
-  <div class="mb-3">
-    <label class="form-label" for="scheduledTime">Scheduled Time</label>
+  <label class="form-label" for="scheduledTime">Scheduled Time</label>
+  <div class="input-group mb-3 datepicker-wrapper" style="max-width: 220px;">
+    <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
     <input
-      bind:value={job.scheduledTime}
-      class="form-control"
       id="scheduledTime"
-      type="datetime-local"
+      bind:value={job.scheduledTime}
+      type="text"
+      class="form-control"
+      placeholder="YYYY-MM-DD"
     />
   </div>
 
