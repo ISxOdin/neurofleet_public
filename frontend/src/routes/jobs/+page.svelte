@@ -2,106 +2,158 @@
   import axios from "axios";
   import { page } from "$app/state";
   import { onMount } from "svelte";
-  import { jwt_token } from "../../store";
+  import {
+    jwt_token,
+    user,
+    isAdmin,
+    isOwner,
+    isFleet,
+    hasAnyRole,
+  } from "../../store";
   import flatpickr from "flatpickr";
   import "flatpickr/dist/flatpickr.min.css";
+  import CompanySelect from "$lib/components/forms/CompanySelect.svelte";
+  import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
+  import VehicleSelect from "$lib/components/forms/VehicleSelect.svelte";
 
-  // get the origin of current page, e.g. http://localhost:8080
   const api_root = page.url.origin;
 
-  let companies = $state([]);
-  let jobs = $state([]);
-  let locations = $state([]);
-  let vehicles = $state([]);
+  let currentPage = 1;
+  let nrOfPages = 0;
+  let defaultPageSize = 20;
+
+  let myCompanyId = null;
+  let myLocationId = null;
+
+  let vehicles = [];
+  let companies = [];
+  let locations = [];
+  let jobs = [];
+  let types = [];
+
+  let loading = false;
+  let showModal = false;
   let scheduledTime = "";
+  let lastOriginId = "";
 
-  let job = $state({
-    description: null,
-    scheduledTime: null,
-    originId: null,
-    destinationId: null,
-    vehicleId: null,
-    companyId: null,
-  });
+  let job = {
+    description: "",
+    scheduledTime: "",
+    originId: "",
+    destinationId: "",
+    vehicleId: "",
+    companyId: "",
+    locationId: "",
+  };
 
-  onMount(() => {
-    getCompanies();
+  const sub = encodeURIComponent($user.sub);
+
+  $: if (job.companyId) {
+    job.originId = "";
+    job.destinationId = "";
+    job.vehicleId = "";
+  }
+
+  $: if (job.originId !== lastOriginId) {
+    lastOriginId = job.originId;
+    job.destinationId = "";
+    job.vehicleId = "";
+  }
+
+  onMount(async () => {
+    await getCompanies();
+    await getLocations();
+    await getVehicles();
     getJobs();
+
     flatpickr("#scheduledTime", {
       enableTime: true,
       dateFormat: "Y-m-d\\TH:i",
       time_24hr: true,
     });
+
+    if (!isAdmin && myCompanyId) {
+      job.companyId = myCompanyId;
+    }
+
+    if (isFleet && myLocationId) {
+      job.locationId = myLocationId;
+    }
   });
 
-  function getCompanies() {
-    var config = {
-      method: "get",
-      url: api_root + "/api/companies",
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
-
-    axios(config)
-      .then(function (response) {
-        companies = response.data;
-      })
-      .catch(function (error) {
-        alert("Could not get companies");
-        console.log(error);
+  async function getCompanies() {
+    try {
+      const res = await axios.get(api_root + "/api/companies", {
+        headers: { Authorization: "Bearer " + $jwt_token },
       });
+      companies = res.data.content;
+      const myCo =
+        companies.find((c) => c.userIds?.includes($user.sub)) ||
+        companies.find((c) => c.owner === $user.sub);
+      myCompanyId = myCo?.id || null;
+    } catch (e) {
+      alert("Could not load companies");
+    }
   }
 
-  function getJobs() {
-    var config = {
-      method: "get",
-      url: api_root + "/api/jobs",
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
-
-    axios(config)
-      .then(function (response) {
-        jobs = response.data;
-      })
-      .catch(function (error) {
-        alert("Could not get jobs");
-        console.log(error);
+  async function getLocations() {
+    try {
+      const res = await axios.get(api_root + "/api/locations", {
+        headers: { Authorization: "Bearer " + $jwt_token },
       });
-  }
 
-  function getLocations() {
-    if (!job.companyId) return;
+      locations = res.data.content;
 
-    var config = {
-      method: "get",
-      url: api_root + "/api/locations?companyId=" + job.companyId,
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
+      const myLo =
+        locations.find((l) => l.userIds?.includes($user.sub)) ||
+        locations.find((l) => l.fleetmanagerId === $user.sub);
 
-    axios(config)
-      .then(function (response) {
-        locations = response.data;
-      })
-      .catch(function (error) {
-        alert("Could not get locations");
-        console.log(error);
-      });
+      myLocationId = myLo?.id || null;
+    } catch (e) {
+      alert("Could not load locations");
+    }
   }
 
   function getVehicles() {
-    if (!job.companyId) return;
+    loading = true;
+    axios
+      .get(api_root + "/api/vehicles", {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
+      .then((res) => {
+        vehicles = res.data.content;
+      })
+      .catch(() => alert("Could not load vehicles"))
+      .finally(() => (loading = false));
+  }
 
-    var config = {
-      method: "get",
-      url: api_root + "/api/vehicles?companyId=" + job.companyId,
-      headers: { Authorization: "Bearer " + $jwt_token },
-    };
+  function getTypes() {
+    axios
+      .get(api_root + "/api/vehicles/types", {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
+      .then((res) => {
+        types = res.data;
+      })
+      .catch(() => alert("Could not load vehicle types"));
+  }
+
+  function getJobs() {
+    axios
+      .get(api_root + "/api/jobs", {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
+      .then((res) => {
+        jobs = res.data.content;
+      })
+      .catch(() => alert("Could not load vehicle types"));
 
     axios(config)
       .then(function (response) {
-        vehicles = response.data;
+        jobs = response.data.content;
       })
       .catch(function (error) {
-        alert("Could not get vehicles");
+        alert("Could not get jobs");
         console.log(error);
       });
   }
@@ -154,46 +206,37 @@
     />
   </div>
 
-  <div class="row mb-3">
-    <div class="col">
-      <label class="form-label" for="originId">Origin</label>
-      <input
-        bind:value={job.originId}
-        class="form-control"
-        id="originId"
-        type="text"
-      />
-    </div>
-    <div class="col">
-      <label class="form-label" for="destinationId">Destination</label>
-      <input
-        bind:value={job.destinationId}
-        class="form-control"
-        id="destinationId"
-        type="text"
-      />
-    </div>
-  </div>
+  {#if isAdmin}
+    <CompanySelect bind:bindValue={job.companyId} {companies} />
+  {/if}
 
-  <div class="row mb-3">
-    <div class="col">
-      <label class="form-label" for="vehicleId">Vehicle ID</label>
-      <input
-        bind:value={job.vehicleId}
-        class="form-control"
-        id="vehicleId"
-        type="text"
-      />
-    </div>
-    <div class="col">
-      <label class="form-label" for="companyId">Company</label>
-      <select bind:value={job.companyId} class="form-select" id="companyId">
-        {#each companies as company}
-          <option value={company.id}>{company.name}</option>
-        {/each}
-      </select>
-    </div>
-  </div>
+  {#if hasAnyRole("admin", "owner")}
+    <LocationSelect
+      bind:bindValue={job.originId}
+      locations={locations.filter((loc) => loc.companyId === job.companyId)}
+      label="Origin"
+      id="originId"
+    />
+    {#if job.companyId && locations.filter((loc) => loc.companyId === job.companyId).length === 0}
+      <div class="text-muted mb-3">
+        <p style="color: red">No locations available for selected company</p>
+      </div>
+    {/if}
+
+    <LocationSelect
+      bind:bindValue={job.destinationId}
+      locations={locations.filter(
+        (loc) => loc.companyId === job.companyId && loc.id !== job.originId
+      )}
+      label="Destination"
+      id="destinationId"
+    />
+  {/if}
+
+  <VehicleSelect
+    bind:bindValue={job.vehicleId}
+    vehicles={vehicles.filter((vehicle) => vehicle.locationId === job.originId)}
+  />
 
   <button type="button" class="btn btn-primary" onclick={createJob}
     >Submit</button
@@ -206,6 +249,7 @@
     <tr>
       <th scope="col">Description</th>
       <th scope="col">Scheduled Time</th>
+      <th scope="col">Company</th>
       <th scope="col">Origin</th>
       <th scope="col">Destination</th>
       <th scope="col">Vehicle</th>
@@ -213,14 +257,15 @@
     </tr>
   </thead>
   <tbody>
-    {#each jobs as job}
+    {#each jobs as j}
       <tr>
-        <td>{job.description}</td>
-        <td>{job.scheduledtime}</td>
-        <td>{job.origin}</td>
-        <td>{job.destination}</td>
-        <td>{job.vehicle}</td>
-        <td>{job.state}</td>
+        <td>{j.description}</td>
+        <td>{j.scheduledTime}</td>
+        <td>{companies.find((c) => c.id === j.companyId)?.name}</td>
+        <td>{locations.find((l) => l.id === j.originId)?.name}</td>
+        <td>{locations.find((l) => l.id === j.destinationId)?.name}</td>
+        <td>{vehicles.find((v) => v.id === j.vehicleId)?.licensePlate}</td>
+        <td>{j.jobstate}</td>
       </tr>
     {/each}
   </tbody>

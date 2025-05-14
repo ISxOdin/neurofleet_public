@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import axios from "axios";
-  import { jwt_token, user } from "../../store";
+  import { jwt_token, user, isAdmin, isOwner, isFleet } from "../../store";
   import { page } from "$app/state";
 
   const api_root = page.url.origin;
@@ -30,15 +30,13 @@
   let showModal = false;
   let selectedVehicle = null;
 
-  const isAdmin = $user.user_roles.includes("admin");
-  const isOwner = $user.user_roles.includes("owner");
-  const isFleet = $user.user_roles.includes("fleetmanager");
   const sub = encodeURIComponent($user.sub);
 
   $: selectedTypeInfo = types.find((t) => t.name === vehicle.vehicleType);
-  $: selectedEditTypeInfo = types.find((t) => t.name === selectedVehicle?.vehicleType);
+  $: selectedEditTypeInfo = types.find(
+    (t) => t.name === selectedVehicle?.vehicleType
+  );
   $: vinValid = /^[A-HJ-NPR-Z0-9]{17}$/.test(vehicle.vin);
-
 
   onMount(async () => {
     await getCompanies();
@@ -181,10 +179,9 @@
   }
 
   function isValidVIN(vin) {
-  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
-  return vinRegex.test(vin);
-}
-
+    const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
+    return vinRegex.test(vin);
+  }
 </script>
 
 <h1>Create Vehicle</h1>
@@ -213,7 +210,7 @@
       </small>
     {/if}
   </div>
-  
+
   <div class="mb-3">
     <label>Type</label>
     <select class="form-select" bind:value={vehicle.vehicleType}>
@@ -356,7 +353,10 @@
             <div class="row mt-2">
               <div class="mb-3">
                 <label>Type</label>
-                <select class="form-select" bind:value={selectedVehicle.vehicleType}>
+                <select
+                  class="form-select"
+                  bind:value={selectedVehicle.vehicleType}
+                >
                   <option disabled selected value={null}>Select type</option>
                   {#each types as type}
                     <option value={type.name}>{type.label}</option>
