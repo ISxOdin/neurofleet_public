@@ -56,6 +56,20 @@
               />
             </div>
 
+            <div class="mb-3">
+              <label>Job Status</label>
+              <select class="form-select" bind:value={selectedJob.jobState}>
+                <option disabled value="">Select status</option>
+                <option value="NEW">New</option>
+                <option value="SCHEDULED">Scheduled</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="FAILED">Failed</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="ABORTED">Aborted</option>
+              </select>
+            </div>
+
             <LocationSelect
               bind:bindValue={selectedJob.originId}
               {locations}
