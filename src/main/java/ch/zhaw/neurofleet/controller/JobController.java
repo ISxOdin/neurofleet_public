@@ -1,5 +1,6 @@
 package ch.zhaw.neurofleet.controller;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Job;
 import ch.zhaw.neurofleet.model.JobCreateDTO;
 import ch.zhaw.neurofleet.repository.JobRepository;
+import ch.zhaw.neurofleet.service.JobService;
 import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
@@ -32,12 +35,14 @@ public class JobController {
     @Autowired
     UserService userService;
 
+    @Autowired
+    JobService jobService;
+
     @PostMapping("/jobs")
     public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO jDTO) {
         if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        
 
         try {
             Job jobDAO = new Job(
@@ -69,6 +74,25 @@ public class JobController {
             return new ResponseEntity<>(c.get(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/jobs/{id}")
+    public ResponseEntity<Job> updateJob(@PathVariable String id, @RequestBody JobCreateDTO dto) {
+        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Job updated = jobService.updateJob(id, dto);
+            return ResponseEntity.ok(updated);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

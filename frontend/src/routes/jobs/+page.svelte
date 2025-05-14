@@ -311,7 +311,7 @@
         <td>{locations.find((l) => l.id === j.originId)?.name}</td>
         <td>{locations.find((l) => l.id === j.destinationId)?.name}</td>
         <td>{vehicles.find((v) => v.id === j.vehicleId)?.licensePlate}</td>
-        <td>{j.jobstate}</td>
+        <td>{j.jobState}</td>
         <td>
           <div class="dropdown">
             <button
