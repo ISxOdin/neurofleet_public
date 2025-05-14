@@ -1,8 +1,17 @@
 <script>
   import { onMount } from "svelte";
   import axios from "axios";
-  import { jwt_token, user } from "../../store";
+  import {
+    jwt_token,
+    user,
+    isAdmin,
+    isOwner,
+    isFleet,
+    hasAnyRole,
+  } from "../../store";
   import { page } from "$app/state";
+  import CompanySelect from "$lib/components/forms/CompanySelect.svelte";
+  import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
 
   const api_root = page.url.origin;
 
@@ -30,15 +39,13 @@
   let showModal = false;
   let selectedVehicle = null;
 
-  const isAdmin = $user.user_roles.includes("admin");
-  const isOwner = $user.user_roles.includes("owner");
-  const isFleet = $user.user_roles.includes("fleetmanager");
   const sub = encodeURIComponent($user.sub);
 
   $: selectedTypeInfo = types.find((t) => t.name === vehicle.vehicleType);
-  $: selectedEditTypeInfo = types.find((t) => t.name === selectedVehicle?.vehicleType);
+  $: selectedEditTypeInfo = types.find(
+    (t) => t.name === selectedVehicle?.vehicleType
+  );
   $: vinValid = /^[A-HJ-NPR-Z0-9]{17}$/.test(vehicle.vin);
-
 
   onMount(async () => {
     await getCompanies();
@@ -181,16 +188,16 @@
   }
 
   function isValidVIN(vin) {
-  const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
-  return vinRegex.test(vin);
-}
-
+    const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
+    return vinRegex.test(vin);
+  }
 </script>
 
 <h1>Create Vehicle</h1>
 <form onsubmit={createVehicle}>
   <div class="mb-3">
-    <label>License Plate</label><input
+    <label class="form-label" for="licencePlate">License Plate</label>
+    <input
       class="form-control"
       bind:value={vehicle.licensePlate}
       required
@@ -198,7 +205,7 @@
     />
   </div>
   <div class="mb-3">
-    <label>VIN</label>
+    <label class="form-label" for="vin">VIN</label>
     <input
       class="form-control"
       bind:value={vehicle.vin}
@@ -213,9 +220,9 @@
       </small>
     {/if}
   </div>
-  
+
   <div class="mb-3">
-    <label>Type</label>
+    <label class="form-label" for="type">Type</label>
     <select class="form-select" bind:value={vehicle.vehicleType}>
       <option disabled selected value="">Select type</option>
       {#each types as type}
@@ -224,7 +231,7 @@
     </select>
   </div>
   <div class="mb-3">
-    <label>Capacity (kg)</label>
+    <label class="form-label" for="capacity">Capacity (kg)</label>
     <input
       class="form-control"
       type="number"
@@ -235,27 +242,19 @@
   </div>
 
   {#if isAdmin}
-    <div class="mb-3">
-      <label>Company</label>
-      <select class="form-select" bind:value={vehicle.companyId}>
-        <option disabled selected value="">Select company</option>
-        {#each companies as company}
-          <option value={company.id}>{company.name}</option>
-        {/each}
-      </select>
-    </div>
+    <CompanySelect bind:bindValue={vehicle.companyId} {companies} />
   {/if}
 
-  {#if isAdmin || isOwner}
-    <div class="mb-3">
-      <label>Location</label>
-      <select class="form-select" bind:value={vehicle.locationId}>
-        <option disabled selected value="">Select location</option>
-        {#each locations as location}
-          <option value={location.id}>{location.name}</option>
-        {/each}
-      </select>
-    </div>
+  {#if hasAnyRole("admin", "owner")}
+    <LocationSelect
+      bind:bindValue={vehicle.locationId}
+      locations={locations.filter((loc) => loc.companyId === vehicle.companyId)}
+    />
+    {#if vehicle.companyId && locations.filter((loc) => loc.companyId === vehicle.companyId).length === 0}
+      <div class="text-muted mb-3">
+        <p style="color: red">No locations available for selected company</p>
+      </div>
+    {/if}
   {/if}
 
   <button type="submit" class="btn btn-primary">Create</button>
@@ -340,14 +339,16 @@
           <form>
             <div class="row">
               <div class="col">
-                <label>License Plate</label>
+                <label class="form-label" for="licencePlate"
+                  >License Plate</label
+                >
                 <input
                   class="form-control"
                   bind:value={selectedVehicle.licensePlate}
                 />
               </div>
               <div class="col">
-                <label>VIN</label><input
+                <label class="form-label" for="vin">VIN</label><input
                   class="form-control"
                   bind:value={selectedVehicle.vin}
                 />
@@ -355,8 +356,11 @@
             </div>
             <div class="row mt-2">
               <div class="mb-3">
-                <label>Type</label>
-                <select class="form-select" bind:value={selectedVehicle.vehicleType}>
+                <label class="form-label" for="type">Type</label>
+                <select
+                  class="form-select"
+                  bind:value={selectedVehicle.vehicleType}
+                >
                   <option disabled selected value={null}>Select type</option>
                   {#each types as type}
                     <option value={type.name}>{type.label}</option>
@@ -364,7 +368,7 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label>Capacity (kg)</label>
+                <label class="form-label" for="capacity">Capacity (kg)</label>
                 <input
                   class="form-control"
                   type="number"
@@ -374,47 +378,40 @@
                 />
               </div>
             </div>
-            <div class="row mt-2">
-              <div class="col">
-                <label>Status</label>
-                <select class="form-select" bind:value={selectedVehicle.state}>
-                  <option value="AVAILABLE">Available</option>
-                  <option value="ON_ROUTE">On Route</option>
-                  <option value="DROPPING_OFF">Dropping Off</option>
-                  <option value="INACTIVE">Inactive</option>
-                  <option value="OUT_OF_SERVICE">Out of service</option>
-                </select>
-              </div>
+            <div class="mb-3 mt-2">
+              <label class="form-label" for="status">Status</label>
+              <select class="form-select" bind:value={selectedVehicle.state}>
+                <option value="AVAILABLE">Available</option>
+                <option value="ON_ROUTE">On Route</option>
+                <option value="DROPPING_OFF">Dropping Off</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="OUT_OF_SERVICE">Out of service</option>
+              </select>
+            </div>
+            <div class="mb-3 mt-2">
               {#if isAdmin}
-                <div class="mb-3">
-                  <label>Company</label>
-                  <select
-                    class="form-select"
-                    bind:value={selectedVehicle.companyId}
-                  >
-                    <option disabled selected value="">Select company</option>
-                    {#each companies as company}
-                      <option value={company.id}>{company.name}</option>
-                    {/each}
-                  </select>
-                </div>
-              {/if}
-
-              {#if isAdmin || isOwner}
-                <div class="mb-3">
-                  <label>Location</label>
-                  <select
-                    class="form-select"
-                    bind:value={selectedVehicle.locationId}
-                  >
-                    <option disabled selected value="">Select location</option>
-                    {#each locations as location}
-                      <option value={location.id}>{location.name}</option>
-                    {/each}
-                  </select>
-                </div>
+                <CompanySelect
+                  bind:bindValue={selectedVehicle.companyId}
+                  {companies}
+                />
               {/if}
             </div>
+
+            {#if hasAnyRole("admin", "owner")}
+              <LocationSelect
+                bind:bindValue={selectedVehicle.locationId}
+                locations={locations.filter(
+                  (loc) => loc.companyId === selectedVehicle.companyId
+                )}
+              />
+              {#if selectedVehicle.companyId && locations.filter((loc) => loc.companyId === selectedVehicle.companyId).length === 0}
+                <div class="text-muted mb-3">
+                  <p style="color: red">
+                    No locations available for selected company
+                  </p>
+                </div>
+              {/if}
+            {/if}
           </form>
         </div>
         <div class="modal-footer">

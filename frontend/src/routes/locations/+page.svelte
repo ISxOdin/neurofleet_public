@@ -68,7 +68,7 @@
       loading = false;
     }
   }
-  
+
   async function getLocations(page = currentPage) {
     loading = true;
     try {
@@ -246,23 +246,27 @@
             {userMap[loc.fleetmanagerId]?.family_name}</td
           >
           <td>
-            
             <button
-            class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
-            <i class="bi bi-gear-fill"></i> Edit
+              class="btn btn-sm btn-outline-secondary"
+              type="button"
+              data-bs-toggle="dropdown"
+            >
+              <i class="bi bi-gear-fill"></i> Edit
             </button>
             <ul
               class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
               aria-labelledby="userDropdown"
             >
               <li>
-                <a class="dropdown-item" onclick={() => openEditModal(loc, loc.id)}
-                  >Edit</a
+                <a
+                  class="dropdown-item"
+                  onclick={() => openEditModal(loc, loc.id)}>Edit</a
                 >
               </li>
               <li>
-                <a class="dropdown-item text-danger" onclick={() => deleteLocation(loc.id)}
-                  >Delete</a
+                <a
+                  class="dropdown-item text-danger"
+                  onclick={() => deleteLocation(loc.id)}>Delete</a
                 >
               </li>
               <li><hr class="dropdown-divider" /></li>
