@@ -258,4 +258,29 @@ public class CompanyControllerTest {
                                 .andDo(print())
                                 .andExpect(status().isNotFound());
         }
+
+        @Test
+        @Order(8)
+        public void testAddUserToCompany() throws Exception {
+                when(companyService.addUserToCompany(eq(company_id), eq("user123"))).thenReturn(baseCompany);
+
+                mvc.perform(post("/api/companies/" + company_id + "/users/user123")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                                .andDo(print())
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$").value("ASSIGNED"));
+        }
+
+        @Test
+        @Order(9)
+        public void testRemoveUserFromCompany() throws Exception {
+
+                mvc.perform(delete("/api/companies/" + company_id + "/users/user123")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                                .andDo(print())
+                                .andExpect(status().isOk());
+        }
+
 }
