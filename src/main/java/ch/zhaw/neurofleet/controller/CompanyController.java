@@ -107,6 +107,9 @@ public class CompanyController {
     public ResponseEntity<String> addUser(
             @PathVariable String companyId,
             @PathVariable String userId) {
+        if (!userService.userHasAnyRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         companyService.addUserToCompany(companyId, userId);
         return ResponseEntity.status(HttpStatus.OK).body("ASSIGNED");
     }
@@ -115,6 +118,9 @@ public class CompanyController {
     public ResponseEntity<Void> removeUser(
             @PathVariable String companyId,
             @PathVariable String userId) {
+        if (!userService.userHasAnyRole("admin")) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         companyService.removeUserFromCompany(companyId, userId);
         return ResponseEntity.ok().build();
     }
