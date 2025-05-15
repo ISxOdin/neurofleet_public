@@ -1,8 +1,13 @@
 package ch.zhaw.neurofleet.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,8 +27,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +36,7 @@ import ch.zhaw.neurofleet.model.UserDTO;
 import ch.zhaw.neurofleet.repository.UserRepository;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.Auth0Service;
+import ch.zhaw.neurofleet.service.CompanyService;
 import ch.zhaw.neurofleet.service.UserService;
 
 @SpringBootTest
@@ -53,6 +57,9 @@ public class UserControllerTest {
     @MockitoBean
     private UserRepository userRepository;
 
+    @MockitoBean
+    private CompanyService companyService;
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String AUTH0_ID = "auth0|12345";
     private static final String COMPANY_ID = "comp-001";
@@ -72,6 +79,8 @@ public class UserControllerTest {
         when(userRepository.findAll()).thenReturn(List.of(testUser));
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(testUser));
     }
+
+    // Get all users tests
 
     @Test
     @Order(1)
@@ -117,6 +126,8 @@ public class UserControllerTest {
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
                 .andExpect(status().isForbidden());
     }
+
+    // Update user tests
 
     @Test
     @Order(5)
@@ -180,4 +191,34 @@ public class UserControllerTest {
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isForbidden());
     }
+
+    // Assign user to company tests
+
+    @Test
+    @Order(8)
+    void testAssignUserToCompany_AsAdmin() throws Exception {
+        String companyId = "comp-123";
+        String userId = "auth0|abc";
+
+        when(userService.userHasAnyRole("admin")).thenReturn(true);
+
+        mvc.perform(post("/api/companies/" + companyId + "/users/" + userId)
+                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(content().string("ASSIGNED"));
+    }
+
+    @Test
+    @Order(9)
+    void testAssignUserToCompany_Forbidden() throws Exception {
+        String companyId = "comp-123";
+        String userId = "auth0|abc";
+
+        when(userService.userHasAnyRole("admin")).thenReturn(false);
+
+        mvc.perform(post("/api/companies/" + companyId + "/users/" + userId)
+                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
+                .andExpect(status().isForbidden());
+    }
+
 }
