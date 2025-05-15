@@ -20,6 +20,10 @@
   let userMap = {};
   let locations = [];
   let companies = [];
+  let location = {
+    name: "",
+    address: "",
+  };
 
   onMount(async () => {
     if (browser) {
@@ -88,16 +92,16 @@
     }
   }
 
-  async function createLocation(data, id) {
+  async function createLocation(location) {
     if (!myCompanyId) {
       return alert("You don't belong to any company");
     }
     const payload = {
-      ...data,
+      ...location,
       companyId: myCompanyId,
     };
     try {
-      await axios.post(`${apiRoot}/api/locations/${id}`, payload, {
+      await axios.post(`${apiRoot}/api/locations`, payload, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
       alert("Location created");

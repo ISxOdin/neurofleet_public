@@ -37,7 +37,7 @@ public class LocationController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/locations/{id}")
+    @PostMapping("/locations")
     public ResponseEntity<Location> createLocation(@RequestBody LocationCreateDTO dto) {
         if (!userService.userHasAnyRole("admin", "owner")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
