@@ -44,6 +44,14 @@ public class JobController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
+        if (userService.userHasAnyRole("owner")) {
+            jDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
+        }
+
+        if (userService.userHasAnyRole("fleetmanager")) {
+            jDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
+        }
+
         try {
             Job jobDAO = new Job(
                     jDTO.getDescription(),
