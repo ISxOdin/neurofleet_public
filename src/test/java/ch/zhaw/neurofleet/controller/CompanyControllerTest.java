@@ -62,7 +62,7 @@ public class CompanyControllerTest {
 
         private static final String company_id = "mocked-id";
 
-        // Testdaten
+        // Test data
         private static final String TEST_NAME = "TestCompany";
         private static final String TEST_EMAIL = "test@neurofleet.com";
         private static final String TEST_ADDRESS = "Bahnhofstrasse 1, 8000 Zürich";
