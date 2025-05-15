@@ -1,22 +1,25 @@
 package ch.zhaw.neurofleet.service;
 
-import java.util.NoSuchElementException;
+import ch.zhaw.neurofleet.model.Job;
+import ch.zhaw.neurofleet.model.JobCreateDTO;
+import ch.zhaw.neurofleet.repository.JobRepository;
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ch.zhaw.neurofleet.model.Job;
-import ch.zhaw.neurofleet.model.JobCreateDTO;
-import ch.zhaw.neurofleet.repository.JobRepository;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class JobService {
 
     @Autowired
-    private JobRepository jobRepository;
+    JobRepository jobRepository;
 
     @Autowired
-    private UserService userService;
+    UserService userService;
 
     public Job updateJob(String id, JobCreateDTO dto) {
         Job job = jobRepository.findById(id)
@@ -43,13 +46,9 @@ public class JobService {
         job.setOriginId(dto.getOriginId());
         job.setDestinationId(dto.getDestinationId());
         job.setVehicleId(dto.getVehicleId());
-        job.setCompanyId(dto.getCompanyId());
-        job.setJobState(dto.getJobState());
-        if (dto.getJobState() == null) {
-            throw new IllegalArgumentException("Jobstate must not be null");
-        }
+
+        job.setJobState(Objects.requireNonNull(dto.getJobState(), "Jobstate must not be null"));
 
         return jobRepository.save(job);
     }
-
 }
