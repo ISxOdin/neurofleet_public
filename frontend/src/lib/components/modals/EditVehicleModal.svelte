@@ -80,7 +80,7 @@
             <CompanySelect bind:bindValue={vehicle.companyId} {companies} />
           {/if}
 
-          {#if $hasAnyRole("admin", "owner")}
+          {#if hasAnyRole("admin", "owner")}
             <LocationSelect
               bind:bindValue={vehicle.locationId}
               locations={locations.filter(
