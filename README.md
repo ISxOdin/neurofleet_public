@@ -3,7 +3,7 @@
 ### Wichtigste Links & URL
 | Name          | URL |
 |--------------|----|
-| Deployte Applikation         | [Azure Deployment]() |
+| Deployte Applikation         | [Azure Deployment](https://zhaw-project-strubili.azurewebsites.net/) |
 | Code         | [GitHub Repository](https://github.com/ISxOdin/neurofleet) |
 | Postman Dokumentation  | [Postman_Documentation](https://documenter.getpostman.com/view/40518505/2sB2j1gBvr) |
 | Roadmap-History         | [History](https://github.com/users/ISxOdin/projects/2/views/7) |
