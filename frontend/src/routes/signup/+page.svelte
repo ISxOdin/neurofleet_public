@@ -1,6 +1,7 @@
 <script>
   import { isAuthenticated } from "../../store";
   import auth from "../../auth.service";
+  import axios from "axios";
 
   let email = $state("");
   let password = $state("");

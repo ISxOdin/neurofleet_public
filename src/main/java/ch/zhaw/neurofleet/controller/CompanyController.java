@@ -22,6 +22,7 @@ import ch.zhaw.neurofleet.model.Company;
 import ch.zhaw.neurofleet.model.CompanyCreateDTO;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
 import ch.zhaw.neurofleet.service.CompanyService;
+import ch.zhaw.neurofleet.service.MailValidatorService;
 import ch.zhaw.neurofleet.service.UserService;
 
 @RestController
@@ -36,11 +37,17 @@ public class CompanyController {
     @Autowired
     UserService userService;
 
+    @Autowired
+    MailValidatorService mailValidatorService;
+
     @PostMapping("/companies")
     public ResponseEntity<Company> createCompany(
             @RequestBody CompanyCreateDTO cDTO) {
         if (!userService.userHasAnyRole("admin")) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        if (mailValidatorService.validateEmail(cDTO.getEmail()).isDisposable()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         try {
             Company cDAO = companyService.createCompany(

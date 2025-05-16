@@ -46,7 +46,6 @@
     }
   }
 
-  // Paginated companies
   async function getCompanies(page = currentPage) {
     loading = true;
     try {
@@ -70,7 +69,6 @@
     getCompanies(page);
   }
 
-  // Create new company
   let newCompany = { name: "", email: "", address: "" };
   async function createCompany() {
     try {
@@ -89,7 +87,6 @@
     }
   }
 
-  // Edit company modal
   function openEditModal(company) {
     editCompany = { ...company };
     showEditModal = true;
@@ -129,6 +126,32 @@
       console.error("Could not delete company", error);
       alert("Could not delete company");
     }
+  }
+
+  function validateEmailAndCreateCompany() {
+    var config = {
+      method: "get",
+      url: "https://disify.com/api/email/" + newCompany.email,
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log("Validated email " + newCompany.email);
+        console.log(response.data);
+        if (
+          response.data.format &&
+          !response.data.disposable &&
+          response.data.dns
+        ) {
+          createCompany();
+        } else {
+          alert("Email " + newCompany.email + " is not valid.");
+        }
+      })
+      .catch(function (error) {
+        alert("Could not validate email");
+        console.log(error);
+      });
   }
 </script>
 
@@ -174,7 +197,11 @@
       />
     </div>
   </div>
-  <button type="submit" class="btn btn-primary mt-3">Submit</button>
+  <button
+    type="button"
+    class="btn btn-primary"
+    onclick={validateEmailAndCreateCompany}>Submit</button
+  >
 </form>
 
 <!-- Companies Table -->
