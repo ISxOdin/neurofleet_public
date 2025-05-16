@@ -35,9 +35,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.zhaw.neurofleet.model.Company;
+import ch.zhaw.neurofleet.model.MailInformation;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.CompanyService;
+import ch.zhaw.neurofleet.service.MailValidatorService;
 import ch.zhaw.neurofleet.service.UserService;
 
 @SpringBootTest
@@ -57,6 +59,9 @@ public class CompanyControllerTest {
 
         @MockitoBean
         private UserService userService;
+
+        @MockitoBean
+        private MailValidatorService mailValidatorService;
 
         private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -143,7 +148,14 @@ public class CompanyControllerTest {
         @Test
         @Order(1)
         void testCreateCompany() throws Exception {
+                MailInformation mail = new MailInformation();
+                mail.setDisposable(false);
+                mail.setFormat(true);
+                mail.setDns(true);
+
                 String jsonBody = objectMapper.writeValueAsString(baseCompany);
+
+                when(mailValidatorService.validateEmail(TEST_EMAIL)).thenReturn(mail);
 
                 var result = mvc.perform(post("/api/companies")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -281,6 +293,27 @@ public class CompanyControllerTest {
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
                                 .andDo(print())
                                 .andExpect(status().isOk());
+        }
+
+        // Test for invalid email format
+
+        @Test
+        public void testCreateCompany_InvalidEmail_Disposable() throws Exception {
+                MailInformation mail = new MailInformation();
+                mail.setFormat(true);
+                mail.setDns(true);
+                mail.setDisposable(true);
+
+                when(mailValidatorService.validateEmail(TEST_EMAIL)).thenReturn(mail);
+
+                String jsonBody = objectMapper.writeValueAsString(baseCompany);
+
+                mvc.perform(post("/api/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                                .andDo(print())
+                                .andExpect(status().isBadRequest());
         }
 
 }
