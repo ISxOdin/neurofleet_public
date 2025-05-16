@@ -21,6 +21,7 @@ import ch.zhaw.neurofleet.model.UserDTO;
 import ch.zhaw.neurofleet.repository.UserRepository;
 import ch.zhaw.neurofleet.service.Auth0Service;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
@@ -37,7 +38,7 @@ public class UserController {
 
     @GetMapping("/users/sync")
     public ResponseEntity<List<User>> syncUsersWithAuth0() {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -68,7 +69,7 @@ public class UserController {
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -87,7 +88,7 @@ public class UserController {
             @PathVariable String auth0Id,
             @RequestBody UserDTO dto) {
 
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 

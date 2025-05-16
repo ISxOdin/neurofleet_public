@@ -47,12 +47,13 @@ import ch.zhaw.neurofleet.service.CompanyService.CompanyWithOwnerEmail;
 import ch.zhaw.neurofleet.service.MailService;
 import ch.zhaw.neurofleet.service.MailValidatorService;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.ADMIN;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @TestMethodOrder(OrderAnnotation.class)
-public class CompanyControllerTest {
+class CompanyControllerTest {
 
         @Autowired
         private MockMvc mvc;
@@ -98,7 +99,7 @@ public class CompanyControllerTest {
                 baseCompany.setId(company_id);
                 baseCompany.setOwner(TEST_OWNER);
 
-                when(userService.userHasAnyRole("admin")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN)).thenReturn(true);
                 when(companyRepository.findById(company_id)).thenReturn(Optional.of(baseCompany));
                 when(companyRepository.existsById(company_id)).thenReturn(true);
                 when(companyRepository.save(any())).thenReturn(baseCompany);
@@ -109,8 +110,8 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testCreateCompany_UserRole() throws Exception {
-                when(userService.userHasAnyRole("admin")).thenReturn(false);
+        void testCreateCompany_UserRole() throws Exception {
+                when(userService.userHasAnyRole(ADMIN)).thenReturn(false);
 
                 mvc.perform(post("/api/companies")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -121,8 +122,8 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testCreateCompany_DriverRole() throws Exception {
-                when(userService.userHasAnyRole("admin")).thenReturn(false);
+        void testCreateCompany_DriverRole() throws Exception {
+                when(userService.userHasAnyRole(ADMIN)).thenReturn(false);
 
                 mvc.perform(post("/api/companies")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -133,8 +134,8 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testCreateCompany_FleetManagerRole() throws Exception {
-                when(userService.userHasAnyRole("admin")).thenReturn(false);
+        void testCreateCompany_FleetManagerRole() throws Exception {
+                when(userService.userHasAnyRole(ADMIN)).thenReturn(false);
 
                 mvc.perform(post("/api/companies")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -145,8 +146,8 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testCreateCompany_OwnerRole() throws Exception {
-                when(userService.userHasAnyRole("admin")).thenReturn(false);
+        void testCreateCompany_OwnerRole() throws Exception {
+                when(userService.userHasAnyRole(ADMIN)).thenReturn(false);
 
                 mvc.perform(post("/api/companies")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -182,7 +183,7 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testGetCompany() throws Exception {
+        void testGetCompany() throws Exception {
                 mvc.perform(get("/api/companies/" + company_id)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
@@ -196,7 +197,7 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testGetAllCompanies() throws Exception {
+        void testGetAllCompanies() throws Exception {
                 PageImpl<Company> mockPage = new PageImpl<>(List.of(baseCompany));
                 when(companyRepository.findAll(PageRequest.of(0, 5))).thenReturn(mockPage);
 
@@ -246,7 +247,7 @@ public class CompanyControllerTest {
 
                 String jsonBody = objectMapper.writeValueAsString(company);
 
-                when(userService.userHasAnyRole("admin")).thenReturn(false);
+                when(userService.userHasAnyRole(ADMIN)).thenReturn(false);
 
                 mvc.perform(put("/api/companies/" + company_id)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -257,7 +258,7 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testDeleteCompany() throws Exception {
+        void testDeleteCompany() throws Exception {
                 mvc.perform(delete("/api/companies/" + company_id)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
@@ -266,7 +267,7 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testIfCompanyIsDeleted() throws Exception {
+        void testIfCompanyIsDeleted() throws Exception {
                 when(companyRepository.existsById(company_id)).thenReturn(false);
 
                 mvc.perform(delete("/api/companies/" + company_id)
@@ -277,7 +278,7 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testAddUserToCompany() throws Exception {
+        void testAddUserToCompany() throws Exception {
                 when(companyService.addUserToCompany(eq(company_id), eq("user123"))).thenReturn(baseCompany);
 
                 mvc.perform(post("/api/companies/" + company_id + "/users/user123")
@@ -289,7 +290,7 @@ public class CompanyControllerTest {
         }
 
         @Test
-        public void testRemoveUserFromCompany() throws Exception {
+        void testRemoveUserFromCompany() throws Exception {
 
                 mvc.perform(delete("/api/companies/" + company_id + "/users/user123")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -301,7 +302,7 @@ public class CompanyControllerTest {
         // Test for invalid email format
 
         @Test
-        public void testCreateCompany_InvalidEmail_Disposable() throws Exception {
+        void testCreateCompany_InvalidEmail_Disposable() throws Exception {
                 MailInformation mail = new MailInformation();
                 mail.setFormat(true);
                 mail.setDns(true);

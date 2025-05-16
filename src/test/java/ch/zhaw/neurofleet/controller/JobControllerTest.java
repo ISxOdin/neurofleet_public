@@ -41,12 +41,13 @@ import ch.zhaw.neurofleet.repository.JobRepository;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.JobService;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @TestMethodOrder(OrderAnnotation.class)
-public class JobControllerTest {
+class JobControllerTest {
 
         @Autowired
         private MockMvc mvc;
@@ -86,7 +87,7 @@ public class JobControllerTest {
 
         @Test
         @Order(1)
-        public void testCreateJob_AdminRole() throws Exception {
+        void testCreateJob_AdminRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Transport X");
                 dto.setScheduledTime(LocalDateTime.now());
@@ -104,7 +105,7 @@ public class JobControllerTest {
                                 dto.getCompanyId());
                 created.setId(JOB_ID);
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobRepository.save(any())).thenReturn(created);
 
                 String json = objectMapper.writeValueAsString(dto);
@@ -120,7 +121,7 @@ public class JobControllerTest {
 
         @Test
         @Order(2)
-        public void testCreateJob_OwnerRole() throws Exception {
+        void testCreateJob_OwnerRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Owner Job");
                 dto.setScheduledTime(LocalDateTime.now());
@@ -138,7 +139,7 @@ public class JobControllerTest {
                                 dto.getCompanyId());
                 created.setId(JOB_ID);
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobRepository.save(any())).thenReturn(created);
 
                 String json = objectMapper.writeValueAsString(dto);
@@ -153,7 +154,7 @@ public class JobControllerTest {
 
         @Test
         @Order(3)
-        public void testCreateJob_FleetmanagerRole() throws Exception {
+        void testCreateJob_FleetmanagerRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Fleetmanager Job");
                 dto.setScheduledTime(LocalDateTime.now());
@@ -171,7 +172,7 @@ public class JobControllerTest {
                                 dto.getCompanyId());
                 created.setId(JOB_ID);
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobRepository.save(any())).thenReturn(created);
 
                 String json = objectMapper.writeValueAsString(dto);
@@ -186,7 +187,7 @@ public class JobControllerTest {
 
         @Test
         @Order(4)
-        public void testCreateJob_UnauthorizedRole() throws Exception {
+        void testCreateJob_UnauthorizedRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Blocked");
                 dto.setScheduledTime(LocalDateTime.now());
@@ -195,7 +196,7 @@ public class JobControllerTest {
                 dto.setDestinationId(DESTINATION_ID);
                 dto.setVehicleId(VEHICLE_ID);
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(false);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
 
                 String json = objectMapper.writeValueAsString(dto);
 
@@ -208,7 +209,7 @@ public class JobControllerTest {
 
         @Test
         @Order(5)
-        public void testGetAllJobs() throws Exception {
+        void testGetAllJobs() throws Exception {
                 when(jobRepository.findAll(PageRequest.of(0, 5)))
                                 .thenReturn(new PageImpl<>(List.of(baseJob)));
 
@@ -222,7 +223,7 @@ public class JobControllerTest {
 
         @Test
         @Order(6)
-        public void testGetJobById_Found() throws Exception {
+        void testGetJobById_Found() throws Exception {
                 when(jobRepository.findById(JOB_ID)).thenReturn(Optional.of(baseJob));
 
                 mvc.perform(get("/api/jobs/" + JOB_ID)
@@ -234,7 +235,7 @@ public class JobControllerTest {
 
         @Test
         @Order(7)
-        public void testGetJobById_NotFound() throws Exception {
+        void testGetJobById_NotFound() throws Exception {
                 when(jobRepository.findById("invalid-id")).thenReturn(Optional.empty());
 
                 mvc.perform(get("/api/jobs/invalid-id")
@@ -244,7 +245,7 @@ public class JobControllerTest {
 
         @Test
         @Order(8)
-        public void testUpdateJob_AdminRole() throws Exception {
+        void testUpdateJob_AdminRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Updated Job");
                 dto.setScheduledTime(LocalDateTime.now());
@@ -258,7 +259,7 @@ public class JobControllerTest {
                                 dto.getVehicleId(), dto.getCompanyId());
                 updated.setId(JOB_ID);
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobService.updateJob(eq(JOB_ID), any(JobCreateDTO.class))).thenReturn(updated);
 
                 String json = objectMapper.writeValueAsString(dto);
@@ -273,11 +274,11 @@ public class JobControllerTest {
 
         @Test
         @Order(9)
-        public void testUpdateJob_UnauthorizedRole() throws Exception {
+        void testUpdateJob_UnauthorizedRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Blocked");
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(false);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
 
                 String json = objectMapper.writeValueAsString(dto);
 
@@ -290,11 +291,11 @@ public class JobControllerTest {
 
         @Test
         @Order(10)
-        public void testUpdateJob_NotFound() throws Exception {
+        void testUpdateJob_NotFound() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Missing");
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobService.updateJob(eq("not-found-id"), any(JobCreateDTO.class)))
                                 .thenThrow(new NoSuchElementException());
 
@@ -309,11 +310,11 @@ public class JobControllerTest {
 
         @Test
         @Order(11)
-        public void testUpdateJob_SecurityException() throws Exception {
+        void testUpdateJob_SecurityException() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Wrong Access");
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobService.updateJob(eq(JOB_ID), any(JobCreateDTO.class)))
                                 .thenThrow(new SecurityException());
 
@@ -328,11 +329,11 @@ public class JobControllerTest {
 
         @Test
         @Order(12)
-        public void testUpdateJob_InternalServerError() throws Exception {
+        void testUpdateJob_InternalServerError() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Fails");
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobService.updateJob(eq(JOB_ID), any(JobCreateDTO.class)))
                                 .thenThrow(new RuntimeException("Unexpected failure"));
 
@@ -347,8 +348,8 @@ public class JobControllerTest {
 
         @Test
         @Order(13)
-        public void testDeleteJob_AdminRole() throws Exception {
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+        void testDeleteJob_AdminRole() throws Exception {
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
 
                 mvc.perform(delete("/api/jobs/" + JOB_ID)
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
@@ -358,8 +359,8 @@ public class JobControllerTest {
 
         @Test
         @Order(14)
-        public void testDeleteJob_UnauthorizedRole() throws Exception {
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(false);
+        void testDeleteJob_UnauthorizedRole() throws Exception {
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
 
                 mvc.perform(delete("/api/jobs/" + JOB_ID)
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
@@ -368,7 +369,7 @@ public class JobControllerTest {
 
         @Test
         @Order(15)
-        public void testCreateJob_OwnerManipulatesCompanyId() throws Exception {
+        void testCreateJob_OwnerManipulatesCompanyId() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Hack Attempt");
                 dto.setScheduledTime(LocalDateTime.now());
@@ -381,8 +382,8 @@ public class JobControllerTest {
                                 dto.getDestinationId(), dto.getVehicleId(), COMPANY_ID);
                 created.setId(JOB_ID);
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
-                when(userService.userHasAnyRole("owner")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+                when(userService.userHasAnyRole(OWNER)).thenReturn(true);
                 when(userService.getCompanyIdOfCurrentUser()).thenReturn(COMPANY_ID);
                 when(jobRepository.save(any())).thenReturn(created);
 
@@ -398,7 +399,7 @@ public class JobControllerTest {
 
         @Test
         @Order(16)
-        public void testUpdateJob_FleetmanagerWrongCompany() throws Exception {
+        void testUpdateJob_FleetmanagerWrongCompany() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
                 dto.setDescription("Illegal fleet update");
                 dto.setScheduledTime(LocalDateTime.now());
@@ -408,7 +409,7 @@ public class JobControllerTest {
                 dto.setVehicleId(VEHICLE_ID);
                 dto.setJobState(JobState.SCHEDULED);
 
-                when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(jobService.updateJob(eq(JOB_ID), any(JobCreateDTO.class)))
                                 .thenThrow(new SecurityException("Job not accessible for fleetmanager"));
 

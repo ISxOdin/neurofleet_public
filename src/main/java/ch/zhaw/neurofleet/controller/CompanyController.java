@@ -26,6 +26,7 @@ import ch.zhaw.neurofleet.service.CompanyService;
 import ch.zhaw.neurofleet.service.MailService;
 import ch.zhaw.neurofleet.service.MailValidatorService;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
@@ -47,7 +48,7 @@ public class CompanyController {
 
     @PostMapping("/companies")
     public ResponseEntity<Company> createCompany(@RequestBody CompanyCreateDTO cDTO) {
-        if (!userService.userHasAnyRole("admin"))
+        if (!userService.userHasAnyRole(ADMIN))
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         if (mailValidatorService.validateEmail(cDTO.getEmail()).isDisposable())
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -81,7 +82,7 @@ public class CompanyController {
 
     @PutMapping("/companies/{id}")
     public ResponseEntity<Company> updateCompany(@PathVariable String id, @RequestBody CompanyCreateDTO dto) {
-        if (!userService.userHasAnyRole("admin"))
+        if (!userService.userHasAnyRole(ADMIN))
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 
         try {
@@ -99,7 +100,7 @@ public class CompanyController {
 
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<String> deleteCompanyById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin")) {
+        if (!userService.userHasAnyRole(ADMIN)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         if (companyRepository.existsById(id)) {
@@ -114,7 +115,7 @@ public class CompanyController {
     public ResponseEntity<String> addUser(
             @PathVariable String companyId,
             @PathVariable String userId) {
-        if (!userService.userHasAnyRole("admin")) {
+        if (!userService.userHasAnyRole(ADMIN)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         companyService.addUserToCompany(companyId, userId);
@@ -125,7 +126,7 @@ public class CompanyController {
     public ResponseEntity<Void> removeUser(
             @PathVariable String companyId,
             @PathVariable String userId) {
-        if (!userService.userHasAnyRole("admin")) {
+        if (!userService.userHasAnyRole(ADMIN)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         companyService.removeUserFromCompany(companyId, userId);

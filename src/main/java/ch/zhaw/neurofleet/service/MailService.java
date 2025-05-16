@@ -20,7 +20,6 @@ public class MailService {
             mailSender.send(message);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }

@@ -20,8 +20,7 @@ import ch.zhaw.neurofleet.model.Route;
 import ch.zhaw.neurofleet.model.RouteCreateDTO;
 import ch.zhaw.neurofleet.repository.RouteRepository;
 import ch.zhaw.neurofleet.service.UserService;
-
-
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
@@ -36,7 +35,7 @@ public class RouteController {
 
     @PostMapping("/routes")
     public ResponseEntity<Route> createRoute(@RequestBody RouteCreateDTO rDTO) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         try {
@@ -45,8 +44,7 @@ public class RouteController {
                     rDTO.getWaypoints(),
                     rDTO.getVehicleId(),
                     rDTO.getJobIds(),
-                    rDTO.getCompanyId()
-            );
+                    rDTO.getCompanyId());
             Route Route = routeRepository.save(routeDAO);
             return new ResponseEntity<>(Route, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -74,7 +72,7 @@ public class RouteController {
 
     @DeleteMapping("/routes/{id}")
     public ResponseEntity<String> deleteRouteById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         routeRepository.deleteById(id);

@@ -1,5 +1,6 @@
 package ch.zhaw.neurofleet.service;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,26 +40,26 @@ public class Auth0Service {
 
     public List<Auth0UserDTO> getAllUsers() {
         String token = getAccessToken();
-    
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-    
+
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-    
+
         String url = UriComponentsBuilder
                 .fromUriString("https://" + domain + "/api/v2/users")
                 .queryParam("per_page", 100)
                 .toUriString();
-    
+
         ResponseEntity<Auth0UserDTO[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 entity,
                 Auth0UserDTO[].class);
-    
+
         List<Auth0UserDTO> users = Arrays.asList(Objects.requireNonNull(response.getBody()));
-    
+
         for (Auth0UserDTO dto : users) {
             try {
                 List<String> roles = getUserRoles(dto.getUser_id());
@@ -67,29 +68,30 @@ public class Auth0Service {
                 dto.setRoles(List.of("–"));
             }
         }
-    
+
         return users;
     }
-    
 
     public List<String> getUserRoles(String userId) {
-    String token = getAccessToken();
-    String url = "https://" + domain + "/api/v2/users/" + userId + "/roles";
+        String token = getAccessToken();
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBearerAuth(token);
-    headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        URI uri = UriComponentsBuilder
+                .fromUriString("https://" + domain + "/api/v2/users/{userId}/roles")
+                .buildAndExpand(userId)
+                .toUri();
 
-    HttpEntity<Void> entity = new HttpEntity<>(headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-    ResponseEntity<Map<String, Object>[]> response = restTemplate.exchange(
-        url, HttpMethod.GET, entity, (Class<Map<String, Object>[]>) (Class<?>) Map[].class);
+        ResponseEntity<Map<String, Object>[]> response = restTemplate.exchange(
+                uri, HttpMethod.GET, entity, (Class<Map<String, Object>[]>) (Class<?>) Map[].class);
 
-    return Arrays.stream(response.getBody())
-            .map(role -> (String) role.get("name"))
-            .collect(Collectors.toList());
-}
-
+        return Arrays.stream(response.getBody())
+                .map(role -> (String) role.get("name"))
+                .collect(Collectors.toList());
+    }
 
     private String getAccessToken() {
         String url = "https://" + domain + "/oauth/token";

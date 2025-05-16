@@ -20,6 +20,7 @@ import ch.zhaw.neurofleet.model.VehicleTypeDTO;
 import ch.zhaw.neurofleet.repository.VehicleRepository;
 import ch.zhaw.neurofleet.service.UserService;
 import ch.zhaw.neurofleet.service.VehicleService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
@@ -36,7 +37,7 @@ public class VehicleController {
 
     @PostMapping("/vehicles")
     public ResponseEntity<Vehicle> createVehicle(@RequestBody VehicleCreateDTO vDTO) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -44,21 +45,20 @@ public class VehicleController {
             return ResponseEntity.badRequest().build();
         }
 
-        if (userService.userHasAnyRole("owner")) {
+        if (userService.userHasAnyRole(OWNER)) {
             vDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
         }
 
-        if (userService.userHasAnyRole("fleetmanager")) {
+        if (userService.userHasAnyRole(FLEETMANAGER)) {
             vDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
             vDTO.setLocationId(userService.getLocationIdOfCurrentUser());
         }
 
         Vehicle vDAO = new Vehicle(
-            vDTO.getLicensePlate(),
-            vDTO.getVin(),
-            vDTO.getLocationId(),
-            vDTO.getCompanyId()
-        );
+                vDTO.getLicensePlate(),
+                vDTO.getVin(),
+                vDTO.getLocationId(),
+                vDTO.getCompanyId());
         vDAO.setVehicleType(vDTO.getVehicleType());
         vDAO.setCapacity(vDTO.getVehicleType().getCapacityKg());
 
@@ -68,18 +68,17 @@ public class VehicleController {
 
     @GetMapping("/vehicles")
     public ResponseEntity<Page<Vehicle>> getVehicles(
-        @RequestParam(defaultValue = "1") int pageNumber,
-        @RequestParam(defaultValue = "5") int pageSize
-    ) {
+            @RequestParam(defaultValue = "1") int pageNumber,
+            @RequestParam(defaultValue = "5") int pageSize) {
         PageRequest pr = PageRequest.of(pageNumber - 1, pageSize);
         Page<Vehicle> page;
 
-        if (userService.userHasAnyRole("admin")) {
+        if (userService.userHasAnyRole(ADMIN)) {
             page = vehicleRepository.findAll(pr);
-        } else if (userService.userHasAnyRole("owner")) {
+        } else if (userService.userHasAnyRole(OWNER)) {
             String cid = userService.getCompanyIdOfCurrentUser();
             page = vehicleRepository.findAllByCompanyId(cid, pr);
-        } else if (userService.userHasAnyRole("fleetmanager")) {
+        } else if (userService.userHasAnyRole(FLEETMANAGER)) {
             String cid = userService.getCompanyIdOfCurrentUser();
             String lid = userService.getLocationIdOfCurrentUser();
             page = vehicleRepository.findAllByCompanyIdAndLocationId(cid, lid, pr);
@@ -93,18 +92,19 @@ public class VehicleController {
     @GetMapping("/vehicles/{id}")
     public ResponseEntity<Vehicle> getVehicleById(@PathVariable String id) {
         Optional<Vehicle> opt = vehicleRepository.findById(id);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
+        if (opt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         Vehicle v = opt.get();
 
-        if (userService.userHasAnyRole("owner") &&
-            !v.getCompanyId().equals(userService.getCompanyIdOfCurrentUser())) {
+        if (userService.userHasAnyRole(OWNER) &&
+                !v.getCompanyId().equals(userService.getCompanyIdOfCurrentUser())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        if (userService.userHasAnyRole("fleetmanager") &&
-            (!v.getCompanyId().equals(userService.getCompanyIdOfCurrentUser()) ||
-             !v.getLocationId().equals(userService.getLocationIdOfCurrentUser()))) {
+        if (userService.userHasAnyRole(FLEETMANAGER) &&
+                (!v.getCompanyId().equals(userService.getCompanyIdOfCurrentUser()) ||
+                        !v.getLocationId().equals(userService.getLocationIdOfCurrentUser()))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -113,7 +113,7 @@ public class VehicleController {
 
     @PutMapping("/vehicles/{id}")
     public ResponseEntity<Vehicle> updateVehicle(@PathVariable String id, @RequestBody VehicleCreateDTO dto) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -125,14 +125,13 @@ public class VehicleController {
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @DeleteMapping("/vehicles/{id}")
     public ResponseEntity<String> deleteVehicleById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -147,13 +146,13 @@ public class VehicleController {
     @GetMapping("/vehicles/types")
     public ResponseEntity<List<VehicleTypeDTO>> getVehicleTypes() {
         List<VehicleTypeDTO> list = Arrays.stream(VehicleType.values())
-            .map(vt -> new VehicleTypeDTO(
-                vt.name(),
-                vt.getLabel(),
-                vt.getCapacityKg(),
-                vt.getLiftCapacityKg(),
-                vt.getPalletCount()))
-            .collect(Collectors.toList());
+                .map(vt -> new VehicleTypeDTO(
+                        vt.name(),
+                        vt.getLabel(),
+                        vt.getCapacityKg(),
+                        vt.getLiftCapacityKg(),
+                        vt.getPalletCount()))
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(list);
     }
