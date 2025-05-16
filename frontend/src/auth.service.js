@@ -1,6 +1,6 @@
 import { createAuth0Client } from "@auth0/auth0-spa-js"; // npm install @auth0/auth0-spa-js
 import { user, jwt_token } from "./store";
-import { goto } from '$app/navigation';
+import { goto } from "$app/navigation";
 import axios from "axios";
 import config from "./auth.config";
 
@@ -14,12 +14,23 @@ async function createClient() {
 }
 
 // Auth0 signup endpoint documentation: see https://auth0.com/docs/libraries/custom-signup#using-the-api
-function signup(
-  email,
-  password,
-  firstName = null,
-  lastName = null
-) {
+async function signup(email, password, firstName = null, lastName = null) {
+  try {
+    const response = await axios.get(
+      `https://www.disify.com/api/email/${email}`
+    );
+    const result = response.data;
+
+    if (!result.format || result.disposable || !result.dns) {
+      alert("Invalid or disposable email address. Please use a different one.");
+      return;
+    }
+  } catch (e) {
+    alert("Failed to validate email. Please try again later.");
+    console.error("Disify error:", e);
+    return;
+  }
+
   var options = {
     method: "post",
     url: `https://${config.auth0_domain}/dbconnections/signup`,
@@ -28,30 +39,18 @@ function signup(
       email: email,
       password: password,
       connection: "Username-Password-Authentication",
-      // you can set any of these properties as well if needed
-      // username: "johndoe", // if not provided, email will be used as username for login. if provided, username has to be validated (must not already exist)
-      // given_name: "John",
-      // family_name: "Doe",
-      // nickname: "Johnny", // if not provided, the part before the @ of the e-mail address will be used
-      // name: "John Doe",
-      // picture: "http://example.org/jdoe.png",
     },
   };
 
   if (firstName && firstName.length > 0) {
     options.data.given_name = firstName;
   }
-
   if (lastName && lastName.length > 0) {
     options.data.family_name = lastName;
   }
 
   axios(options)
     .then((response) => {
-      // wait 2 seconds. Explanation: The user roles are set automatically on signup,
-      // but we have to wait a short amount of time to make sure that the roles are
-      // stored in the database of auth0. Otherwise the roles may not be in the
-      // userinfo object on the first login.
       setTimeout(() => {
         login(email, password, true);
       }, 2000);
@@ -86,7 +85,7 @@ function login(username, password, redirectToHome = false) {
         // go to start page after 500ms. Explanation: if we do not wait, the login form on the
         // start page might still be visible because $isAuthenticated is not yet set to true.
         setTimeout(() => {
-          goto("/") 
+          goto("/");
         }, 500);
       }
     })
@@ -122,11 +121,13 @@ async function logout() {
     await createClient();
     user.set({});
     jwt_token.set("");
-    await auth0Client.logout({logoutParams:{returnTo: window.location.origin}});
+    await auth0Client.logout({
+      logoutParams: { returnTo: window.location.origin },
+    });
   } catch (e) {
     console.error(e);
   }
-  goto("/") // return to main page
+  goto("/"); // return to main page
 }
 
 const auth = {
