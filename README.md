@@ -8,7 +8,7 @@
 | Postman Dokumentation  | [Postman_Documentation](https://documenter.getpostman.com/view/40518505/2sB2j1gBvr) |
 | Roadmap-History         | [History](https://github.com/users/ISxOdin/projects/2/views/7) |
 | Chart mit Iterations und Labels         | [Iterations](https://github.com/users/ISxOdin/projects/2/insights/2) |
-| SonarQube         | [Tbd]() |
+| SonarCloud         | [Statische Analyse](https://sonarcloud.io/dashboard?id=zhaw-strubili_neurofleetok) |
 
 ![Workflow](https://github.com/ISxOdin/neurofleet/actions/workflows/ci.yaml/badge.svg)
 ![Coverage](https://github.com/ISxOdin/neurofleet/blob/main/.github/badges/jacoco.svg) 
