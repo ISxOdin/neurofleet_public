@@ -4,7 +4,6 @@ import java.time.Duration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ public class MailValidatorService {
     private static final Logger logger = LoggerFactory.getLogger(MailValidatorService.class);
     private final WebClient webClient;
 
-    @Autowired
     public MailValidatorService() {
         this.webClient = WebClient.builder()
                 .baseUrl(DISIFY_EMAIL_VALIDATOR_BASE_URL)
