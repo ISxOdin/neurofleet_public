@@ -34,12 +34,13 @@ import ch.zhaw.neurofleet.model.RouteCreateDTO;
 import ch.zhaw.neurofleet.repository.RouteRepository;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @TestMethodOrder(OrderAnnotation.class)
-public class RouteControllerTest {
+class RouteControllerTest {
 
     @Autowired
     private MockMvc mvc;
@@ -78,7 +79,7 @@ public class RouteControllerTest {
         dto.setJobIds(JOB_IDS);
         dto.setCompanyId(COMPANY_ID);
 
-        when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
         when(routeRepository.save(any())).thenReturn(route);
 
         String json = objectMapper.writeValueAsString(dto);
@@ -101,7 +102,7 @@ public class RouteControllerTest {
         dto.setJobIds(JOB_IDS);
         dto.setCompanyId(COMPANY_ID);
 
-        when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(false);
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
 
         mvc.perform(post("/api/routes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -143,7 +144,7 @@ public class RouteControllerTest {
     @Test
     @Order(6)
     void testDeleteRoute_AsOwner() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
 
         mvc.perform(delete("/api/routes/" + ROUTE_ID)
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.OWNER))
@@ -153,7 +154,7 @@ public class RouteControllerTest {
     @Test
     @Order(7)
     void testDeleteRoute_Forbidden() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner", "fleetmanager")).thenReturn(false);
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
 
         mvc.perform(delete("/api/routes/" + ROUTE_ID)
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))

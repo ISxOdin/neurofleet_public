@@ -29,12 +29,13 @@ import ch.zhaw.neurofleet.model.Auth0UserDTO;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.Auth0Service;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @TestMethodOrder(OrderAnnotation.class)
-public class Auth0ControllerTest {
+class Auth0ControllerTest {
 
     @Autowired
     private MockMvc mvc;
@@ -50,12 +51,12 @@ public class Auth0ControllerTest {
 
     @BeforeEach
     void setup() {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(true);
     }
 
     @Test
     @Order(1)
-    public void testGetAllUsers_AsAdmin() throws Exception {
+    void testGetAllUsers_AsAdmin() throws Exception {
         Auth0UserDTO user = new Auth0UserDTO();
         user.setUser_id(USER_ID);
         user.setEmail("user@example.com");
@@ -70,7 +71,7 @@ public class Auth0ControllerTest {
 
     @Test
     @Order(2)
-    public void testGetUserRoles_AsOwner() throws Exception {
+    void testGetUserRoles_AsOwner() throws Exception {
         when(auth0Service.getUserRoles(USER_ID)).thenReturn(List.of(ROLE));
 
         mvc.perform(get("/api/auth0/users/" + USER_ID + "/roles")
@@ -81,7 +82,7 @@ public class Auth0ControllerTest {
 
     @Test
     @Order(3)
-    public void testAssignUserRole_AsAdmin() throws Exception {
+    void testAssignUserRole_AsAdmin() throws Exception {
         doNothing().when(auth0Service).assignUserRole(USER_ID, ROLE);
 
         mvc.perform(post("/api/auth0/users/" + USER_ID + "/roles/" + ROLE)
@@ -92,7 +93,7 @@ public class Auth0ControllerTest {
 
     @Test
     @Order(4)
-    public void testDeleteUserRole_AsAdmin() throws Exception {
+    void testDeleteUserRole_AsAdmin() throws Exception {
         doNothing().when(auth0Service).deleteUserRole(USER_ID, ROLE);
 
         mvc.perform(delete("/api/auth0/users/" + USER_ID + "/roles/" + ROLE)
@@ -103,8 +104,8 @@ public class Auth0ControllerTest {
 
     @Test
     @Order(5)
-    public void testGetAllUsers_Unauthorized() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(false);
+    void testGetAllUsers_Unauthorized() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(false);
 
         mvc.perform(get("/api/auth0/users")
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
@@ -113,8 +114,8 @@ public class Auth0ControllerTest {
 
     @Test
     @Order(6)
-    public void testAssignUserRole_Forbidden() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(false);
+    void testAssignUserRole_Forbidden() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(false);
 
         mvc.perform(post("/api/auth0/users/" + USER_ID + "/roles/" + ROLE)
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
@@ -123,8 +124,8 @@ public class Auth0ControllerTest {
 
     @Test
     @Order(7)
-    public void testDeleteUserRole_ServiceError() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(true);
+    void testDeleteUserRole_ServiceError() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(true);
         doThrow(new RuntimeException("something failed"))
                 .when(auth0Service).deleteUserRole(USER_ID, ROLE);
 

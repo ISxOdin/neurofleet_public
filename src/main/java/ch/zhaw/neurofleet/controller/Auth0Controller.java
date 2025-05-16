@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Auth0UserDTO;
 import ch.zhaw.neurofleet.service.Auth0Service;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api/auth0")
@@ -28,7 +29,7 @@ public class Auth0Controller {
 
     @GetMapping("/users")
     public ResponseEntity<List<Auth0UserDTO>> getAuth0Users() {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -42,7 +43,7 @@ public class Auth0Controller {
 
     @GetMapping("/users/{id}/roles")
     public ResponseEntity<List<String>> getUserRoles(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -59,7 +60,7 @@ public class Auth0Controller {
             @PathVariable String id,
             @PathVariable String roleName) {
 
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -67,7 +68,6 @@ public class Auth0Controller {
             auth0Service.assignUserRole(id, roleName);
             return ResponseEntity.status(HttpStatus.OK).body("ASSIGNED");
         } catch (Exception e) {
-            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -77,7 +77,7 @@ public class Auth0Controller {
             @PathVariable String id,
             @PathVariable String roleName) {
 
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -85,7 +85,6 @@ public class Auth0Controller {
             auth0Service.deleteUserRole(id, roleName);
             return ResponseEntity.status(HttpStatus.OK).body("DELETED");
         } catch (Exception e) {
-            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

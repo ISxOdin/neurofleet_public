@@ -23,6 +23,7 @@ import ch.zhaw.neurofleet.model.JobCreateDTO;
 import ch.zhaw.neurofleet.repository.JobRepository;
 import ch.zhaw.neurofleet.service.JobService;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
@@ -40,15 +41,15 @@ public class JobController {
 
     @PostMapping("/jobs")
     public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO jDTO) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        if (userService.userHasAnyRole("owner")) {
+        if (userService.userHasAnyRole(OWNER)) {
             jDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
         }
 
-        if (userService.userHasAnyRole("fleetmanager")) {
+        if (userService.userHasAnyRole(FLEETMANAGER)) {
             jDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
         }
 
@@ -87,7 +88,7 @@ public class JobController {
 
     @PutMapping("/jobs/{id}")
     public ResponseEntity<Job> updateJob(@PathVariable String id, @RequestBody JobCreateDTO dto) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -106,7 +107,7 @@ public class JobController {
 
     @DeleteMapping("/jobs/{id}")
     public ResponseEntity<String> deleteJobById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner", "fleetmanager")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         jobRepository.deleteById(id);

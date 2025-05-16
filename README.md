@@ -1,17 +1,18 @@
 # NeuroFleet
 
 ### Wichtigste Links & URL
-| Name          | URL |
-|--------------|----|
-| Deployte Applikation         | [Azure Deployment](https://zhaw-project-strubili.azurewebsites.net/) |
-| Code         | [GitHub Repository](https://github.com/ISxOdin/neurofleet) |
-| Postman Dokumentation  | [Postman_Documentation](https://documenter.getpostman.com/view/40518505/2sB2j1gBvr) |
-| Roadmap-History         | [History](https://github.com/users/ISxOdin/projects/2/views/7) |
-| Chart mit Iterations und Labels         | [Iterations](https://github.com/users/ISxOdin/projects/2/insights/2) |
-| SonarCloud         | [Statische Analyse](https://sonarcloud.io/dashboard?id=zhaw-strubili_neurofleetok) |
+
+| Name                            | URL                                                                                 |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| Deployte Applikation            | [Azure Deployment](https://zhaw-project-strubili.azurewebsites.net/)                |
+| Code                            | [GitHub Repository](https://github.com/ISxOdin/neurofleet)                          |
+| Postman Dokumentation           | [Postman_Documentation](https://documenter.getpostman.com/view/40518505/2sB2j1gBvr) |
+| Roadmap-History                 | [History](https://github.com/users/ISxOdin/projects/2/views/7)                      |
+| Chart mit Iterations und Labels | [Iterations](https://github.com/users/ISxOdin/projects/2/insights/2)                |
+| SonarCloud                      | [Statische Analyse](https://sonarcloud.io/dashboard?id=zhaw-strubili_neurofleetok)  |
 
 ![Workflow](https://github.com/ISxOdin/neurofleet/actions/workflows/ci.yaml/badge.svg)
-![Coverage](https://github.com/ISxOdin/neurofleet/blob/main/.github/badges/jacoco.svg) 
+![Coverage](https://github.com/ISxOdin/neurofleet/blob/main/.github/badges/jacoco.svg)
 ![Branches](https://github.com/ISxOdin/neurofleet/blob/main/.github/badges/branches.svg)
 
 Was sind die Kernideen?

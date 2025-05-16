@@ -23,6 +23,7 @@ import ch.zhaw.neurofleet.model.LocationCreateDTO;
 import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.service.LocationService;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
@@ -39,11 +40,11 @@ public class LocationController {
 
     @PostMapping("/locations")
     public ResponseEntity<Location> createLocation(@RequestBody LocationCreateDTO dto) {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
-            if (userService.userHasAnyRole("owner")) {
+            if (userService.userHasAnyRole(OWNER)) {
                 dto.setCompanyId(userService.getCompanyIdOfCurrentUser());
             }
             Location saved = locationService.createLocation(
@@ -65,12 +66,12 @@ public class LocationController {
 
         PageRequest pr = PageRequest.of(pageNumber - 1, pageSize);
         Page<Location> page;
-        if (userService.userHasAnyRole("admin")) {
+        if (userService.userHasAnyRole(ADMIN)) {
             page = locationRepository.findAll(pr);
-        } else if (userService.userHasAnyRole("owner")) {
+        } else if (userService.userHasAnyRole(OWNER)) {
             String cid = userService.getCompanyIdOfCurrentUser();
             page = locationRepository.findAllByCompanyId(cid, pr);
-        } else if (userService.userHasAnyRole("fleetmanager")) {
+        } else if (userService.userHasAnyRole(FLEETMANAGER)) {
             String lid = userService.getAuthIdOfCurrentUser();
             page = locationRepository.findAllByFleetmanagerId(lid, pr);
         } else {
@@ -81,10 +82,10 @@ public class LocationController {
 
     @GetMapping("/locations/{id}")
     public ResponseEntity<Location> getLocationById(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        if (userService.userHasAnyRole("owner")) {
+        if (userService.userHasAnyRole(OWNER)) {
             String cid = userService.getCompanyIdOfCurrentUser();
             if (!locationRepository.existsByIdAndCompanyId(id, cid)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -100,11 +101,11 @@ public class LocationController {
             @PathVariable String id,
             @RequestBody LocationCreateDTO dto) {
 
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
-            if (userService.userHasAnyRole("owner")) {
+            if (userService.userHasAnyRole(OWNER)) {
                 String cid = userService.getCompanyIdOfCurrentUser();
                 if (!locationRepository.existsByIdAndCompanyId(id, cid)) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -122,10 +123,10 @@ public class LocationController {
 
     @DeleteMapping("/locations/{id}")
     public ResponseEntity<Void> deleteLocation(@PathVariable String id) {
-        if (!userService.userHasAnyRole("admin", "owner")) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        if (userService.userHasAnyRole("owner")) {
+        if (userService.userHasAnyRole(OWNER)) {
             String cid = userService.getCompanyIdOfCurrentUser();
             if (!locationRepository.existsByIdAndCompanyId(id, cid)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

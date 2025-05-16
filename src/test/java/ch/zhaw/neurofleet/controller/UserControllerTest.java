@@ -37,12 +37,13 @@ import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.Auth0Service;
 import ch.zhaw.neurofleet.service.CompanyService;
 import ch.zhaw.neurofleet.service.UserService;
+import static ch.zhaw.neurofleet.security.Roles.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @TestMethodOrder(OrderAnnotation.class)
-public class UserControllerTest {
+class UserControllerTest {
 
     @Autowired
     private MockMvc mvc;
@@ -84,7 +85,7 @@ public class UserControllerTest {
     @Test
     @Order(1)
     void testGetAllUsers_AsAdmin() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(true);
 
         mvc.perform(get("/api/users")
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
@@ -98,7 +99,7 @@ public class UserControllerTest {
     @Test
     @Order(2)
     void testGetAllUsers_Forbidden() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(false);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(false);
 
         mvc.perform(get("/api/users")
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
@@ -108,7 +109,7 @@ public class UserControllerTest {
     @Test
     @Order(3)
     void testSyncUsersWithAuth0_Admin() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(true);
         when(auth0Service.getAllUsers()).thenReturn(List.of());
 
         mvc.perform(get("/api/users/sync")
@@ -119,7 +120,7 @@ public class UserControllerTest {
     @Test
     @Order(4)
     void testSyncUsersWithAuth0_Forbidden() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(false);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(false);
 
         mvc.perform(get("/api/users/sync")
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
@@ -144,7 +145,7 @@ public class UserControllerTest {
         existingUser.setLocationId(dto.getLocationId());
         existingUser.setVehicleId(dto.getVehicleId());
 
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(true);
         when(userRepository.findByAuth0Id(AUTH0_ID)).thenReturn(Optional.of(existingUser));
         when(userService.updateUser(AUTH0_ID, dto)).thenReturn(existingUser);
 
@@ -162,7 +163,7 @@ public class UserControllerTest {
     @Test
     @Order(6)
     void testUpdateUser_NotFound() throws Exception {
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(true);
 
         UserDTO dto = new UserDTO();
         dto.setCompanyId(COMPANY_ID);
@@ -182,7 +183,7 @@ public class UserControllerTest {
         UserDTO dto = new UserDTO();
         dto.setCompanyId(COMPANY_ID);
 
-        when(userService.userHasAnyRole("admin", "owner")).thenReturn(false);
+        when(userService.userHasAnyRole(ADMIN, OWNER)).thenReturn(false);
 
         mvc.perform(put("/api/users/" + AUTH0_ID)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -199,7 +200,7 @@ public class UserControllerTest {
         String companyId = "comp-123";
         String userId = "auth0|abc";
 
-        when(userService.userHasAnyRole("admin")).thenReturn(true);
+        when(userService.userHasAnyRole(ADMIN)).thenReturn(true);
 
         mvc.perform(post("/api/companies/" + companyId + "/users/" + userId)
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
@@ -213,7 +214,7 @@ public class UserControllerTest {
         String companyId = "comp-123";
         String userId = "auth0|abc";
 
-        when(userService.userHasAnyRole("admin")).thenReturn(false);
+        when(userService.userHasAnyRole(ADMIN)).thenReturn(false);
 
         mvc.perform(post("/api/companies/" + companyId + "/users/" + userId)
                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
