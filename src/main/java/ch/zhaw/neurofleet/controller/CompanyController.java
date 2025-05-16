@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ch.zhaw.neurofleet.model.Company;
 import ch.zhaw.neurofleet.model.CompanyCreateDTO;
+import ch.zhaw.neurofleet.model.Mail;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
 import ch.zhaw.neurofleet.service.CompanyService;
+import ch.zhaw.neurofleet.service.MailService;
 import ch.zhaw.neurofleet.service.MailValidatorService;
 import ch.zhaw.neurofleet.service.UserService;
 
@@ -40,22 +42,20 @@ public class CompanyController {
     @Autowired
     MailValidatorService mailValidatorService;
 
+    @Autowired
+    MailService mailService;
+
     @PostMapping("/companies")
-    public ResponseEntity<Company> createCompany(
-            @RequestBody CompanyCreateDTO cDTO) {
-        if (!userService.userHasAnyRole("admin")) {
+    public ResponseEntity<Company> createCompany(@RequestBody CompanyCreateDTO cDTO) {
+        if (!userService.userHasAnyRole("admin"))
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-        if (mailValidatorService.validateEmail(cDTO.getEmail()).isDisposable()) {
+        if (mailValidatorService.validateEmail(cDTO.getEmail()).isDisposable())
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+
         try {
-            Company cDAO = companyService.createCompany(
-                    cDTO.getName(),
-                    cDTO.getEmail(),
-                    cDTO.getAddress());
-            Company company = companyRepository.save(cDAO);
-            return new ResponseEntity<>(company, HttpStatus.CREATED);
+            var result = companyService.createCompany(cDTO.getName(), cDTO.getEmail(), cDTO.getAddress());
+            sendCompanyCreatedMail(cDTO.getEmail(), result.getCompany().getName());
+            return new ResponseEntity<>(result.getCompany(), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -80,16 +80,16 @@ public class CompanyController {
     }
 
     @PutMapping("/companies/{id}")
-    public ResponseEntity<Company> updateCompany(
-            @PathVariable String id,
-            @RequestBody CompanyCreateDTO dto) {
-        if (!userService.userHasAnyRole("admin")) {
+    public ResponseEntity<Company> updateCompany(@PathVariable String id, @RequestBody CompanyCreateDTO dto) {
+        if (!userService.userHasAnyRole("admin"))
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
 
         try {
-            Company updated = companyService.updateCompany(id, dto);
-            return new ResponseEntity<>(updated, HttpStatus.OK);
+            var result = companyService.updateCompany(id, dto);
+            if (result.getOwnerEmail() != null) {
+                sendOwnerRegisteredMail(result.getOwnerEmail(), result.getCompany().getName());
+            }
+            return new ResponseEntity<>(result.getCompany(), HttpStatus.OK);
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
@@ -130,6 +130,29 @@ public class CompanyController {
         }
         companyService.removeUserFromCompany(companyId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    private void sendCompanyCreatedMail(String email, String companyName) {
+        Mail mail = new Mail();
+        mail.setTo(email);
+        mail.setSubject("Your company has been successfully registered");
+        mail.setMessage(
+                "Dear Customer,\n\n" +
+                        "Your company \"" + companyName + "\" has been successfully registered in NeuroFleet.\n\n" +
+                        "Best regards,\n" +
+                        "The NeuroFleet Team");
+        mailService.sendMail(mail);
+    }
+
+    private void sendOwnerRegisteredMail(String email, String companyName) {
+        Mail mail = new Mail();
+        mail.setTo(email);
+        mail.setSubject("You have been assigned as the new owner");
+        mail.setMessage(
+                "You have been successfully registered as the new owner of the company \"" + companyName + "\".\n\n" +
+                        "Best regards,\n" +
+                        "The NeuroFleet Team");
+        mailService.sendMail(mail);
     }
 
 }

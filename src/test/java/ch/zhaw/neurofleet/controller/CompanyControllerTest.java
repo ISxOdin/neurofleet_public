@@ -2,7 +2,10 @@ package ch.zhaw.neurofleet.controller;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -13,11 +16,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +38,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.zhaw.neurofleet.model.Company;
+import ch.zhaw.neurofleet.model.Mail;
 import ch.zhaw.neurofleet.model.MailInformation;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.CompanyService;
+import ch.zhaw.neurofleet.service.CompanyService.CompanyWithOwnerEmail;
+import ch.zhaw.neurofleet.service.MailService;
 import ch.zhaw.neurofleet.service.MailValidatorService;
 import ch.zhaw.neurofleet.service.UserService;
 
@@ -62,6 +68,9 @@ public class CompanyControllerTest {
 
         @MockitoBean
         private MailValidatorService mailValidatorService;
+
+        @MockitoBean
+        private MailService mailService;
 
         private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -93,8 +102,10 @@ public class CompanyControllerTest {
                 when(companyRepository.findById(company_id)).thenReturn(Optional.of(baseCompany));
                 when(companyRepository.existsById(company_id)).thenReturn(true);
                 when(companyRepository.save(any())).thenReturn(baseCompany);
-                when(companyService.createCompany(any(), any(), any())).thenReturn(baseCompany);
-                when(companyService.updateCompany(eq(company_id), any())).thenReturn(baseCompany);
+                when(companyService.createCompany(any(), any(), any()))
+                                .thenReturn(new CompanyWithOwnerEmail(baseCompany, TEST_OWNER));
+                when(companyService.updateCompany(eq(company_id), any()))
+                                .thenReturn(new CompanyWithOwnerEmail(baseCompany, TEST_OWNER));
         }
 
         @Test
@@ -146,7 +157,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(1)
         void testCreateCompany() throws Exception {
                 MailInformation mail = new MailInformation();
                 mail.setDisposable(false);
@@ -172,7 +182,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(2)
         public void testGetCompany() throws Exception {
                 mvc.perform(get("/api/companies/" + company_id)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -187,7 +196,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(3)
         public void testGetAllCompanies() throws Exception {
                 PageImpl<Company> mockPage = new PageImpl<>(List.of(baseCompany));
                 when(companyRepository.findAll(PageRequest.of(0, 5))).thenReturn(mockPage);
@@ -205,14 +213,14 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(4)
         void testUpdateCompany() throws Exception {
                 Company updated = new Company(UPDATED_TEST_NAME, UPDATED_TEST_EMAIL, UPDATED_TEST_ADDRESS,
                                 UPDATED_TEST_LATITUDE, UPDATED_TEST_LONGITUDE);
                 updated.setOwner(TEST_OWNER);
                 updated.setId(company_id);
 
-                when(companyService.updateCompany(eq(company_id), any())).thenReturn(updated);
+                when(companyService.updateCompany(eq(company_id), any()))
+                                .thenReturn(new CompanyWithOwnerEmail(updated, TEST_OWNER));
 
                 String jsonBody = objectMapper.writeValueAsString(updated);
 
@@ -231,7 +239,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(5)
         void testUpdateCompany_ForbiddenForOwner() throws Exception {
                 Company company = new Company(UPDATED_TEST_NAME, UPDATED_TEST_EMAIL, UPDATED_TEST_ADDRESS,
                                 UPDATED_TEST_LATITUDE, UPDATED_TEST_LONGITUDE);
@@ -250,7 +257,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(6)
         public void testDeleteCompany() throws Exception {
                 mvc.perform(delete("/api/companies/" + company_id)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -260,7 +266,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(7)
         public void testIfCompanyIsDeleted() throws Exception {
                 when(companyRepository.existsById(company_id)).thenReturn(false);
 
@@ -272,7 +277,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(8)
         public void testAddUserToCompany() throws Exception {
                 when(companyService.addUserToCompany(eq(company_id), eq("user123"))).thenReturn(baseCompany);
 
@@ -285,7 +289,6 @@ public class CompanyControllerTest {
         }
 
         @Test
-        @Order(9)
         public void testRemoveUserFromCompany() throws Exception {
 
                 mvc.perform(delete("/api/companies/" + company_id + "/users/user123")
@@ -314,6 +317,106 @@ public class CompanyControllerTest {
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
                                 .andDo(print())
                                 .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void testCreateCompany_SendsMail() throws Exception {
+                MailInformation mail = new MailInformation();
+                mail.setDisposable(false);
+                mail.setFormat(true);
+                mail.setDns(true);
+
+                when(mailValidatorService.validateEmail(TEST_EMAIL)).thenReturn(mail);
+                when(companyService.createCompany(any(), any(), any()))
+                                .thenReturn(new CompanyWithOwnerEmail(baseCompany, TEST_EMAIL));
+
+                String jsonBody = objectMapper.writeValueAsString(baseCompany);
+
+                mvc.perform(post("/api/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                                .andDo(print())
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.id").value(company_id));
+
+                verify(mailService).sendMail(argThat(mailSent -> mailSent.getTo().equals(TEST_EMAIL) &&
+                                mailSent.getSubject().contains("successfully registered")));
+        }
+
+        @Test
+        void testUpdateCompany_NewOwnerSendsMail() throws Exception {
+                Company updated = new Company("Updated", TEST_EMAIL, TEST_ADDRESS, TEST_LATITUDE, TEST_LONGITUDE);
+                updated.setId(company_id);
+                updated.setOwner(TEST_OWNER);
+
+                when(companyService.updateCompany(eq(company_id), any()))
+                                .thenReturn(new CompanyWithOwnerEmail(updated, TEST_EMAIL));
+
+                String jsonBody = objectMapper.writeValueAsString(updated);
+
+                mvc.perform(put("/api/companies/" + company_id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN)
+                                .content(jsonBody))
+                                .andDo(print())
+                                .andExpect(status().isOk());
+
+                verify(mailService).sendMail(argThat(mailSent -> mailSent.getTo().equals(TEST_EMAIL) &&
+                                mailSent.getSubject().contains("assigned as the new owner")));
+        }
+
+        @Test
+        void testUpdateCompany_NoOwnerEmail_NoMailSent() throws Exception {
+                when(companyService.updateCompany(eq(company_id), any()))
+                                .thenReturn(new CompanyWithOwnerEmail(baseCompany, null));
+
+                String jsonBody = objectMapper.writeValueAsString(baseCompany);
+
+                mvc.perform(put("/api/companies/" + company_id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN)
+                                .content(jsonBody))
+                                .andDo(print())
+                                .andExpect(status().isOk());
+
+                verify(mailService, never()).sendMail(any(Mail.class));
+        }
+
+        @Test
+        void testCreateCompany_InternalServerError() throws Exception {
+                MailInformation mail = new MailInformation();
+                mail.setDisposable(false);
+                mail.setFormat(true);
+                mail.setDns(true);
+
+                when(mailValidatorService.validateEmail(TEST_EMAIL)).thenReturn(mail);
+                when(companyService.createCompany(any(), any(), any()))
+                                .thenThrow(new RuntimeException("DB error"));
+
+                String jsonBody = objectMapper.writeValueAsString(baseCompany);
+
+                mvc.perform(post("/api/companies")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                                .andDo(print())
+                                .andExpect(status().isInternalServerError());
+        }
+
+        @Test
+        void testUpdateCompany_NotFound() throws Exception {
+                when(companyService.updateCompany(eq(company_id), any()))
+                                .thenThrow(new NoSuchElementException("not found"));
+
+                String jsonBody = objectMapper.writeValueAsString(baseCompany);
+
+                mvc.perform(put("/api/companies/" + company_id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody)
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                                .andDo(print())
+                                .andExpect(status().isNotFound());
         }
 
 }
