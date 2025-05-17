@@ -1,8 +1,13 @@
 package ch.zhaw.neurofleet.security;
 
-public interface Roles {
-    String ADMIN = "admin";
-    String OWNER = "owner";
-    String FLEETMANAGER = "fleetmanager";
-    String DRIVER = "driver";
+public final class Roles {
+
+    private Roles() {
+        // Prevent instantiation
+    }
+
+    public static final String ADMIN = "admin";
+    public static final String OWNER = "owner";
+    public static final String FLEETMANAGER = "fleetmanager";
+    public static final String DRIVER = "driver";
 }
