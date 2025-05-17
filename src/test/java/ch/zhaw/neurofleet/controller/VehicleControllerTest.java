@@ -66,8 +66,8 @@ class VehicleControllerTest {
         void setup() {
                 baseVehicle = new Vehicle("ZH 123", "VIN123", LOCATION_ID, COMPANY_ID);
                 baseVehicle.setId(VEHICLE_ID);
-                baseVehicle.setVehicleType(VehicleType.LIEFERWAGEN);
-                baseVehicle.setCapacity(VehicleType.LIEFERWAGEN.getCapacityKg());
+                baseVehicle.setVehicleType(VehicleType.VAN);
+                baseVehicle.setCapacity(VehicleType.VAN.getCapacityKg());
 
                 when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(userService.getCompanyIdOfCurrentUser()).thenReturn(COMPANY_ID);
@@ -92,12 +92,12 @@ class VehicleControllerTest {
                 dto.setVin("VIN123");
                 dto.setCompanyId(COMPANY_ID);
                 dto.setLocationId(LOCATION_ID);
-                dto.setVehicleType(VehicleType.LIEFERWAGEN);
+                dto.setVehicleType(VehicleType.VAN);
 
                 Vehicle created = new Vehicle("ZH 123", "VIN123", LOCATION_ID, COMPANY_ID);
                 created.setId(VEHICLE_ID);
-                created.setVehicleType(VehicleType.LIEFERWAGEN);
-                created.setCapacity(VehicleType.LIEFERWAGEN.getCapacityKg());
+                created.setVehicleType(VehicleType.VAN);
+                created.setCapacity(VehicleType.VAN.getCapacityKg());
 
                 when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(vehicleRepository.save(any())).thenReturn(created);
@@ -111,7 +111,7 @@ class VehicleControllerTest {
                                 .andExpect(status().isCreated())
                                 .andExpect(jsonPath("$.licensePlate").value("ZH 123"))
                                 .andExpect(jsonPath("$.vin").value("VIN123"))
-                                .andExpect(jsonPath("$.vehicleType").value("LIEFERWAGEN"));
+                                .andExpect(jsonPath("$.vehicleType").value("VAN"));
         }
 
         @Test
@@ -127,7 +127,7 @@ class VehicleControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.content[0].id").value(VEHICLE_ID))
                                 .andExpect(jsonPath("$.content[0].companyId").value(COMPANY_ID))
-                                .andExpect(jsonPath("$.content[0].vehicleType").value("LIEFERWAGEN"));
+                                .andExpect(jsonPath("$.content[0].vehicleType").value("VAN"));
         }
 
         @Test
@@ -138,12 +138,12 @@ class VehicleControllerTest {
                 dto.setVin("VIN456");
                 dto.setCompanyId("ignored-company"); // wird vom Controller überschrieben
                 dto.setLocationId(LOCATION_ID);
-                dto.setVehicleType(VehicleType.LIEFERWAGEN);
+                dto.setVehicleType(VehicleType.VAN);
 
                 Vehicle created = new Vehicle("ZH 456", "VIN456", LOCATION_ID, COMPANY_ID);
                 created.setId(VEHICLE_ID);
-                created.setVehicleType(VehicleType.LIEFERWAGEN);
-                created.setCapacity(VehicleType.LIEFERWAGEN.getCapacityKg());
+                created.setVehicleType(VehicleType.VAN);
+                created.setCapacity(VehicleType.VAN.getCapacityKg());
 
                 when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(userService.userHasAnyRole(OWNER)).thenReturn(true);
@@ -169,12 +169,12 @@ class VehicleControllerTest {
                 dto.setVin("VIN789");
                 dto.setCompanyId("ignored-company");
                 dto.setLocationId("ignored-location");
-                dto.setVehicleType(VehicleType.LIEFERWAGEN);
+                dto.setVehicleType(VehicleType.VAN);
 
                 Vehicle created = new Vehicle("ZH 789", "VIN789", LOCATION_ID, COMPANY_ID);
                 created.setId(VEHICLE_ID);
-                created.setVehicleType(VehicleType.LIEFERWAGEN);
-                created.setCapacity(VehicleType.LIEFERWAGEN.getCapacityKg());
+                created.setVehicleType(VehicleType.VAN);
+                created.setCapacity(VehicleType.VAN.getCapacityKg());
 
                 when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
                 when(userService.userHasAnyRole(FLEETMANAGER)).thenReturn(true);
@@ -302,7 +302,7 @@ class VehicleControllerTest {
                 dto.setVin("VIN987");
                 dto.setCompanyId(COMPANY_ID);
                 dto.setLocationId(LOCATION_ID);
-                dto.setVehicleType(VehicleType.LIEFERWAGEN);
+                dto.setVehicleType(VehicleType.VAN);
 
                 Vehicle updated = new Vehicle(dto.getLicensePlate(), dto.getVin(), dto.getLocationId(),
                                 dto.getCompanyId());
