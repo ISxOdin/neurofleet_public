@@ -3,6 +3,7 @@
   import { isAuthenticated, user, hasAnyRole, isAdmin } from "../store";
   import auth from "../auth.service";
   import { page } from "$app/stores";
+  import Chatbot from "$lib/components/chat/Chatbot.svelte";
 
   $: currentPath = $page.url.pathname;
 </script>
@@ -223,6 +224,20 @@
           <slot />
         </div>
       </main>
+
+      <!-- Chatbot Component -->
+      <Chatbot />
+
+      <!-- Chatbot Button -->
+      {#if $isAuthenticated}
+        <button
+          class="chatbot-button"
+          onclick={() => window.dispatchEvent(new CustomEvent("toggleChatbot"))}
+          aria-label="Toggle Chatbot"
+        >
+          <i class="bi bi-chat-dots-fill"></i>
+        </button>
+      {/if}
     </div>
   </div>
 </div>
@@ -282,5 +297,54 @@
   .navbar-logo {
     height: 20px;
     width: auto;
+  }
+
+  .chatbot-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1000;
+  }
+
+  .chatbot-button i {
+    font-size: 1.5rem;
+    color: var(--base-color);
+  }
+
+  .chatbot-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .chatbot-button:active {
+    transform: scale(0.95);
+  }
+
+  /* Add animation for the chat icon */
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(149, 212, 238, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(149, 212, 238, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(149, 212, 238, 0);
+    }
+  }
+
+  .chatbot-button {
+    animation: pulse 2s infinite;
   }
 </style>

@@ -117,24 +117,24 @@
 {/if}
 
 <style>
- .login-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: url("/images/Background.png") no-repeat center center fixed;
-  background-size: cover;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: -1; /* Damit sie hinter allen Inhalten liegt */
-}
+  .login-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: url("/images/Background.png") no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: -1;
+  }
 
-.container.mt-5 {
-  position: relative;
-  z-index: 1; /* Damit der Login-Container über dem Hintergrundbild liegt */
-}
+  .container.mt-5 {
+    position: relative;
+    z-index: 1;
+  }
 
   img {
     max-width: 100%;

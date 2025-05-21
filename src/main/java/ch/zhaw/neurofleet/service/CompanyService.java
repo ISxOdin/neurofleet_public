@@ -36,6 +36,10 @@ public class CompanyService {
     @Value("${google.maps.api.key}")
     private String googleApiKey;
 
+    public List<Company> getAllCompanies() {
+        return companyRepository.findAll();
+    }
+
     public CompanyWithOwnerEmail createCompany(String name, String email, String address) {
         Coordinates coordinates = geocodeAddress(address);
 
