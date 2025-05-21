@@ -5,6 +5,7 @@
   import { browser } from "$app/environment";
   import { jwt_token, user, isAuthenticated } from "../../store";
   import EditLocationModal from "$lib/components/modals/EditLocationModal.svelte";
+  import Pagination from "$lib/components/Pagination.svelte";
 
   let currentPage = 1;
   let defaultPageSize = 20;
@@ -251,27 +252,11 @@
     </tbody>
   </table>
 
-  <nav>
-    <ul class="pagination justify-content-center">
-      <li class="page-item" class:disabled={currentPage === 1}>
-        <button class="page-link" onclick={() => getLocations(currentPage - 1)}
-          >&laquo;</button
-        >
-      </li>
-      {#each Array(nrOfPages) as _, i}
-        <li class="page-item" class:active={currentPage === i + 1}>
-          <button class="page-link" onclick={() => getLocations(i + 1)}
-            >{i + 1}</button
-          >
-        </li>
-      {/each}
-      <li class="page-item" class:disabled={currentPage === nrOfPages}>
-        <button class="page-link" onclick={() => getLocations(currentPage + 1)}
-          >&raquo;</button
-        >
-      </li>
-    </ul>
-  </nav>
+  <Pagination
+    {currentPage}
+    totalPages={nrOfPages}
+    onPageChange={getLocations}
+  />
 {/if}
 
 <style>

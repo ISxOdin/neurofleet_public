@@ -4,6 +4,8 @@
   import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
   import EditCompanyModal from "$lib/components/modals/EditCompanyModal.svelte";
+  import CreateCompanyModal from "$lib/components/modals/CreateCompanyModal.svelte";
+  import Pagination from "$lib/components/Pagination.svelte";
 
   let apiRoot = "";
   let users = [];
@@ -12,10 +14,11 @@
   let companies = [];
   let currentPage = 1;
   let totalPages = 0;
-  const pageSize = 20;
+  const pageSize = 5;
   let loading = false;
 
   let showEditModal = false;
+  let showCreateModal = false;
   let editCompany = null;
 
   onMount(async () => {
@@ -97,6 +100,15 @@
     editCompany = null;
   }
 
+  function openCreateModal() {
+    showCreateModal = true;
+  }
+
+  function closeCreateModal() {
+    showCreateModal = false;
+    newCompany = { name: "", email: "", address: "" };
+  }
+
   async function submitEdit(updated) {
     try {
       await axios.put(`${apiRoot}/api/companies/${updated.id}`, updated, {
@@ -164,48 +176,23 @@
   />
 {/if}
 
-<!-- Create Company Form -->
-<h1 class="mt-3 text-center">Create Company</h1>
-<form onsubmit={createCompany} class="mb-5">
-  <div class="row g-3">
-    <div class="col-md-4">
-      <label class="form-label">Name</label>
-      <input
-        class="form-control"
-        bind:value={newCompany.name}
-        required
-        placeholder="Neurofleet AG"
-      />
-    </div>
-    <div class="col-md-4">
-      <label class="form-label">Email</label>
-      <input
-        type="email"
-        class="form-control"
-        bind:value={newCompany.email}
-        required
-        placeholder="maxmustermann@neurofleet.com"
-      />
-    </div>
-    <div class="col-md-4">
-      <label class="form-label">Address</label>
-      <input
-        class="form-control"
-        bind:value={newCompany.address}
-        required
-        placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"
-      />
-    </div>
-  </div>
-  <button
-    type="button"
-    class="btn btn-primary"
-    onclick={validateEmailAndCreateCompany}>Submit</button
-  >
-</form>
-
 <!-- Companies Table -->
-<h1 class="text-center">All Companies</h1>
+
+<div class="companies-header">
+  <h1 class="text-center">All Companies</h1>
+  <button class="btn-accent" onclick={() => (showCreateModal = true)}>
+    <i class="bi bi-plus-lg"></i> Create Company
+  </button>
+  {#if showCreateModal}
+    <CreateCompanyModal
+      on:created={() => {
+        showCreateModal = false;
+        getCompanies();
+      }}
+      on:cancel={closeCreateModal}
+    />
+  {/if}
+</div>
 {#if loading}
   <div class="d-flex justify-content-center my-4">
     <div class="spinner-border" role="status">
@@ -213,7 +200,7 @@
     </div>
   </div>
 {:else}
-  <table class="table table-hover">
+  <table class="companies-table">
     <thead>
       <tr>
         <th>Name</th>
@@ -247,7 +234,7 @@
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              <button class="btn btn-sm btn-outline-secondary">
+              <button class="btn btn-sm btn-outline-light">
                 <i class="bi bi-gear-fill"></i> Edit
               </button>
             </a>
@@ -274,32 +261,83 @@
     </tbody>
   </table>
 
-  <!-- Pagination -->
-  <nav>
-    <ul class="pagination justify-content-center">
-      <li class="page-item" class:disabled={currentPage === 1}>
-        <button class="page-link" onclick={() => changePage(currentPage - 1)}
-          >&laquo;</button
-        >
-      </li>
-      {#each Array(totalPages) as _, i}
-        <li class="page-item" class:active={currentPage === i + 1}>
-          <button class="page-link" onclick={() => changePage(i + 1)}
-            >{i + 1}</button
-          >
-        </li>
-      {/each}
-      <li class="page-item" class:disabled={currentPage === totalPages}>
-        <button class="page-link" onclick={() => changePage(currentPage + 1)}
-          >&raquo;</button
-        >
-      </li>
-    </ul>
-  </nav>
+  <Pagination {currentPage} {totalPages} onPageChange={getCompanies} />
 {/if}
 
 <style>
   .page-link {
     box-shadow: none;
+  }
+
+  .companies-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    margin-top: 2rem;
+    background-color: #343c44;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #95d4ee;
+  }
+
+  .companies-header h1 {
+    color: white;
+    font-size: 1.4rem;
+    margin: 0;
+  }
+
+  .btn-accent {
+    background: #95d4ee;
+    color: #23272e;
+    border: none;
+    border-radius: 4px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-accent:hover {
+    background: #7bc4e6;
+  }
+
+  .companies-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #4f5a65;
+    color: #fff;
+    border-radius: 8px;
+    border: 1px solid #95d4ee;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .companies-table th,
+  .companies-table td {
+    padding: 1rem 0.8rem;
+    text-align: left;
+    vertical-align: middle;
+  }
+  .companies-table th {
+    color: #95d4ee;
+    font-weight: 600;
+    background: #343c44;
+    border-bottom: 2px solid #343c44;
+  }
+  .companies-table tbody tr {
+    transition: background 0.15s;
+  }
+  .companies-table tbody tr:nth-child(even) {
+    background: #343c44;
+  }
+  .companies-table tbody tr:nth-child(odd) {
+    background: #4f5a65;
+  }
+  .companies-table tbody tr:hover {
+    background: rgba(149, 212, 238, 0.2);
   }
 </style>

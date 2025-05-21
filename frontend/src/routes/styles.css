@@ -1,23 +1,47 @@
-body{
-    background-color: #4F5A65;
-    font-family: 'Arial';
-    color: white;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+body {
+  background-color: #4f5a65;
+  font-family: "Arial";
+  color: white;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
-h1{
-    font-family: 'Arial';
+h1 {
+  font-family: "Arial";
 }
 
 /* Button */
 .btn-primary {
-    background-color: #053361;
-    border: none;
-    padding: 0.75rem;
-    font-size: 1rem;
-    font-weight: bold;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-top: 1rem;
+  background-color: #053361;
+  border: none;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.pagination {
+  --bs-pagination-bg: #343c44;
+  --bs-pagination-color: #ffffff;
+  --bs-pagination-border-color: #343c44;
+
+  --bs-pagination-hover-bg: #4f5a65;
+  --bs-pagination-hover-color: #ffffff;
+  --bs-pagination-hover-border-color: #95d4ee;
+
+  --bs-pagination-active-bg: #95d4ee;
+  --bs-pagination-active-color: #343c44;
+  --bs-pagination-active-border-color: #95d4ee;
+
+  --bs-pagination-disabled-bg: #343c44;
+  --bs-pagination-disabled-color: #888;
+  --bs-pagination-disabled-border-color: #343c44;
+
+  --bs-pagination-focus-box-shadow: 0 0 0 0.15rem rgba(149, 212, 238, 0.5);
+  --bs-pagination-border-radius: 8px;
+  --bs-pagination-padding-x: 1rem;
+  --bs-pagination-padding-y: 0.5rem;
+  --bs-pagination-transition: background-color 0.2s ease, color 0.2s ease;
 }

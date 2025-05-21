@@ -13,6 +13,7 @@
   import CompanySelect from "$lib/components/forms/CompanySelect.svelte";
   import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
   import EditVehicleModal from "$lib/components/modals/EditVehicleModal.svelte";
+  import Pagination from "$lib/components/Pagination.svelte";
 
   const api_root = page.url.origin;
 
@@ -320,6 +321,8 @@
       {/each}
     </tbody>
   </table>
+
+  <Pagination {currentPage} totalPages={nrOfPages} onPageChange={getVehicles} />
 {/if}
 
 {#if showModal && selectedVehicle}
