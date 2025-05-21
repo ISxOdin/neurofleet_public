@@ -15,7 +15,7 @@
         <div
           id="sidebar"
           class="collapse collapse-horizontal show position-fixed"
-          style="top: 56px; height: calc(100% - 56px); background-color: #343C44;"
+          style="top: 54px; height: calc(100% - 56px); background-color: #343C44;"
         >
           <div
             id="sidebar-nav"
