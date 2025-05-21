@@ -3,6 +3,7 @@
   import { isAuthenticated, user, hasAnyRole, isAdmin } from "../store";
   import auth from "../auth.service";
   import { page } from "$app/stores";
+  import Chatbot from "$lib/components/chat/Chatbot.svelte";
 
   $: currentPath = $page.url.pathname;
 </script>
@@ -223,6 +224,9 @@
           <slot />
         </div>
       </main>
+
+      <!-- Chatbot Component -->
+      <Chatbot />
 
       <!-- Chatbot Button -->
       {#if $isAuthenticated}
