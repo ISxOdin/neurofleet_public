@@ -36,7 +36,7 @@
                 <li></li>
                 <li class="nav-item">
                   <a
-                    href="/"
+                    href="/dashboard"
                     class="nav-link p-3"
                     class:custom-active={currentPath === "/dashboard"}
                   >
