@@ -6,12 +6,11 @@ RUN apt-get update && apt-get install -y curl \
 WORKDIR /usr/src/app
 COPY . .
 
-# Create .env.production in frontend directory with proper escaping
-ARG VITE_GOOGLE_MAPS_API_KEY
-RUN echo "VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" > frontend/.env.production && \
-    chmod 600 frontend/.env.production
+# Erzeuge .env.production im Frontend-Verzeichnis
+RUN echo "VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" > frontend/.env.production
 
 RUN mkdir -p frontend/.svelte-kit && echo '{}' > frontend/.svelte-kit/tsconfig.json
+
 
 RUN cd frontend && npm install
 RUN cd frontend && npm run build

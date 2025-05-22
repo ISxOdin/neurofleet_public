@@ -38,8 +38,6 @@ jobs:
           tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          build-args: |
-            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
   deploy:
     permissions:
