@@ -2,11 +2,11 @@
   import { user } from "../../store";
   import { isAuthenticated } from "../../store";
   import { goto } from "$app/navigation";
-</script>
 
-function goToLogin() {
-  goto("/");
-}
+  function goToLogin() {
+    goto("/");
+  }
+</script>
 
 {#if $isAuthenticated}
   <div class="page">

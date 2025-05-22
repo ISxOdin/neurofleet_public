@@ -69,7 +69,7 @@ public class VehicleController {
     @GetMapping("/vehicles")
     public ResponseEntity<Page<Vehicle>> getVehicles(
             @RequestParam(defaultValue = "1") int pageNumber,
-            @RequestParam(defaultValue = "5") int pageSize) {
+            @RequestParam(defaultValue = "20") int pageSize) {
         PageRequest pr = PageRequest.of(pageNumber - 1, pageSize);
         Page<Vehicle> page;
 
