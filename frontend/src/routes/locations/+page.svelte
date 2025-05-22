@@ -143,6 +143,7 @@
   }
 
   async function deleteLocation(id) {
+    console.log("Deleting location", id);
     if (!confirm("Delete this location?")) return;
     try {
       await axios.delete(`${apiRoot}/api/locations/${id}`, {

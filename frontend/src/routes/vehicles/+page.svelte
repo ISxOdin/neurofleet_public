@@ -16,7 +16,7 @@
   import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
   import EditVehicleModal from "$lib/components/modals/EditVehicleModal.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
-
+  import CreateVehicleModal from "$lib/components/modals/CreateVehicleModal.svelte";
   const api_root = page.url.origin;
 
   let vehicle = {
@@ -29,7 +29,8 @@
 
   let currentPage = 1;
   let nrOfPages = 0;
-  let defaultPageSize = 20;
+  let defaultPageSize = 5;
+  let showCreateModal = false;
 
   let myCompanyId = null;
   let myLocationId = null;
@@ -98,14 +99,20 @@
     }
   }
 
-  function getVehicles() {
+  function getVehicles(page = currentPage) {
     loading = true;
     axios
-      .get(api_root + "/api/vehicles", {
-        headers: { Authorization: "Bearer " + $jwt_token },
-      })
+      .get(
+        api_root +
+          `/api/vehicles?pageNumber=${page}&pageSize=${defaultPageSize}`,
+        {
+          headers: { Authorization: "Bearer " + $jwt_token },
+        }
+      )
       .then((res) => {
         vehicles = res.data.content;
+        nrOfPages = res.data.totalPages;
+        currentPage = page;
       })
       .catch(() => alert("Could not load vehicles"))
       .finally(() => (loading = false));
@@ -122,7 +129,7 @@
       .catch(() => alert("Could not load vehicle types"));
   }
 
-  function createVehicle() {
+  function createVehicle(vehicle) {
     const payload = {
       ...vehicle,
     };
@@ -200,77 +207,28 @@
 </script>
 
 {#if $isAuthenticated}
-  <h1>Create Vehicle</h1>
-  <form onsubmit={createVehicle}>
-    <div class="mb-3">
-      <label class="form-label" for="licencePlate">License Plate</label>
-      <input
-        class="form-control"
-        bind:value={vehicle.licensePlate}
-        required
-        placeholder="ZH 1234"
-      />
-    </div>
-    <div class="mb-3">
-      <label class="form-label" for="vin">VIN</label>
-      <input
-        class="form-control"
-        bind:value={vehicle.vin}
-        maxlength="17"
-        required
-        style="border-color: {vehicle.vin && !vinValid ? 'red' : ''}"
-        placeholder="1HGCM82633A123456"
-      />
-      {#if vehicle.vin && !vinValid}
-        <small style="color: red">
-          VIN must be 17 characters, no I, O or Q
-        </small>
-      {/if}
-    </div>
+  <div class="vehicles-header">
+    <h1 class="text-center">All Vehicles</h1>
+    <button class="btn-accent" onclick={() => (showCreateModal = true)}>
+      <i class="bi bi-plus-lg"></i> Create Vehicle
+    </button>
+  </div>
 
-    <div class="mb-3">
-      <label class="form-label" for="type">Type</label>
-      <select class="form-select" bind:value={vehicle.vehicleType}>
-        <option disabled selected value="">Select type</option>
-        {#each types as type}
-          <option value={type.name}>{type.label}</option>
-        {/each}
-      </select>
-    </div>
-    <div class="mb-3">
-      <label class="form-label" for="capacity">Capacity (kg)</label>
-      <input
-        class="form-control"
-        type="number"
-        value={selectedTypeInfo?.capacityKg ?? ""}
-        readonly
-        disabled
-      />
-    </div>
-
-    {#if isAdmin}
-      <CompanySelect bind:bindValue={vehicle.companyId} {companies} />
-    {/if}
-
-    {#if hasAnyRole("admin", "owner")}
-      <LocationSelect
-        bind:bindValue={vehicle.locationId}
-        locations={locations.filter(
-          (loc) => loc.companyId === vehicle.companyId
-        )}
-      />
-      {#if vehicle.companyId && locations.filter((loc) => loc.companyId === vehicle.companyId).length === 0}
-        <div class="text-muted mb-3">
-          <p style="color: red">No locations available for selected company</p>
-        </div>
-      {/if}
-    {/if}
-
-    <button type="submit" class="btn btn-primary">Create</button>
-  </form>
-  <hr />
-  <h2>Vehicles</h2>
-
+  {#if showCreateModal}
+    <CreateVehicleModal
+      {types}
+      {companies}
+      {locations}
+      {myCompanyId}
+      {myLocationId}
+      on:created={(e) => {
+        showCreateModal = false;
+        getVehicles();
+        createVehicle(e.detail);
+      }}
+      on:cancel={() => (showCreateModal = false)}
+    />
+  {/if}
   {#if loading}
     <div class="d-flex justify-content-center mt-5">
       <div class="spinner-border" role="status">
@@ -278,7 +236,7 @@
       </div>
     </div>
   {:else}
-    <table class="table mt-3">
+    <table class="vehicles-table">
       <thead>
         <tr>
           <th>License Plate</th>
@@ -298,13 +256,28 @@
             <td>{v.vin}</td>
             <td>{v.vehicleType}</td>
             <td>{v.capacity}</td>
-            <td>{v.state}</td>
+            <td>
+              <span class="status-badge status-{v.state.toLowerCase()}">
+                {#if v.state === "AVAILABLE"}
+                  <i class="bi bi-check-circle-fill"></i>
+                {:else if v.state === "ON_ROUTE"}
+                  <i class="bi bi-truck"></i>
+                {:else if v.state === "DROPPING_OFF"}
+                  <i class="bi bi-box-seam"></i>
+                {:else if v.state === "INACTIVE"}
+                  <i class="bi bi-pause-circle-fill"></i>
+                {:else if v.state === "OUT_OF_SERVICE"}
+                  <i class="bi bi-x-circle-fill"></i>
+                {/if}
+                {v.state.replace("_", " ")}
+              </span>
+            </td>
             <td>{companies.find((c) => c.id === v.companyId)?.name}</td>
             <td>{locations.find((l) => l.id === v.locationId)?.name}</td>
             <td>
               <div class="dropdown">
                 <button
-                  class="btn btn-sm btn-outline-secondary"
+                  class="btn btn-sm btn-outline-light"
                   type="button"
                   data-bs-toggle="dropdown"
                 >
@@ -324,6 +297,7 @@
                       onclick={() => deleteVehicle(v.id)}>Delete</a
                     >
                   </li>
+                  <li><hr class="dropdown-divider" /></li>
                 </ul>
               </div>
             </td>
@@ -362,4 +336,177 @@
 {/if}
 
 <style>
+  .vehicles-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    margin-top: 2rem;
+    background-color: #343c44;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #95d4ee;
+  }
+
+  .vehicles-header h1 {
+    color: white;
+    font-size: 1.4rem;
+    margin: 0;
+  }
+
+  .btn-accent {
+    background: #95d4ee;
+    color: #23272e;
+    border: none;
+    border-radius: 4px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-accent:hover {
+    background: #7bc4e6;
+  }
+
+  .create-form {
+    background: #343c44;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #95d4ee;
+    margin-bottom: 2rem;
+  }
+
+  .vehicles-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #4f5a65;
+    color: #fff;
+    border-radius: 8px;
+    border: 1px solid #95d4ee;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .vehicles-table th,
+  .vehicles-table td {
+    padding: 1rem 0.8rem;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .vehicles-table th {
+    color: #95d4ee;
+    font-weight: 600;
+    background: #343c44;
+    border-bottom: 2px solid #343c44;
+  }
+
+  .vehicles-table tbody tr {
+    transition: background 0.15s;
+  }
+
+  .vehicles-table tbody tr:nth-child(even) {
+    background: #343c44;
+  }
+
+  .vehicles-table tbody tr:nth-child(odd) {
+    background: #4f5a65;
+  }
+
+  .vehicles-table tbody tr:hover {
+    background: rgba(149, 212, 238, 0.2);
+  }
+
+  .dropdown {
+    position: relative;
+    z-index: 1000;
+  }
+
+  .form-label {
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-control,
+  .form-select {
+    background-color: #4f5a65;
+    border: 1px solid #95d4ee;
+    color: #fff;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    background-color: #4f5a65;
+    border-color: #95d4ee;
+    color: #fff;
+    box-shadow: 0 0 0 0.25rem rgba(149, 212, 238, 0.25);
+  }
+
+  .form-control::placeholder {
+    color: #95d4ee;
+    opacity: 0.7;
+  }
+
+  .form-control:disabled {
+    background-color: #343c44;
+    opacity: 0.7;
+  }
+
+  @media (max-width: 768px) {
+    .vehicles-header {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .vehicles-table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .status-badge i {
+    font-size: 1rem;
+  }
+
+  .status-available {
+    background-color: rgba(40, 167, 69, 0.5);
+    color: #3dbe5b;
+  }
+
+  .status-on_route {
+    background-color: rgba(0, 123, 255, 0.5);
+    color: #007bff;
+  }
+
+  .status-dropping_off {
+    background-color: rgba(111, 66, 193, 0.5);
+    color: #af83ff;
+  }
+
+  .status-inactive {
+    background-color: rgba(108, 117, 125, 0.5);
+    color: #8d9194;
+  }
+
+  .status-out_of_service {
+    background-color: rgba(220, 53, 69, 0.5);
+    color: #dc3545;
+  }
 </style>
