@@ -25,6 +25,9 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
+      - name: Create .env.production
+        run: echo "VITE_GOOGLE_MAPS_API_KEY=${{ secrets.PUBLIC_GOOGLE_MAPS_API_KEY }}" > .env.production
+
       - name: Build with Maven
         run: mvn clean verify
 
