@@ -17,7 +17,7 @@
 
   let currentPage = 1;
   let totalPages = 0;
-  const pageSize = 20;
+  const pageSize = 5;
   let loading = false;
 
   onMount(async () => {

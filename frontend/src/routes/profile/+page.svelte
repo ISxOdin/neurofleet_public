@@ -2,32 +2,64 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
-  import { jwt_token, isAuthenticated, user } from "../../store";
+  import { jwt_token, isAuthenticated, user, isOwner } from "../../store";
   import { fade, fly } from "svelte/transition";
+  import { findUserCompany } from "$lib/utils";
 
   let companies = [];
+  let locations = [];
   let loading = false;
   let apiRoot = "";
+  let myCompanyId = null;
+
+  let currentPage = 1;
+  let defaultPageSize = 5;
+  let nrOfPages = 0;
+  let sub = encodeURIComponent($user.sub);
 
   onMount(async () => {
     if (browser) {
       apiRoot = window.location.origin;
-      await getCompanies();
+      await getMyCompanies();
+      if (myCompanyId) {
+        await getMyLocations();
+      }
     }
   });
 
-  async function getCompanies() {
-    loading = true;
+  async function getMyCompanies() {
     try {
-      const { data } = await axios.get(`${apiRoot}/api/companies`, {
+      const response = await axios.get(`${apiRoot}/api/companies/user/${sub}`, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
-      companies = data.content || data;
-    } catch (error) {
-      console.error("Could not get companies", error);
-      alert("Could not get companies");
-    } finally {
-      loading = false;
+      companies = response.data;
+      if (isOwner) {
+        myCompanyId = findUserCompany(companies, $user.sub);
+      }
+    } catch (err) {
+      console.error("Could not load companies", err);
+    }
+  }
+
+  async function getMyLocations() {
+    try {
+      let response;
+      if (isOwner && myCompanyId) {
+        // For owners, get all locations of their company
+        response = await axios.get(
+          `${apiRoot}/api/locations?pageNumber=1&pageSize=100&companyId=${myCompanyId}`,
+          { headers: { Authorization: `Bearer ${$jwt_token}` } }
+        );
+        locations = response.data.content;
+      } else {
+        // For other roles, get locations where they are a member or fleet manager
+        response = await axios.get(`${apiRoot}/api/locations/user/${sub}`, {
+          headers: { Authorization: `Bearer ${$jwt_token}` },
+        });
+        locations = response.data;
+      }
+    } catch (err) {
+      console.error("Could not load locations", err);
     }
   }
 </script>
@@ -48,11 +80,11 @@
         </div>
         <h2 class="profile-name">{$user.name}</h2>
         <p class="profile-email">
-          <i class="fas fa-envelope"></i>
+          <i class="bi bi-envelope"></i>
           {$user.email}
         </p>
         <p class="profile-id">
-          <i class="fas fa-fingerprint"></i>
+          <i class="bi bi-fingerprint"></i>
           {$user.sub}
         </p>
       </div>
@@ -63,25 +95,20 @@
           in:fly={{ y: 20, duration: 400, delay: 200 }}
         >
           <h3 class="section-title">
-            <i class="fas fa-user-circle"></i>
+            <i class="bi bi-person-circle"></i>
             Personal Information
           </h3>
           <div class="info-grid">
             <div class="info-item">
-              <span class="key-info"
-                ><i class="fas fa-user-tag"></i> Nickname</span
-              >
+              <span class="key-info"> Nickname</span>
               <span class="value">{$user.nickname || "Not set"}</span>
             </div>
             <div class="info-item">
-              <span class="key-info"
-                ><i class="fas fa-user"></i> First Name</span
-              >
+              <span class="key-info">First Name</span>
               <span class="value">{$user.given_name || "Not set"}</span>
             </div>
             <div class="info-item">
-              <span class="key-info"><i class="fas fa-user"></i> Last Name</span
-              >
+              <span class="key-info"> Last Name</span>
               <span class="value">{$user.family_name || "Not set"}</span>
             </div>
           </div>
@@ -92,18 +119,17 @@
           in:fly={{ y: 20, duration: 400, delay: 300 }}
         >
           <h3 class="section-title">
-            <i class="fas fa-briefcase"></i>
+            <i class="bi bi-briefcase"></i>
             Professional Information
           </h3>
           {#if $user.user_roles?.length > 0}
             <div class="roles-section">
-              <span class="key-info"
-                ><i class="fas fa-user-shield"></i> Roles</span
-              >
+              <h4 class="subsection-title">
+                <i class="bi bi-shield-check"></i> Roles
+              </h4>
               <div class="roles-container">
                 {#each $user.user_roles as role}
                   <span class="role-badge" in:fade>
-                    <i class="fas fa-check-circle"></i>
                     {role}
                   </span>
                 {/each}
@@ -112,17 +138,57 @@
           {/if}
 
           <div class="companies-section">
-            {#each companies as company}
-              {#if company.userIds?.includes($user.sub)}
-                <div class="company-card" in:fade>
-                  <i class="fas fa-building"></i>
+            {#if companies.length > 0}
+              <h4 class="subsection-title">
+                <i class="bi bi-building"></i> Companies
+              </h4>
+              {#each companies as company}
+                <div class="card" in:fade>
                   <div class="company-info">
                     <span class="key-info">Company</span>
                     <span class="value">{company.name}</span>
+                    {#if company.address}
+                      <span class="address"
+                        ><i class="bi bi-geo-alt"></i>
+                        {company.address}</span
+                      >
+                    {/if}
+                    {#if company.latitude && company.longitude}
+                      <span class="address"
+                        ><i class="bi bi-geo-alt-fill"></i>
+                        {company.latitude}, {company.longitude}</span
+                      >
+                    {/if}
                   </div>
                 </div>
-              {/if}
-            {/each}
+              {/each}
+            {/if}
+
+            {#if locations.length > 0}
+              <h4 class="subsection-title">
+                <i class="bi bi-geo"></i> Locations
+              </h4>
+              {#each locations as location}
+                <div class="card" in:fade>
+                  <div class="company-info">
+                    <span class="key-info">Location</span>
+                    <span class="value">{location.name}</span>
+                    {#if location.address}
+                      <span class="address"
+                        ><i class="bi bi-geo-alt"></i>
+                        {location.address}</span
+                      >
+                    {/if}
+                    {#if location.latitude && location.longitude}
+                      <span class="address"
+                        ><i class="bi bi-geo-alt-fill"></i>
+                        {location.latitude}, {location.longitude}</span
+                      >
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            {/if}
           </div>
         </div>
       </div>
@@ -131,7 +197,7 @@
 {:else}
   <div class="container mt-5 text-center" in:fade>
     <div class="not-authenticated">
-      <i class="fas fa-lock fa-3x mb-3"></i>
+      <i class="bi bi-lock-fill fa-3x mb-3"></i>
       <p>You are not logged in.</p>
     </div>
   </div>
@@ -258,6 +324,7 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-align: left;
   }
 
   .key-info i {
@@ -268,6 +335,7 @@
   .value {
     color: white;
     font-size: 1.1rem;
+    text-align: left;
   }
 
   .roles-section {
@@ -316,23 +384,36 @@
     gap: 1rem;
   }
 
-  .company-card {
+  .subsection-title {
+    color: #95d4ee;
+    font-size: 1.1rem;
+    margin: 1.5rem 0 1rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid #95d4ee;
+  }
+
+  .card {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 0.75rem;
     padding: 1rem;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
     transition: all 0.3s ease;
+    border-left: 4px solid #95d4ee;
+    text-align: left;
   }
 
-  .company-card:hover {
+  .card:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateX(5px);
   }
 
-  .company-card i {
+  .card i {
     font-size: 1.5rem;
+  }
+
+  .card i {
     color: #95d4ee;
   }
 
@@ -340,6 +421,23 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    text-align: left;
+    flex: 1;
+  }
+
+  .address {
+    color: #95d4ee;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  .address i {
+    font-size: 0.8rem;
+    opacity: 0.8;
   }
 
   .not-authenticated {

@@ -1,6 +1,12 @@
 <script>
   import "./styles.css";
-  import { isAuthenticated, user, hasAnyRole, isAdmin } from "../store";
+  import {
+    isAuthenticated,
+    user,
+    hasAnyRole,
+    isAdmin,
+    isOwner,
+  } from "../store";
   import auth from "../auth.service";
   import { page } from "$app/stores";
   import Chatbot from "$lib/components/chat/Chatbot.svelte";
@@ -36,7 +42,7 @@
                 <li></li>
                 <li class="nav-item">
                   <a
-                    href="/"
+                    href="/dashboard"
                     class="nav-link p-3"
                     class:custom-active={currentPath === "/dashboard"}
                   >
@@ -119,7 +125,7 @@
                             ></i>Locations
                           </a>
                         </li>
-                        {#if $isAuthenticated && $user.user_roles && isAdmin}
+                        {#if $isAuthenticated && hasAnyRole("admin")}
                           <li>
                             <a
                               href="/companies"
@@ -135,7 +141,7 @@
                     </div>
                   </li>
                 {/if}
-              {:else if $isAuthenticated && $user.user_roles && $user.user_roles.includes("driver")}
+              {:else if $isAuthenticated && hasAnyRole("driver")}
                 <li class="nav-item">
                   <a
                     href="/driverjobs"

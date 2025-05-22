@@ -1,5 +1,6 @@
 package ch.zhaw.neurofleet.controller;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -131,6 +132,19 @@ public class CompanyController {
         }
         companyService.removeUserFromCompany(companyId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/companies/user/{userId}")
+    public ResponseEntity<List<Company>> getCompaniesByUserId(@PathVariable String userId) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        try {
+            List<Company> companies = companyRepository.findCompaniesByUserId(userId);
+            return new ResponseEntity<>(companies, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private void sendCompanyCreatedMail(String email, String companyName) {
