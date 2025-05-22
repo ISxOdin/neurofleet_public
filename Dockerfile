@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y curl \
 WORKDIR /usr/src/app
 COPY . .
 # Erzeuge .env.production im Frontend-Verzeichnis
-RUN echo "PUBLIC_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" > frontend/.env.production
+RUN echo "VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" > frontend/.env.production
 
 RUN cd frontend && npm install
 RUN cd frontend && npm run build
