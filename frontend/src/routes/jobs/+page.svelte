@@ -16,6 +16,7 @@
   import { goto } from "$app/navigation";
 
   const api_root = page.url.origin;
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   let vehicles = [];
   let companies = [];
@@ -267,11 +268,11 @@
                     style="border:0"
                     loading="lazy"
                     allowfullscreen
-                    src="https://www.google.com/maps/dir/?api=1&origin={encodeURIComponent(
+                    src="https://www.google.com/maps/embed/v1/directions?key={GOOGLE_MAPS_API_KEY}&origin={encodeURIComponent(
                       locations.find((l) => l.id === j.originId)?.address
                     )}&destination={encodeURIComponent(
                       locations.find((l) => l.id === j.destinationId)?.address
-                    )}&travelmode=drive"
+                    )}&mode=driving"
                   ></iframe>
                 {:else}
                   <div class="text-center p-3">

@@ -290,9 +290,9 @@
                   style="border:0"
                   loading="lazy"
                   allowfullscreen
-                  src="https://www.google.com/maps/embed/v1/search?q={encodeURIComponent(
+                  src="https://www.google.com/maps/embed/v1/place?key={GOOGLE_MAPS_API_KEY}&q={encodeURIComponent(
                     c.address
-                  )}&key={GOOGLE_MAPS_API_KEY}"
+                  )}"
                 ></iframe>
               {:else}
                 <div class="text-center p-3">
