@@ -8,7 +8,7 @@
   import CreateLocationModal from "$lib/components/modals/CreateLocationModal.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
   import { findUserCompany } from "$lib/utils";
-  import { PUBLIC_GOOGLE_MAPS_API_KEY } from "$env/static/public";
+  import { VITE_GOOGLE_MAPS_API_KEY } from "$env/static/public";
 
   let currentPage = 1;
   let defaultPageSize = 5;
@@ -273,7 +273,7 @@
                   allowfullscreen
                   src="https://www.google.com/maps/embed/v1/search?q={encodeURIComponent(
                     loc.address
-                  )}&key={PUBLIC_GOOGLE_MAPS_API_KEY}"
+                  )}&key={VITE_GOOGLE_MAPS_API_KEY}"
                 ></iframe>
               {:else}
                 <div class="text-center p-3">

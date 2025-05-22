@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y curl \
     && curl -L https://www.npmjs.com/install.sh | npm_install="10.2.3" | sh
 WORKDIR /usr/src/app
 COPY . .
+# Erzeuge .env.production im Frontend-Verzeichnis
+RUN echo "PUBLIC_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" > frontend/.env.production
+
 RUN cd frontend && npm install
 RUN cd frontend && npm run build
 RUN rm -r frontend
