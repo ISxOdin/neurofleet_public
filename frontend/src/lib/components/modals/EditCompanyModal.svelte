@@ -86,12 +86,6 @@
     margin-bottom: 1.5rem;
   }
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-  }
-
   label {
     display: block;
     font-weight: 600;
@@ -106,18 +100,6 @@
     border-radius: 0.5rem;
     background: #2a2e36;
     color: white;
-  }
-
-  .modal-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-label {
-    color: #ccc;
-    font-size: 0.95rem;
   }
 
   .form-control {

@@ -18,123 +18,128 @@
   }
 </script>
 
-<div class="modal-backdrop">
-  <div class="modal-content">
-    <h2>Create Location</h2>
-    <form onsubmit={handleSubmit}>
-      <div class="form-group">
+<div class="modal-backdrop show"></div>
+<div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Location</h5>
+        <button class="btn-close btn-close-white" onclick={handleCancel}
+        ></button>
+      </div>
+      <div class="modal-body">
         <label>Name</label>
         <input
-          class="form-control"
+          class="form-control mb-2"
           bind:value={location.name}
           placeholder="Zurich HQ"
           required
         />
-      </div>
-      <div class="form-group">
         <label>Address</label>
         <input
-          class="form-control"
+          class="form-control mb-2"
           bind:value={location.address}
-          placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"
+          placeholder="Bahnhofstrasse 1, Zürich"
           required
         />
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" onclick={handleCancel}>
-          Cancel
-        </button>
-        <button type="submit" class="btn-accent">Create Location</button>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick={handleCancel}>Cancel</button>
+        <button class="btn btn-primary" onclick={handleSubmit}>Create</button>
       </div>
-    </form>
+    </div>
   </div>
 </div>
 
 <style>
   .modal-backdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+  }
+
+  .modal-header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    z-index: 1000;
-  }
-
-  .modal-content {
-    background: #343c44;
-    padding: 2rem;
-    border-radius: 8px;
-    border: 1px solid #95d4ee;
-    width: 90%;
-    max-width: 500px;
-  }
-
-  .modal-content h2 {
-    color: white;
+    border-bottom: 1px solid #95d4ee;
     margin-bottom: 1.5rem;
-    font-size: 1.4rem;
   }
 
-  .form-group {
-    margin-bottom: 1rem;
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #95d4ee;
+    margin-bottom: 1.5rem;
   }
 
-  .form-group label {
+  label {
     display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
     color: #95d4ee;
-    margin-bottom: 0.5rem;
+  }
+
+  input.form-control {
+    width: 100%;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: #2a2e36;
+    color: white;
   }
 
   .form-control {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #4f5a65;
-    border-radius: 4px;
-    background: #23272e;
-    color: white;
-  }
-
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-
-  .btn-accent {
-    background: #95d4ee;
-    color: #23272e;
-    border: none;
-    border-radius: 4px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .btn-accent:hover {
-    background: #7bc4e6;
-  }
-
-  .btn-secondary {
-    background: #4f5a65;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
-    border: none;
+    padding: 0.75rem;
     border-radius: 4px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
   }
 
-  .btn-secondary:hover {
+  .form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #95d4ee;
+    color: #fff;
+    box-shadow: none;
+  }
+
+  .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .modal-content {
+    padding: 2rem 2rem 1.5rem 2rem;
+    border-radius: 1rem;
     background: #343c44;
+  }
+
+  .btn-primary {
+    background: transparent !important;
+    color: #95d4ee !important;
+    border: none !important;
+    font-weight: 600;
+  }
+  .btn-primary:hover {
+    background: rgba(149, 212, 238, 0.1) !important;
+    color: #fff !important;
+  }
+  .btn-secondary {
+    background: transparent !important;
+    color: #95d4ee !important;
+    border: none !important;
+    font-weight: 600;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  .btn-secondary:hover {
+    background: rgba(149, 212, 238, 0.1) !important;
+    color: #fff !important;
   }
 </style>

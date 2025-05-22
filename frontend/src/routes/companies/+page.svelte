@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
+  import { PUBLIC_GOOGLE_MAPS_API_KEY } from "$env/static/public";
   import EditCompanyModal from "$lib/components/modals/EditCompanyModal.svelte";
   import CreateCompanyModal from "$lib/components/modals/CreateCompanyModal.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
@@ -10,6 +11,7 @@
   let apiRoot = "";
   let users = [];
   let userMap = {};
+  let expandedRowId = null;
 
   let companies = [];
   let currentPage = 1;
@@ -165,6 +167,12 @@
         console.log(error);
       });
   }
+
+  function toggleRow(companyId, event) {
+    // Don't toggle if clicking on the dropdown
+    if (event.target.closest(".dropdown")) return;
+    expandedRowId = expandedRowId === companyId ? null : companyId;
+  }
 </script>
 
 {#if showEditModal && editCompany}
@@ -205,8 +213,6 @@
       <tr>
         <th>Name</th>
         <th>Address</th>
-        <th>Latitude</th>
-        <th>Longitude</th>
         <th>ID</th>
         <th>Owner</th>
         <th>Email</th>
@@ -215,11 +221,21 @@
     </thead>
     <tbody>
       {#each companies as c}
-        <tr>
-          <td>{c.name}</td>
+        <tr
+          class="company-row"
+          class:expanded={expandedRowId === c.id}
+          onclick={(e) => toggleRow(c.id, e)}
+        >
+          <td>
+            <div class="company-name">{c.name}</div>
+            {#if c.latitude && c.longitude}
+              <div class="coordinates">
+                <i class="bi bi-geo-alt"></i>
+                {c.latitude}, {c.longitude}
+              </div>
+            {/if}
+          </td>
           <td>{c.address}</td>
-          <td>{c.latitude}</td>
-          <td>{c.longitude}</td>
           <td>{c.id}</td>
           <td
             >{userMap[c.owner]?.given_name}
@@ -227,36 +243,60 @@
           >
           <td>{c.email}</td>
           <td>
-            <a
-              href="#"
-              class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-              id="userDropdown"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <button class="btn btn-sm btn-outline-light">
-                <i class="bi bi-gear-fill"></i> Edit
-              </button>
-            </a>
-            <ul
-              class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
-              aria-labelledby="userDropdown"
-            >
-              <li>
-                <a class="dropdown-item" onclick={() => openEditModal(c)}
-                  >Edit</a
-                >
-              </li>
-              <li>
-                <a
-                  class="dropdown-item text-danger"
-                  onclick={() => deleteCompany(c.id)}>Delete</a
-                >
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-            </ul>
+            <div class="dropdown">
+              <a
+                href="#"
+                class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                id="userDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <button class="btn btn-sm btn-outline-light">
+                  <i class="bi bi-gear-fill"></i> Edit
+                </button>
+              </a>
+              <ul
+                class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
+                aria-labelledby="userDropdown"
+              >
+                <li>
+                  <a class="dropdown-item" onclick={() => openEditModal(c)}
+                    >Edit</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item text-danger"
+                    onclick={() => deleteCompany(c.id)}>Delete</a
+                  >
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+              </ul>
+            </div>
           </td>
         </tr>
+        {#if expandedRowId === c.id}
+          <tr class="map-row">
+            <td colspan="8">
+              {#if c.address}
+                <iframe
+                  width="100%"
+                  height="450"
+                  style="border:0"
+                  loading="lazy"
+                  allowfullscreen
+                  src="https://www.google.com/maps/embed/v1/search?q={encodeURIComponent(
+                    c.address
+                  )}&key={PUBLIC_GOOGLE_MAPS_API_KEY}"
+                ></iframe>
+              {:else}
+                <div class="text-center p-3">
+                  <i class="bi bi-map"></i> No address available for this company
+                </div>
+              {/if}
+            </td>
+          </tr>
+        {/if}
       {/each}
     </tbody>
   </table>
@@ -265,10 +305,6 @@
 {/if}
 
 <style>
-  .page-link {
-    box-shadow: none;
-  }
-
   .companies-header {
     display: flex;
     justify-content: space-between;
@@ -339,5 +375,50 @@
   }
   .companies-table tbody tr:hover {
     background: rgba(149, 212, 238, 0.2);
+  }
+
+  .company-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .company-row:hover {
+    background-color: rgba(149, 212, 238, 0.1);
+  }
+
+  .company-row.expanded {
+    background-color: rgba(149, 212, 238, 0.15);
+  }
+
+  .map-row td {
+    padding: 0 !important;
+    background-color: #343c44;
+  }
+
+  .map-row iframe {
+    border-radius: 0 0 8px 8px;
+  }
+
+  .dropdown {
+    position: relative;
+    z-index: 1000;
+  }
+
+  .company-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+
+  .coordinates {
+    font-size: 0.85rem;
+    color: #95d4ee;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .coordinates i {
+    font-size: 0.8rem;
+    opacity: 0.8;
   }
 </style>

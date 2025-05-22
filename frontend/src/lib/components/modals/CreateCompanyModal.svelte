@@ -74,43 +74,36 @@
         <h5 class="modal-title">Create Company</h5>
         <button class="btn-close btn-close-white" onclick={cancel}></button>
       </div>
-      <form onsubmit={createCompany} class="mb-5">
-        <div class="modal-form">
-          <div class="form-group">
-            <label class="form-label">Name</label>
-            <input
-              class="form-control"
-              bind:value={newCompany.name}
-              required
-              placeholder="Neurofleet AG"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input
-              type="email"
-              class="form-control"
-              bind:value={newCompany.email}
-              required
-              placeholder="maxmustermann@neurofleet.com"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Address</label>
-            <input
-              class="form-control"
-              bind:value={newCompany.address}
-              required
-              placeholder="Bahnhofstrasse 1, 8001 Zürich, Switzerland"
-            />
-          </div>
-        </div>
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick={validateEmailAndCreateCompany}>Submit</button
+      <div class="modal-body">
+        <label>Name</label>
+        <input
+          class="form-control mb-2"
+          bind:value={newCompany.name}
+          required
+          placeholder="Neurofleet AG"
+        />
+        <label>Email</label>
+        <input
+          type="email"
+          class="form-control mb-2"
+          bind:value={newCompany.email}
+          required
+          placeholder="max@neurofleet.com"
+        />
+        <label>Address</label>
+        <input
+          class="form-control mb-2"
+          bind:value={newCompany.address}
+          required
+          placeholder="Bahnhofstrasse 1, Zürich"
+        />
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick={cancel}>Cancel</button>
+        <button class="btn btn-primary" onclick={validateEmailAndCreateCompany}
+          >Create</button
         >
-      </form>
+      </div>
     </div>
   </div>
 </div>
@@ -131,10 +124,12 @@
     margin-bottom: 1.5rem;
   }
 
-  .form-group {
+  .modal-footer {
     display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #95d4ee;
+    margin-bottom: 1.5rem;
   }
 
   label {
@@ -153,18 +148,6 @@
     color: white;
   }
 
-  .modal-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-label {
-    color: #ccc;
-    font-size: 0.95rem;
-  }
-
   .form-control {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -180,9 +163,40 @@
     box-shadow: none;
   }
 
+  .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
   .modal-content {
     padding: 2rem 2rem 1.5rem 2rem;
     border-radius: 1rem;
     background: #343c44;
+  }
+
+  .btn-primary {
+    background: transparent !important;
+    color: #95d4ee !important;
+    border: none !important;
+    font-weight: 600;
+  }
+  .btn-primary:hover {
+    background: rgba(149, 212, 238, 0.1) !important;
+    color: #fff !important;
+  }
+  .btn-secondary {
+    background: transparent !important;
+    color: #95d4ee !important;
+    border: none !important;
+    font-weight: 600;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  .btn-secondary:hover {
+    background: rgba(149, 212, 238, 0.1) !important;
+    color: #fff !important;
   }
 </style>

@@ -2,13 +2,15 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
-  import { jwt_token, isAuthenticated, user } from "../../store";
+  import { jwt_token, isAuthenticated, user, isOwner } from "../../store";
   import { fade, fly } from "svelte/transition";
+  import { findUserCompany } from "$lib/utils";
 
   let companies = [];
   let locations = [];
   let loading = false;
   let apiRoot = "";
+  let myCompanyId = null;
 
   let currentPage = 1;
   let defaultPageSize = 5;
@@ -19,7 +21,9 @@
     if (browser) {
       apiRoot = window.location.origin;
       await getMyCompanies();
-      await getMyLocations();
+      if (myCompanyId) {
+        await getMyLocations();
+      }
     }
   });
 
@@ -29,6 +33,9 @@
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
       companies = response.data;
+      if (isOwner) {
+        myCompanyId = findUserCompany(companies, $user.sub);
+      }
     } catch (err) {
       console.error("Could not load companies", err);
     }
@@ -36,10 +43,21 @@
 
   async function getMyLocations() {
     try {
-      const response = await axios.get(`${apiRoot}/api/locations/user/${sub}`, {
-        headers: { Authorization: `Bearer ${$jwt_token}` },
-      });
-      locations = response.data;
+      let response;
+      if (isOwner && myCompanyId) {
+        // For owners, get all locations of their company
+        response = await axios.get(
+          `${apiRoot}/api/locations?pageNumber=1&pageSize=100&companyId=${myCompanyId}`,
+          { headers: { Authorization: `Bearer ${$jwt_token}` } }
+        );
+        locations = response.data.content;
+      } else {
+        // For other roles, get locations where they are a member or fleet manager
+        response = await axios.get(`${apiRoot}/api/locations/user/${sub}`, {
+          headers: { Authorization: `Bearer ${$jwt_token}` },
+        });
+        locations = response.data;
+      }
     } catch (err) {
       console.error("Could not load locations", err);
     }
@@ -62,11 +80,11 @@
         </div>
         <h2 class="profile-name">{$user.name}</h2>
         <p class="profile-email">
-          <i class="fas fa-envelope"></i>
+          <i class="bi bi-envelope"></i>
           {$user.email}
         </p>
         <p class="profile-id">
-          <i class="fas fa-fingerprint"></i>
+          <i class="bi bi-fingerprint"></i>
           {$user.sub}
         </p>
       </div>
@@ -77,25 +95,20 @@
           in:fly={{ y: 20, duration: 400, delay: 200 }}
         >
           <h3 class="section-title">
-            <i class="fas fa-user-circle"></i>
+            <i class="bi bi-person-circle"></i>
             Personal Information
           </h3>
           <div class="info-grid">
             <div class="info-item">
-              <span class="key-info"
-                ><i class="fas fa-user-tag"></i> Nickname</span
-              >
+              <span class="key-info"> Nickname</span>
               <span class="value">{$user.nickname || "Not set"}</span>
             </div>
             <div class="info-item">
-              <span class="key-info"
-                ><i class="fas fa-user"></i> First Name</span
-              >
+              <span class="key-info">First Name</span>
               <span class="value">{$user.given_name || "Not set"}</span>
             </div>
             <div class="info-item">
-              <span class="key-info"><i class="fas fa-user"></i> Last Name</span
-              >
+              <span class="key-info"> Last Name</span>
               <span class="value">{$user.family_name || "Not set"}</span>
             </div>
           </div>
@@ -106,18 +119,17 @@
           in:fly={{ y: 20, duration: 400, delay: 300 }}
         >
           <h3 class="section-title">
-            <i class="fas fa-briefcase"></i>
+            <i class="bi bi-briefcase"></i>
             Professional Information
           </h3>
           {#if $user.user_roles?.length > 0}
             <div class="roles-section">
-              <span class="key-info"
-                ><i class="fas fa-user-shield"></i> Roles</span
-              >
+              <h4 class="subsection-title">
+                <i class="bi bi-shield-check"></i> Roles
+              </h4>
               <div class="roles-container">
                 {#each $user.user_roles as role}
                   <span class="role-badge" in:fade>
-                    <i class="fas fa-check-circle"></i>
                     {role}
                   </span>
                 {/each}
@@ -127,17 +139,24 @@
 
           <div class="companies-section">
             {#if companies.length > 0}
-              <h4 class="subsection-title">Companies</h4>
+              <h4 class="subsection-title">
+                <i class="bi bi-building"></i> Companies
+              </h4>
               {#each companies as company}
                 <div class="card" in:fade>
-                  <i class="fas fa-building"></i>
                   <div class="company-info">
                     <span class="key-info">Company</span>
                     <span class="value">{company.name}</span>
                     {#if company.address}
                       <span class="address"
-                        ><i class="fas fa-map-marker-alt"></i>
+                        ><i class="bi bi-geo-alt"></i>
                         {company.address}</span
+                      >
+                    {/if}
+                    {#if company.latitude && company.longitude}
+                      <span class="address"
+                        ><i class="bi bi-geo-alt-fill"></i>
+                        {company.latitude}, {company.longitude}</span
                       >
                     {/if}
                   </div>
@@ -146,17 +165,24 @@
             {/if}
 
             {#if locations.length > 0}
-              <h4 class="subsection-title">Locations</h4>
+              <h4 class="subsection-title">
+                <i class="bi bi-geo"></i> Locations
+              </h4>
               {#each locations as location}
                 <div class="card" in:fade>
-                  <i class="fas fa-map-pin"></i>
                   <div class="company-info">
                     <span class="key-info">Location</span>
                     <span class="value">{location.name}</span>
                     {#if location.address}
                       <span class="address"
-                        ><i class="fas fa-map-marker-alt"></i>
+                        ><i class="bi bi-geo-alt"></i>
                         {location.address}</span
+                      >
+                    {/if}
+                    {#if location.latitude && location.longitude}
+                      <span class="address"
+                        ><i class="bi bi-geo-alt-fill"></i>
+                        {location.latitude}, {location.longitude}</span
                       >
                     {/if}
                   </div>
@@ -171,7 +197,7 @@
 {:else}
   <div class="container mt-5 text-center" in:fade>
     <div class="not-authenticated">
-      <i class="fas fa-lock fa-3x mb-3"></i>
+      <i class="bi bi-lock-fill fa-3x mb-3"></i>
       <p>You are not logged in.</p>
     </div>
   </div>

@@ -7,12 +7,15 @@
   import EditLocationModal from "$lib/components/modals/EditLocationModal.svelte";
   import CreateLocationModal from "$lib/components/modals/CreateLocationModal.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
+  import { findUserCompany } from "$lib/utils";
+  import { PUBLIC_GOOGLE_MAPS_API_KEY } from "$env/static/public";
 
   let currentPage = 1;
   let defaultPageSize = 5;
   let nrOfPages = 0;
   let loading = false;
   let apiRoot = "";
+  let expandedRowId = null;
 
   let myCompanyId;
 
@@ -44,9 +47,7 @@
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
       companies = response.data.content || response.data;
-
-      const myCo = companies.find((c) => c.userIds?.includes($user.sub));
-      myCompanyId = myCo?.id || null;
+      myCompanyId = findUserCompany(companies, $user.sub);
     } catch (err) {
       console.error("Could not load companies", err);
       alert("Could not load companies");
@@ -153,6 +154,12 @@
       alert("Could not delete location");
     }
   }
+
+  function toggleRow(locationId, event) {
+    // Don't toggle if clicking on the dropdown
+    if (event.target.closest(".dropdown")) return;
+    expandedRowId = expandedRowId === locationId ? null : locationId;
+  }
 </script>
 
 <!-- Create Form -->
@@ -192,8 +199,6 @@
       <tr>
         <th>Name</th>
         <th>Address</th>
-        <th>Lon</th>
-        <th>Lat</th>
         <th>ID</th>
         <th>Company</th>
         <th>Fleet Manager</th>
@@ -202,11 +207,21 @@
     </thead>
     <tbody>
       {#each locations as loc}
-        <tr>
-          <td>{loc.name}</td>
+        <tr
+          class="location-row"
+          class:expanded={expandedRowId === loc.id}
+          onclick={(e) => toggleRow(loc.id, e)}
+        >
+          <td>
+            <div class="location-name">{loc.name}</div>
+            {#if loc.latitude && loc.longitude}
+              <div class="coordinates">
+                <i class="bi bi-geo-alt"></i>
+                {loc.latitude}, {loc.longitude}
+              </div>
+            {/if}
+          </td>
           <td>{loc.address}</td>
-          <td>{loc.longitude}</td>
-          <td>{loc.latitude}</td>
           <td>{loc.id}</td>
           <td>{companies.find((c) => c.id === loc.companyId)?.name}</td>
           <td
@@ -214,36 +229,60 @@
             {userMap[loc.fleetmanagerId]?.family_name}</td
           >
           <td>
-            <a
-              href="#"
-              class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-              id="userDropdown"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <button class="btn btn-sm btn-outline-light">
-                <i class="bi bi-gear-fill"></i> Edit
-              </button>
-            </a>
-            <ul
-              class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
-              aria-labelledby="userDropdown"
-            >
-              <li>
-                <a class="dropdown-item" onclick={() => openEditModal(loc)}
-                  >Edit</a
-                >
-              </li>
-              <li>
-                <a
-                  class="dropdown-item text-danger"
-                  onclick={() => deleteLocation(loc.id)}>Delete</a
-                >
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-            </ul>
+            <div class="dropdown">
+              <a
+                href="#"
+                class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                id="userDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <button class="btn btn-sm btn-outline-light">
+                  <i class="bi bi-gear-fill"></i> Edit
+                </button>
+              </a>
+              <ul
+                class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
+                aria-labelledby="userDropdown"
+              >
+                <li>
+                  <a class="dropdown-item" onclick={() => openEditModal(loc)}
+                    >Edit</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item text-danger"
+                    onclick={() => deleteLocation(loc.id)}>Delete</a
+                  >
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+              </ul>
+            </div>
           </td>
         </tr>
+        {#if expandedRowId === loc.id}
+          <tr class="map-row">
+            <td colspan="8">
+              {#if loc.address}
+                <iframe
+                  width="100%"
+                  height="450"
+                  style="border:0"
+                  loading="lazy"
+                  allowfullscreen
+                  src="https://www.google.com/maps/embed/v1/search?q={encodeURIComponent(
+                    loc.address
+                  )}&key={PUBLIC_GOOGLE_MAPS_API_KEY}"
+                ></iframe>
+              {:else}
+                <div class="text-center p-3">
+                  <i class="bi bi-map"></i> No address available for this location
+                </div>
+              {/if}
+            </td>
+          </tr>
+        {/if}
       {/each}
     </tbody>
   </table>
@@ -256,10 +295,6 @@
 {/if}
 
 <style>
-  .page-link {
-    box-shadow: none;
-  }
-
   .companies-header {
     display: flex;
     justify-content: space-between;
@@ -354,57 +389,48 @@
     background: rgba(149, 212, 238, 0.2);
   }
 
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .location-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .location-row:hover {
+    background-color: rgba(149, 212, 238, 0.1);
+  }
+
+  .location-row.expanded {
+    background-color: rgba(149, 212, 238, 0.15);
+  }
+
+  .map-row td {
+    padding: 0 !important;
+    background-color: #343c44;
+  }
+
+  .map-row iframe {
+    border-radius: 0 0 8px 8px;
+  }
+
+  .dropdown {
+    position: relative;
     z-index: 1000;
   }
 
-  .modal-content {
-    background: #343c44;
-    padding: 2rem;
-    border-radius: 8px;
-    border: 1px solid #95d4ee;
-    width: 90%;
-    max-width: 500px;
+  .location-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
   }
 
-  .modal-content h2 {
-    color: white;
-    margin-bottom: 1.5rem;
-    font-size: 1.4rem;
-  }
-
-  .form-group {
-    margin-bottom: 1rem;
-  }
-
-  .form-group label {
-    display: block;
+  .coordinates {
+    font-size: 0.85rem;
     color: #95d4ee;
-    margin-bottom: 0.5rem;
-  }
-
-  .form-control {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #4f5a65;
-    border-radius: 4px;
-    background: #23272e;
-    color: white;
-  }
-
-  .modal-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .coordinates i {
+    font-size: 0.8rem;
+    opacity: 0.8;
   }
 </style>
