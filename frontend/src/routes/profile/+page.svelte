@@ -5,6 +5,7 @@
   import { jwt_token, isAuthenticated, user, isOwner } from "../../store";
   import { fade, fly } from "svelte/transition";
   import { findUserCompany } from "$lib/utils";
+  import { goto } from "$app/navigation";
 
   let companies = [];
   let locations = [];
@@ -61,6 +62,10 @@
     } catch (err) {
       console.error("Could not load locations", err);
     }
+  }
+
+  function goToLogin() {
+    goto("/");
   }
 </script>
 
@@ -199,6 +204,9 @@
     <div class="not-authenticated">
       <i class="bi bi-lock-fill fa-3x mb-3"></i>
       <p>You are not logged in.</p>
+      <button class="btn btn-primary mt-3" onclick={goToLogin}>
+        Go to Login
+      </button>
     </div>
   </div>
 {/if}

@@ -1,8 +1,9 @@
 <script>
   import { onMount } from "svelte";
-  import { user, hasAnyRole, jwt_token } from "../../store";
+  import { user, hasAnyRole, jwt_token, isAuthenticated } from "../../store";
   import axios from "axios";
   import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
 
   const api_root = $page.url.origin;
   let dashboardData = {
@@ -33,116 +34,132 @@
       loading = false;
     }
   });
+
+  function goToLogin() {
+    goto("/");
+  }
 </script>
 
-<div class="dashboard-container">
-  {#if loading}
-    <div class="loading-spinner">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  {:else if error}
-    <div class="alert alert-danger" role="alert">
-      {error}
-    </div>
-  {:else}
-    <!-- Role-specific Information -->
-    <div class="role-info-section">
-      {#if hasAnyRole(["owner"])}
-        <div class="info-card">
-          <div class="card-icon">
-            <i class="fas fa-building"></i>
-          </div>
-          <div class="card-content">
-            <h3>My Company</h3>
-            <p>{dashboardData.company}</p>
-          </div>
-        </div>
-      {/if}
-
-      {#if hasAnyRole(["fleetmanager"])}
-        <div class="info-card">
-          <div class="card-icon">
-            <i class="fas fa-map-marker-alt"></i>
-          </div>
-          <div class="card-content">
-            <h3>Location</h3>
-            <p>{dashboardData.location}</p>
-          </div>
-        </div>
-      {/if}
-    </div>
-
-    <!-- Job Statistics -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-truck"></i>
-        </div>
-        <div class="stat-content">
-          <h4>Active Vehicles</h4>
-          <p class="stat-number">{dashboardData.activeVehicles}</p>
+{#if $isAuthenticated}
+  <div class="dashboard-container">
+    {#if loading}
+      <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-calendar-check"></i>
-        </div>
-        <div class="stat-content">
-          <h4>Scheduled Jobs</h4>
-          <p class="stat-number">{dashboardData.scheduledJobs}</p>
-        </div>
+    {:else if error}
+      <div class="alert alert-danger" role="alert">
+        {error}
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-spinner"></i>
-        </div>
-        <div class="stat-content">
-          <h4>In Progress Jobs</h4>
-          <p class="stat-number">{dashboardData.inProgressJobs}</p>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-content">
-          <h4>Completed Today</h4>
-          <p class="stat-number">{dashboardData.completedJobsToday}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alerts Section -->
-    <div class="alerts-section">
-      <h3>Alerts</h3>
-      {#if dashboardData.alerts.length === 0}
-        <p class="no-alerts">No alerts at the moment</p>
-      {:else}
-        <div class="alerts-list">
-          {#each dashboardData.alerts as alert}
-            <div class="alert-item {alert.type}">
-              <i
-                class="fas {alert.type === 'cancelled'
-                  ? 'fa-ban'
-                  : 'fa-exclamation-triangle'}"
-              ></i>
-              <div class="alert-content">
-                <h5>{alert.title}</h5>
-                <p>{alert.message}</p>
-                <small>{alert.timestamp}</small>
-              </div>
+    {:else}
+      <!-- Role-specific Information -->
+      <div class="role-info-section">
+        {#if hasAnyRole(["owner"])}
+          <div class="info-card">
+            <div class="card-icon">
+              <i class="fas fa-building"></i>
             </div>
-          {/each}
+            <div class="card-content">
+              <h3>My Company</h3>
+              <p>{dashboardData.company}</p>
+            </div>
+          </div>
+        {/if}
+
+        {#if hasAnyRole(["fleetmanager"])}
+          <div class="info-card">
+            <div class="card-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="card-content">
+              <h3>Location</h3>
+              <p>{dashboardData.location}</p>
+            </div>
+          </div>
+        {/if}
+      </div>
+
+      <!-- Job Statistics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="stat-content">
+            <h4>Active Vehicles</h4>
+            <p class="stat-number">{dashboardData.activeVehicles}</p>
+          </div>
         </div>
-      {/if}
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-content">
+            <h4>Scheduled Jobs</h4>
+            <p class="stat-number">{dashboardData.scheduledJobs}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-spinner"></i>
+          </div>
+          <div class="stat-content">
+            <h4>In Progress Jobs</h4>
+            <p class="stat-number">{dashboardData.inProgressJobs}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <h4>Completed Today</h4>
+            <p class="stat-number">{dashboardData.completedJobsToday}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts Section -->
+      <div class="alerts-section">
+        <h3>Alerts</h3>
+        {#if dashboardData.alerts.length === 0}
+          <p class="no-alerts">No alerts at the moment</p>
+        {:else}
+          <div class="alerts-list">
+            {#each dashboardData.alerts as alert}
+              <div class="alert-item {alert.type}">
+                <i
+                  class="fas {alert.type === 'cancelled'
+                    ? 'fa-ban'
+                    : 'fa-exclamation-triangle'}"
+                ></i>
+                <div class="alert-content">
+                  <h5>{alert.title}</h5>
+                  <p>{alert.message}</p>
+                  <small>{alert.timestamp}</small>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </div>
+{:else}
+  <div class="container mt-5 text-center" in:fade>
+    <div class="not-authenticated">
+      <i class="bi bi-lock-fill fa-3x mb-3"></i>
+      <p>You are not logged in.</p>
+      <button class="btn btn-primary mt-3" onclick={goToLogin}>
+        Go to Login
+      </button>
     </div>
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style>
   .dashboard-container {

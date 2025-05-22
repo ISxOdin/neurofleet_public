@@ -2,7 +2,8 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
-  import { jwt_token } from "../../store";
+  import { jwt_token, isAuthenticated } from "../../store";
+  import { goto } from "$app/navigation";
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   import EditCompanyModal from "$lib/components/modals/EditCompanyModal.svelte";
   import CreateCompanyModal from "$lib/components/modals/CreateCompanyModal.svelte";
@@ -173,6 +174,10 @@
     if (event.target.closest(".dropdown")) return;
     expandedRowId = expandedRowId === companyId ? null : companyId;
   }
+
+  function goToLogin() {
+    goto("/");
+  }
 </script>
 
 {#if showEditModal && editCompany}
@@ -302,6 +307,22 @@
   </table>
 
   <Pagination {currentPage} {totalPages} onPageChange={getCompanies} />
+{/if}
+
+{#if $isAuthenticated}
+  <div class="companies-container">
+    <!-- ... existing content ... -->
+  </div>
+{:else}
+  <div class="container mt-5 text-center" in:fade>
+    <div class="not-authenticated">
+      <i class="bi bi-lock-fill fa-3x mb-3"></i>
+      <p>You are not logged in.</p>
+      <button class="btn btn-primary mt-3" onclick={goToLogin}>
+        Go to Login
+      </button>
+    </div>
+  </div>
 {/if}
 
 <style>

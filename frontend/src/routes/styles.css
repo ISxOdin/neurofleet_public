@@ -45,3 +45,11 @@ h1 {
   --bs-pagination-padding-y: 0.5rem;
   --bs-pagination-transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+.not-authenticated {
+  color: white;
+  padding: 2rem;
+  background: #343c44;
+  border-radius: 1rem;
+  border: 1px solid #95d4ee;
+}

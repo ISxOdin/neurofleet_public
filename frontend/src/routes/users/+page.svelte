@@ -2,8 +2,9 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
-  import { jwt_token } from "../../store";
+  import { jwt_token, isAuthenticated } from "../../store";
   import EditUserModal from "$lib/components/modals/EditUserModal.svelte";
+  import { goto } from "$app/navigation";
 
   let users = [];
   let companies = [];
@@ -114,50 +115,70 @@
       alert("Failed to update user");
     }
   }
+
+  function goToLogin() {
+    goto("/");
+  }
 </script>
 
-<h1 class="text-center">All Users</h1>
-{#if loading}
-  <div class="d-flex justify-content-center my-4">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
+{#if $isAuthenticated}
+  <h1 class="text-center">All Users</h1>
+  {#if loading}
+    <div class="d-flex justify-content-center my-4">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  {:else}
+    <table class="table table-hover">
+      <thead
+        ><tr
+          ><th>Name</th><th>Email</th><th>User ID</th><th>Role</th><th
+            >Actions</th
+          ></tr
+        ></thead
+      >
+      <tbody>
+        {#each users as user}
+          <tr>
+            <td>{user.given_name} {user.family_name}</td>
+            <td>{user.email}</td>
+            <td>{user.user_id}</td>
+            <td>{user.role}</td>
+            <td>
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                onclick={() => openEditModal(user)}
+              >
+                <i class="bi bi-gear-fill"></i> Edit
+              </button>
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  {/if}
+
+  {#if showEditModal && selectedUser}
+    <EditUserModal
+      user={selectedUser}
+      roles={["admin", "owner", "fleetmanager"]}
+      {companies}
+      on:cancel={closeEditModal}
+      on:save={(e) => saveEditedUser(e.detail)}
+    />
+  {/if}
+{:else}
+  <div class="container mt-5 text-center" in:fade>
+    <div class="not-authenticated">
+      <i class="bi bi-lock-fill fa-3x mb-3"></i>
+      <p>You are not logged in.</p>
+      <button class="btn btn-primary mt-3" onclick={goToLogin}>
+        Go to Login
+      </button>
     </div>
   </div>
-{:else}
-  <table class="table table-hover">
-    <thead
-      ><tr
-        ><th>Name</th><th>Email</th><th>User ID</th><th>Role</th><th>Actions</th
-        ></tr
-      ></thead
-    >
-    <tbody>
-      {#each users as user}
-        <tr>
-          <td>{user.given_name} {user.family_name}</td>
-          <td>{user.email}</td>
-          <td>{user.user_id}</td>
-          <td>{user.role}</td>
-          <td>
-            <button
-              class="btn btn-sm btn-outline-secondary"
-              onclick={() => openEditModal(user)}
-            >
-              <i class="bi bi-gear-fill"></i> Edit
-            </button>
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
 {/if}
 
-{#if showEditModal && selectedUser}
-  <EditUserModal
-    user={selectedUser}
-    roles={["admin", "owner", "fleetmanager"]}
-    {companies}
-    on:cancel={closeEditModal}
-    on:save={(e) => saveEditedUser(e.detail)}
-  />
-{/if}
+<style>
+</style>

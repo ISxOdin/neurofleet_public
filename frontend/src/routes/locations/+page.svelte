@@ -8,6 +8,7 @@
   import CreateLocationModal from "$lib/components/modals/CreateLocationModal.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
   import { findUserCompany } from "$lib/utils";
+  import { goto } from "$app/navigation";
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   let currentPage = 1;
@@ -160,138 +161,154 @@
     if (event.target.closest(".dropdown")) return;
     expandedRowId = expandedRowId === locationId ? null : locationId;
   }
+
+  function goToLogin() {
+    goto("/");
+  }
 </script>
 
 <!-- Create Form -->
-<div class="companies-header">
-  <h1 class="text-center">All Locations</h1>
-  <button class="btn-accent" onclick={() => (showCreateModal = true)}>
-    <i class="bi bi-plus-lg"></i> Create Location
-  </button>
-</div>
-
-{#if showCreateModal}
-  <CreateLocationModal
-    on:created={(e) => createLocation(e.detail)}
-    on:cancel={() => (showCreateModal = false)}
-  />
-{/if}
-
-{#if showEditModal && editLocation}
-  <EditLocationModal
-    location={editLocation}
-    {users}
-    companyId={myCompanyId}
-    on:cancel={closeEditModal}
-    on:save={(e) => submitEdit(e.detail)}
-  />
-{/if}
-
-{#if loading}
-  <div class="d-flex justify-content-center my-4">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
+{#if $isAuthenticated}
+  <div class="companies-header">
+    <h1 class="text-center">All Locations</h1>
+    <button class="btn-accent" onclick={() => (showCreateModal = true)}>
+      <i class="bi bi-plus-lg"></i> Create Location
+    </button>
   </div>
-{:else}
-  <table class="companies-table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Address</th>
-        <th>ID</th>
-        <th>Company</th>
-        <th>Fleet Manager</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each locations as loc}
-        <tr
-          class="location-row"
-          class:expanded={expandedRowId === loc.id}
-          onclick={(e) => toggleRow(loc.id, e)}
-        >
-          <td>
-            <div class="location-name">{loc.name}</div>
-            {#if loc.latitude && loc.longitude}
-              <div class="coordinates">
-                <i class="bi bi-geo-alt"></i>
-                {loc.latitude}, {loc.longitude}
-              </div>
-            {/if}
-          </td>
-          <td>{loc.address}</td>
-          <td>{loc.id}</td>
-          <td>{companies.find((c) => c.id === loc.companyId)?.name}</td>
-          <td
-            >{userMap[loc.fleetmanagerId]?.given_name}
-            {userMap[loc.fleetmanagerId]?.family_name}</td
-          >
-          <td>
-            <div class="dropdown">
-              <a
-                href="#"
-                class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
-                id="userDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <button class="btn btn-sm btn-outline-light">
-                  <i class="bi bi-gear-fill"></i> Edit
-                </button>
-              </a>
-              <ul
-                class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
-                aria-labelledby="userDropdown"
-              >
-                <li>
-                  <a class="dropdown-item" onclick={() => openEditModal(loc)}
-                    >Edit</a
-                  >
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item text-danger"
-                    onclick={() => deleteLocation(loc.id)}>Delete</a
-                  >
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-              </ul>
-            </div>
-          </td>
+
+  {#if showCreateModal}
+    <CreateLocationModal
+      on:created={(e) => createLocation(e.detail)}
+      on:cancel={() => (showCreateModal = false)}
+    />
+  {/if}
+
+  {#if showEditModal && editLocation}
+    <EditLocationModal
+      location={editLocation}
+      {users}
+      companyId={myCompanyId}
+      on:cancel={closeEditModal}
+      on:save={(e) => submitEdit(e.detail)}
+    />
+  {/if}
+
+  {#if loading}
+    <div class="d-flex justify-content-center my-4">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  {:else}
+    <table class="companies-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Address</th>
+          <th>ID</th>
+          <th>Company</th>
+          <th>Fleet Manager</th>
+          <th>Actions</th>
         </tr>
-        {#if expandedRowId === loc.id}
-          <tr class="map-row">
-            <td colspan="8">
-              {#if loc.address}
-                <iframe
-                  width="100%"
-                  height="450"
-                  style="border:0"
-                  loading="lazy"
-                  allowfullscreen
-                  src="https://www.google.com/maps/embed/v1/search?q={encodeURIComponent(
-                    loc.address
-                  )}&key={GOOGLE_MAPS_API_KEY}"
-                ></iframe>
-              {:else}
-                <div class="text-center p-3">
-                  <i class="bi bi-map"></i> No address available for this location
+      </thead>
+      <tbody>
+        {#each locations as loc}
+          <tr
+            class="location-row"
+            class:expanded={expandedRowId === loc.id}
+            onclick={(e) => toggleRow(loc.id, e)}
+          >
+            <td>
+              <div class="location-name">{loc.name}</div>
+              {#if loc.latitude && loc.longitude}
+                <div class="coordinates">
+                  <i class="bi bi-geo-alt"></i>
+                  {loc.latitude}, {loc.longitude}
                 </div>
               {/if}
             </td>
+            <td>{loc.address}</td>
+            <td>{loc.id}</td>
+            <td>{companies.find((c) => c.id === loc.companyId)?.name}</td>
+            <td
+              >{userMap[loc.fleetmanagerId]?.given_name}
+              {userMap[loc.fleetmanagerId]?.family_name}</td
+            >
+            <td>
+              <div class="dropdown">
+                <a
+                  href="#"
+                  class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                  id="userDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <button class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-gear-fill"></i> Edit
+                  </button>
+                </a>
+                <ul
+                  class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
+                  aria-labelledby="userDropdown"
+                >
+                  <li>
+                    <a class="dropdown-item" onclick={() => openEditModal(loc)}
+                      >Edit</a
+                    >
+                  </li>
+                  <li>
+                    <a
+                      class="dropdown-item text-danger"
+                      onclick={() => deleteLocation(loc.id)}>Delete</a
+                    >
+                  </li>
+                  <li><hr class="dropdown-divider" /></li>
+                </ul>
+              </div>
+            </td>
           </tr>
-        {/if}
-      {/each}
-    </tbody>
-  </table>
+          {#if expandedRowId === loc.id}
+            <tr class="map-row">
+              <td colspan="8">
+                {#if loc.address}
+                  <iframe
+                    width="100%"
+                    height="450"
+                    style="border:0"
+                    loading="lazy"
+                    allowfullscreen
+                    src="https://www.google.com/maps/embed/v1/search?q={encodeURIComponent(
+                      loc.address
+                    )}&key={GOOGLE_MAPS_API_KEY}"
+                  ></iframe>
+                {:else}
+                  <div class="text-center p-3">
+                    <i class="bi bi-map"></i> No address available for this location
+                  </div>
+                {/if}
+              </td>
+            </tr>
+          {/if}
+        {/each}
+      </tbody>
+    </table>
 
-  <Pagination
-    {currentPage}
-    totalPages={nrOfPages}
-    onPageChange={getLocations}
-  />
+    <Pagination
+      {currentPage}
+      totalPages={nrOfPages}
+      onPageChange={getLocations}
+    />
+  {/if}
+{:else}
+  <div class="container mt-5 text-center" in:fade>
+    <div class="not-authenticated">
+      <i class="bi bi-lock-fill fa-3x mb-3"></i>
+      <p>You are not logged in.</p>
+      <button class="btn btn-primary mt-3" onclick={goToLogin}>
+        Go to Login
+      </button>
+    </div>
+  </div>
 {/if}
 
 <style>

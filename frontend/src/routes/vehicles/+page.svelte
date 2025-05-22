@@ -8,8 +8,10 @@
     isOwner,
     isFleet,
     hasAnyRole,
+    isAuthenticated,
   } from "../../store";
   import { page } from "$app/state";
+  import { goto } from "$app/navigation";
   import CompanySelect from "$lib/components/forms/CompanySelect.svelte";
   import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
   import EditVehicleModal from "$lib/components/modals/EditVehicleModal.svelte";
@@ -191,147 +193,173 @@
     const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
     return vinRegex.test(vin);
   }
+
+  function goToLogin() {
+    goto("/");
+  }
 </script>
 
-<h1>Create Vehicle</h1>
-<form onsubmit={createVehicle}>
-  <div class="mb-3">
-    <label class="form-label" for="licencePlate">License Plate</label>
-    <input
-      class="form-control"
-      bind:value={vehicle.licensePlate}
-      required
-      placeholder="ZH 1234"
-    />
-  </div>
-  <div class="mb-3">
-    <label class="form-label" for="vin">VIN</label>
-    <input
-      class="form-control"
-      bind:value={vehicle.vin}
-      maxlength="17"
-      required
-      style="border-color: {vehicle.vin && !vinValid ? 'red' : ''}"
-      placeholder="1HGCM82633A123456"
-    />
-    {#if vehicle.vin && !vinValid}
-      <small style="color: red">
-        VIN must be 17 characters, no I, O or Q
-      </small>
+{#if $isAuthenticated}
+  <h1>Create Vehicle</h1>
+  <form onsubmit={createVehicle}>
+    <div class="mb-3">
+      <label class="form-label" for="licencePlate">License Plate</label>
+      <input
+        class="form-control"
+        bind:value={vehicle.licensePlate}
+        required
+        placeholder="ZH 1234"
+      />
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="vin">VIN</label>
+      <input
+        class="form-control"
+        bind:value={vehicle.vin}
+        maxlength="17"
+        required
+        style="border-color: {vehicle.vin && !vinValid ? 'red' : ''}"
+        placeholder="1HGCM82633A123456"
+      />
+      {#if vehicle.vin && !vinValid}
+        <small style="color: red">
+          VIN must be 17 characters, no I, O or Q
+        </small>
+      {/if}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="type">Type</label>
+      <select class="form-select" bind:value={vehicle.vehicleType}>
+        <option disabled selected value="">Select type</option>
+        {#each types as type}
+          <option value={type.name}>{type.label}</option>
+        {/each}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="capacity">Capacity (kg)</label>
+      <input
+        class="form-control"
+        type="number"
+        value={selectedTypeInfo?.capacityKg ?? ""}
+        readonly
+        disabled
+      />
+    </div>
+
+    {#if isAdmin}
+      <CompanySelect bind:bindValue={vehicle.companyId} {companies} />
     {/if}
-  </div>
 
-  <div class="mb-3">
-    <label class="form-label" for="type">Type</label>
-    <select class="form-select" bind:value={vehicle.vehicleType}>
-      <option disabled selected value="">Select type</option>
-      {#each types as type}
-        <option value={type.name}>{type.label}</option>
-      {/each}
-    </select>
-  </div>
-  <div class="mb-3">
-    <label class="form-label" for="capacity">Capacity (kg)</label>
-    <input
-      class="form-control"
-      type="number"
-      value={selectedTypeInfo?.capacityKg ?? ""}
-      readonly
-      disabled
-    />
-  </div>
+    {#if hasAnyRole("admin", "owner")}
+      <LocationSelect
+        bind:bindValue={vehicle.locationId}
+        locations={locations.filter(
+          (loc) => loc.companyId === vehicle.companyId
+        )}
+      />
+      {#if vehicle.companyId && locations.filter((loc) => loc.companyId === vehicle.companyId).length === 0}
+        <div class="text-muted mb-3">
+          <p style="color: red">No locations available for selected company</p>
+        </div>
+      {/if}
+    {/if}
 
-  {#if isAdmin}
-    <CompanySelect bind:bindValue={vehicle.companyId} {companies} />
-  {/if}
+    <button type="submit" class="btn btn-primary">Create</button>
+  </form>
+  <hr />
+  <h2>Vehicles</h2>
 
-  {#if hasAnyRole("admin", "owner")}
-    <LocationSelect
-      bind:bindValue={vehicle.locationId}
-      locations={locations.filter((loc) => loc.companyId === vehicle.companyId)}
-    />
-    {#if vehicle.companyId && locations.filter((loc) => loc.companyId === vehicle.companyId).length === 0}
-      <div class="text-muted mb-3">
-        <p style="color: red">No locations available for selected company</p>
+  {#if loading}
+    <div class="d-flex justify-content-center mt-5">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
-    {/if}
+    </div>
+  {:else}
+    <table class="table mt-3">
+      <thead>
+        <tr>
+          <th>License Plate</th>
+          <th>VIN</th>
+          <th>Type</th>
+          <th>Capacity</th>
+          <th>Status</th>
+          <th>Company</th>
+          <th>Location</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each vehicles as v}
+          <tr>
+            <td>{v.licensePlate}</td>
+            <td>{v.vin}</td>
+            <td>{v.vehicleType}</td>
+            <td>{v.capacity}</td>
+            <td>{v.state}</td>
+            <td>{companies.find((c) => c.id === v.companyId)?.name}</td>
+            <td>{locations.find((l) => l.id === v.locationId)?.name}</td>
+            <td>
+              <div class="dropdown">
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                >
+                  <i class="bi bi-gear-fill"></i> Edit
+                </button>
+                <ul
+                  class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
+                  aria-labelledby="userDropdown"
+                >
+                  <li>
+                    <a class="dropdown-item" onclick={() => openEdit(v)}>Edit</a
+                    >
+                  </li>
+                  <li>
+                    <a
+                      class="dropdown-item text-danger"
+                      onclick={() => deleteVehicle(v.id)}>Delete</a
+                    >
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+
+    <Pagination
+      {currentPage}
+      totalPages={nrOfPages}
+      onPageChange={getVehicles}
+    />
   {/if}
 
-  <button type="submit" class="btn btn-primary">Create</button>
-</form>
-<hr />
-<h2>Vehicles</h2>
-
-{#if loading}
-  <div class="d-flex justify-content-center mt-5">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
+  {#if showModal && selectedVehicle}
+    <EditVehicleModal
+      vehicle={selectedVehicle}
+      {companies}
+      {locations}
+      {types}
+      on:cancel={closeModal}
+      on:save={(e) => saveEdit(e.detail)}
+    />
+  {/if}
+{:else}
+  <div class="container mt-5 text-center" in:fade>
+    <div class="not-authenticated">
+      <i class="bi bi-lock-fill fa-3x mb-3"></i>
+      <p>You are not logged in.</p>
+      <button class="btn btn-primary mt-3" onclick={goToLogin}>
+        Go to Login
+      </button>
     </div>
   </div>
-{:else}
-  <table class="table mt-3">
-    <thead>
-      <tr>
-        <th>License Plate</th>
-        <th>VIN</th>
-        <th>Type</th>
-        <th>Capacity</th>
-        <th>Status</th>
-        <th>Company</th>
-        <th>Location</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each vehicles as v}
-        <tr>
-          <td>{v.licensePlate}</td>
-          <td>{v.vin}</td>
-          <td>{v.vehicleType}</td>
-          <td>{v.capacity}</td>
-          <td>{v.state}</td>
-          <td>{companies.find((c) => c.id === v.companyId)?.name}</td>
-          <td>{locations.find((l) => l.id === v.locationId)?.name}</td>
-          <td>
-            <div class="dropdown">
-              <button
-                class="btn btn-sm btn-outline-secondary"
-                type="button"
-                data-bs-toggle="dropdown"
-              >
-                <i class="bi bi-gear-fill"></i> Edit
-              </button>
-              <ul
-                class="dropdown-menu dropdown-menu-dark dropdown-menu-end text-small shadow"
-                aria-labelledby="userDropdown"
-              >
-                <li>
-                  <a class="dropdown-item" onclick={() => openEdit(v)}>Edit</a>
-                </li>
-                <li>
-                  <a
-                    class="dropdown-item text-danger"
-                    onclick={() => deleteVehicle(v.id)}>Delete</a
-                  >
-                </li>
-              </ul>
-            </div>
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-
-  <Pagination {currentPage} totalPages={nrOfPages} onPageChange={getVehicles} />
 {/if}
 
-{#if showModal && selectedVehicle}
-  <EditVehicleModal
-    vehicle={selectedVehicle}
-    {companies}
-    {locations}
-    {types}
-    on:cancel={closeModal}
-    on:save={(e) => saveEdit(e.detail)}
-  />
-{/if}
+<style>
+</style>
