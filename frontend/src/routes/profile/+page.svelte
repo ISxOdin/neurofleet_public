@@ -6,28 +6,42 @@
   import { fade, fly } from "svelte/transition";
 
   let companies = [];
+  let locations = [];
   let loading = false;
   let apiRoot = "";
+
+  let currentPage = 1;
+  let defaultPageSize = 5;
+  let nrOfPages = 0;
+  let sub = encodeURIComponent($user.sub);
 
   onMount(async () => {
     if (browser) {
       apiRoot = window.location.origin;
-      await getCompanies();
+      await getMyCompanies();
+      await getMyLocations();
     }
   });
 
-  async function getCompanies() {
-    loading = true;
+  async function getMyCompanies() {
     try {
-      const { data } = await axios.get(`${apiRoot}/api/companies`, {
+      const response = await axios.get(`${apiRoot}/api/companies/user/${sub}`, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
-      companies = data.content || data;
-    } catch (error) {
-      console.error("Could not get companies", error);
-      alert("Could not get companies");
-    } finally {
-      loading = false;
+      companies = response.data;
+    } catch (err) {
+      console.error("Could not load companies", err);
+    }
+  }
+
+  async function getMyLocations() {
+    try {
+      const response = await axios.get(`${apiRoot}/api/locations/user/${sub}`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
+      });
+      locations = response.data;
+    } catch (err) {
+      console.error("Could not load locations", err);
     }
   }
 </script>
@@ -112,17 +126,43 @@
           {/if}
 
           <div class="companies-section">
-            {#each companies as company}
-              {#if company.userIds?.includes($user.sub)}
-                <div class="company-card" in:fade>
+            {#if companies.length > 0}
+              <h4 class="subsection-title">Companies</h4>
+              {#each companies as company}
+                <div class="card" in:fade>
                   <i class="fas fa-building"></i>
                   <div class="company-info">
                     <span class="key-info">Company</span>
                     <span class="value">{company.name}</span>
+                    {#if company.address}
+                      <span class="address"
+                        ><i class="fas fa-map-marker-alt"></i>
+                        {company.address}</span
+                      >
+                    {/if}
                   </div>
                 </div>
-              {/if}
-            {/each}
+              {/each}
+            {/if}
+
+            {#if locations.length > 0}
+              <h4 class="subsection-title">Locations</h4>
+              {#each locations as location}
+                <div class="card" in:fade>
+                  <i class="fas fa-map-pin"></i>
+                  <div class="company-info">
+                    <span class="key-info">Location</span>
+                    <span class="value">{location.name}</span>
+                    {#if location.address}
+                      <span class="address"
+                        ><i class="fas fa-map-marker-alt"></i>
+                        {location.address}</span
+                      >
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            {/if}
           </div>
         </div>
       </div>
@@ -258,6 +298,7 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-align: left;
   }
 
   .key-info i {
@@ -268,6 +309,7 @@
   .value {
     color: white;
     font-size: 1.1rem;
+    text-align: left;
   }
 
   .roles-section {
@@ -316,23 +358,36 @@
     gap: 1rem;
   }
 
-  .company-card {
+  .subsection-title {
+    color: #95d4ee;
+    font-size: 1.1rem;
+    margin: 1.5rem 0 1rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid #95d4ee;
+  }
+
+  .card {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 0.75rem;
     padding: 1rem;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
     transition: all 0.3s ease;
+    border-left: 4px solid #95d4ee;
+    text-align: left;
   }
 
-  .company-card:hover {
+  .card:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateX(5px);
   }
 
-  .company-card i {
+  .card i {
     font-size: 1.5rem;
+  }
+
+  .card i {
     color: #95d4ee;
   }
 
@@ -340,6 +395,23 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    text-align: left;
+    flex: 1;
+  }
+
+  .address {
+    color: #95d4ee;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  .address i {
+    font-size: 0.8rem;
+    opacity: 0.8;
   }
 
   .not-authenticated {

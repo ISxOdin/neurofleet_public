@@ -1,5 +1,6 @@
 package ch.zhaw.neurofleet.controller;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -134,5 +135,18 @@ public class LocationController {
         }
         locationRepository.deleteById(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/locations/user/{userId}")
+    public ResponseEntity<List<Location>> getLocationsByUserId(@PathVariable String userId) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        try {
+            List<Location> locations = locationRepository.findLocationsByUserId(userId);
+            return ResponseEntity.ok(locations);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
