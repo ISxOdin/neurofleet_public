@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { jwt_token } from "../../store";
-  import { VITE_GOOGLE_MAPS_API_KEY } from "$env/static/public";
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   import EditCompanyModal from "$lib/components/modals/EditCompanyModal.svelte";
   import CreateCompanyModal from "$lib/components/modals/CreateCompanyModal.svelte";
   import Pagination from "$lib/components/Pagination.svelte";
@@ -287,7 +287,7 @@
                   allowfullscreen
                   src="https://www.google.com/maps/embed/v1/search?q={encodeURIComponent(
                     c.address
-                  )}&key={VITE_GOOGLE_MAPS_API_KEY}"
+                  )}&key={GOOGLE_MAPS_API_KEY}"
                 ></iframe>
               {:else}
                 <div class="text-center p-3">

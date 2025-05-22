@@ -5,14 +5,19 @@ RUN apt-get update && apt-get install -y curl \
     && curl -L https://www.npmjs.com/install.sh | npm_install="10.2.3" | sh
 WORKDIR /usr/src/app
 COPY . .
-# Erzeuge .env.production im Frontend-Verzeichnis
-RUN echo "PUBLIC_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" > frontend/.env.production
 
-RUN cd frontend && npm install
-RUN cd frontend && npm run build
+# Set up environment variables for the frontend build
+ARG VITE_GOOGLE_MAPS_API_KEY
+RUN echo "VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" > frontend/.env
+
+# Build frontend with environment variables
+RUN cd frontend && npm install && npm run build
 RUN rm -r frontend
+
+# Build backend
 RUN sed -i 's/\r$//' mvnw
 RUN chmod +x mvnw
 RUN ./mvnw package
+
 EXPOSE 8080
 CMD ["java", "-jar", "/usr/src/app/target/neurofleet-0.0.1-SNAPSHOT.jar"]
