@@ -219,14 +219,20 @@
             <td>{vehicles.find((v) => v.id === j.vehicleId)?.licensePlate}</td>
             <td>
               <span class="status-badge status-{j.jobState.toLowerCase()}">
-                {#if j.jobState === "PENDING"}
-                  <i class="bi bi-clock"></i>
+                {#if j.jobState === "NEW"}
+                  <i class="bi bi-plus-circle"></i>
+                {:else if j.jobState === "SCHEDULED"}
+                  <i class="bi bi-calendar-event"></i>
                 {:else if j.jobState === "IN_PROGRESS"}
                   <i class="bi bi-truck"></i>
                 {:else if j.jobState === "COMPLETED"}
                   <i class="bi bi-check-circle-fill"></i>
+                {:else if j.jobState === "FAILED"}
+                  <i class="bi bi-exclamation-circle-fill"></i>
                 {:else if j.jobState === "CANCELLED"}
                   <i class="bi bi-x-circle-fill"></i>
+                {:else if j.jobState === "ABORTED"}
+                  <i class="bi bi-stop-circle-fill"></i>
                 {/if}
                 {j.jobState.replace("_", " ")}
               </span>
@@ -423,7 +429,12 @@
     font-size: 1rem;
   }
 
-  .status-pending {
+  .status-new {
+    background-color: rgba(108, 117, 125, 0.5);
+    color: #ced4da;
+  }
+
+  .status-scheduled {
     background-color: rgba(255, 193, 7, 0.5);
     color: #ffc107;
   }
@@ -438,9 +449,19 @@
     color: #3dbe5b;
   }
 
-  .status-cancelled {
+  .status-failed {
     background-color: rgba(220, 53, 69, 0.5);
-    color: #dc3545;
+    color: #ff6b6b;
+  }
+
+  .status-cancelled {
+    background-color: rgba(108, 117, 125, 0.5);
+    color: #adb5bd;
+  }
+
+  .status-aborted {
+    background-color: rgba(153, 51, 255, 0.5);
+    color: #b266ff;
   }
 
   @media (max-width: 768px) {

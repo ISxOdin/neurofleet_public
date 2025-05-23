@@ -211,7 +211,7 @@
   .modal-content {
     padding: 2rem 2rem 1.5rem 2rem;
     border-radius: 1rem;
-    background: #343c44;
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .form-select,
@@ -227,7 +227,6 @@
     padding: 0.75rem;
     border-radius: 4px;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2395d4ee' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 16px 12px;
@@ -277,13 +276,35 @@
     color: #fff !important;
   }
 
+  .input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+  }
+
   .input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    font-size: 1rem;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: none;
+    border-radius: 4px 0 0 4px;
     color: #95d4ee;
+    margin: 0;
+  }
+
+  .input-group .form-control {
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    border-radius: 0 4px 4px 0;
+    margin: 0;
   }
 
   .datepicker-wrapper {
     position: relative;
+    width: 100%;
   }
 </style>
