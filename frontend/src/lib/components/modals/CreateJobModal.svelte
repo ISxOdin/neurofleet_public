@@ -7,7 +7,6 @@
 
   export let companies = [];
   export let locations = [];
-  export let vehicles = [];
   export let myCompanyId = null;
   export let myLocationId = null;
 
@@ -18,9 +17,9 @@
     scheduledTime: "",
     originId: "",
     destinationId: "",
-    vehicleId: "",
     companyId: "",
     locationId: "",
+    payloadKg: 0,
   };
 
   let lastOriginId = "";
@@ -30,13 +29,11 @@
     lastCompanyId = job.companyId;
     job.originId = "";
     job.destinationId = "";
-    job.vehicleId = "";
   }
 
   $: if (job.originId !== lastOriginId) {
     lastOriginId = job.originId;
     job.destinationId = "";
-    job.vehicleId = "";
   }
 
   onMount(() => {
@@ -60,6 +57,10 @@
   }
 
   function save() {
+    if (!job.payloadKg || job.payloadKg <= 0) {
+      alert("Please enter a valid payload weight (greater than 0 kg)");
+      return;
+    }
     dispatch("created", job);
   }
 </script>
@@ -130,19 +131,14 @@
           </select>
         {/if}
 
-        <label>Vehicle</label>
-        <select
-          class="form-select mb-3"
-          bind:value={job.vehicleId}
-          disabled={!job.originId}
-        >
-          <option disabled selected value="">Select vehicle</option>
-          {#each vehicles.filter((vehicle) => vehicle.locationId === job.originId) as vehicle}
-            <option value={vehicle.id}>
-              {vehicle.licensePlate} ({vehicle.vehicleType})
-            </option>
-          {/each}
-        </select>
+        <label>Payload (kg)</label>
+        <input
+          type="number"
+          class="form-control mb-3"
+          bind:value={job.payloadKg}
+          min="1"
+          placeholder="Enter payload weight in kg"
+        />
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick={cancel}>Cancel</button>

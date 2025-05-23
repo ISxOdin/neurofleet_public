@@ -69,9 +69,9 @@
                 </li>
                 <li>
                   <a
-                    href="/routes"
+                    href="/transport-routes"
                     class="nav-link p-3 text-white"
-                    class:custom-active={currentPath === "/routes"}
+                    class:custom-active={currentPath === "/transport-routes"}
                   >
                     <i class="bi bi-sign-turn-left me-2 accent-color"></i> Routes
                   </a>

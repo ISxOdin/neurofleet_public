@@ -4,15 +4,30 @@
   export let label = "Vehicle";
   export let id = "vehicleId";
   export let disabled = false;
+
+  // Calculate available capacity for each vehicle
+  $: vehiclesWithCapacity = vehicles.map((vehicle) => {
+    const assignedJobs = vehicle.jobs || [];
+    const usedCapacity = assignedJobs.reduce(
+      (sum, job) => sum + (job.payloadKg || 0),
+      0
+    );
+    const availableCapacity = vehicle.capacity - usedCapacity;
+    return {
+      ...vehicle,
+      availableCapacity,
+    };
+  });
 </script>
 
 <div class="mb-3">
   <label for={id}>{label}</label>
   <select class="form-select" {id} bind:value={bindValue} {disabled}>
     <option disabled value="">Select vehicle</option>
-    {#each vehicles as vehicle}
+    {#each vehiclesWithCapacity as vehicle}
       <option value={vehicle.id}>
-        {vehicle.licensePlate ?? vehicle.id} - {vehicle.vehicleType} - {vehicle.capacity}
+        {vehicle.licensePlate ?? vehicle.id} - {vehicle.vehicleType}
+        ({vehicle.availableCapacity}kg available / {vehicle.capacity}kg total)
       </option>
     {/each}
   </select>

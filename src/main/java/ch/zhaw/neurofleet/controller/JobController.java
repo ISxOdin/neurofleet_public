@@ -27,7 +27,6 @@ import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
-
 public class JobController {
 
     @Autowired
@@ -59,8 +58,8 @@ public class JobController {
                     jDTO.getScheduledTime(),
                     jDTO.getOriginId(),
                     jDTO.getDestinationId(),
-                    jDTO.getVehicleId(),
-                    jDTO.getCompanyId());
+                    jDTO.getCompanyId(),
+                    jDTO.getPayloadKg());
             Job job = jobRepository.save(jobDAO);
             return new ResponseEntity<>(job, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -112,5 +111,4 @@ public class JobController {
         jobRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK).body("DELETED");
     }
-
 }

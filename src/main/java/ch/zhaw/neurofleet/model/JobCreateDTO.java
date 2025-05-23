@@ -14,7 +14,7 @@ public class JobCreateDTO {
     private LocalDateTime scheduledTime;
     private String originId;
     private String destinationId;
-    private String vehicleId;
     private String companyId;
+    private Integer payloadKg;
     private JobState jobState;
 }

@@ -26,8 +26,8 @@ public class Job {
     @NonNull
     private String destinationId;
     @NonNull
-    private String vehicleId;
-    @NonNull
     private String companyId;
+    @NonNull
+    private Integer payloadKg;
     private JobState jobState = JobState.NEW;
 }
