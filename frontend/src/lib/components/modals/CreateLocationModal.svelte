@@ -1,20 +1,24 @@
 <script>
   import { createEventDispatcher } from "svelte";
+  import { isAdmin, isOwner } from "../../../store";
+  import CompanySelect from "../forms/CompanySelect.svelte";
   const dispatch = createEventDispatcher();
 
   let location = {
     name: "",
     address: "",
+    companyId: "",
   };
+  export let companies = [];
 
   function handleSubmit() {
     dispatch("created", location);
-    location = { name: "", address: "" };
+    location = { name: "", address: "", companyId: "" };
   }
 
   function handleCancel() {
     dispatch("cancel");
-    location = { name: "", address: "" };
+    location = { name: "", address: "", companyId: "" };
   }
 </script>
 
@@ -42,6 +46,17 @@
           placeholder="Bahnhofstrasse 1, Zürich"
           required
         />
+        {#if $isAdmin}
+          <label>Company</label>
+          <select class="form-select mb-3" bind:value={location.companyId}>
+            <option disabled selected value="">Select company</option>
+            {#each companies as company}
+              <option value={company.id}>{company.name}</option>
+            {/each}
+          </select>
+        {:else if $isOwner}
+          <input type="hidden" bind:value={location.companyId} />
+        {/if}
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick={handleCancel}>Cancel</button>
@@ -141,5 +156,25 @@
   .btn-secondary:hover {
     background: rgba(149, 212, 238, 0.1) !important;
     color: #fff !important;
+  }
+  .form-select,
+  .form-select option {
+    background: #2a2e36 !important;
+    color: #fff !important;
+  }
+
+  .form-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.75rem;
+    border-radius: 4px;
+  }
+
+  .form-select:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #95d4ee;
+    color: #fff;
+    box-shadow: none;
   }
 </style>

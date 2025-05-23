@@ -66,7 +66,7 @@ public class CompanyController {
     @GetMapping("/companies")
     public ResponseEntity<Page<Company>> getCompanies(
             @RequestParam(required = false, defaultValue = "1") Integer pageNumber,
-            @RequestParam(required = false, defaultValue = "5") Integer pageSize) {
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
         Page<Company> allCompanies = companyRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
         return new ResponseEntity<>(allCompanies, HttpStatus.OK);
     }
