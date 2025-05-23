@@ -36,7 +36,6 @@
   onMount(async () => {
     await getCompanies();
     await getLocations();
-    await getVehicles();
     getJobs();
   });
 
@@ -70,20 +69,6 @@
       myLocationId = myLo?.id || null;
     } catch (e) {
       alert("Could not load locations");
-    }
-  }
-
-  async function getVehicles() {
-    loading = true;
-    try {
-      const res = await axios.get(api_root + "/api/vehicles", {
-        headers: { Authorization: "Bearer " + $jwt_token },
-      });
-      vehicles = res.data.content;
-    } catch {
-      alert("Could not load vehicles");
-    } finally {
-      loading = false;
     }
   }
 
@@ -146,8 +131,15 @@
         closeEditJobModal();
         getJobs();
       })
-      .catch(() => {
-        alert("Update failed");
+      .catch((error) => {
+        if (
+          error.response?.status === 400 &&
+          error.response?.data?.message?.includes("capacity")
+        ) {
+          alert("Error: " + error.response.data.message);
+        } else {
+          alert("Update failed");
+        }
       });
   }
 
@@ -166,7 +158,14 @@
         getJobs();
       })
       .catch((error) => {
-        alert("Could not create job");
+        if (
+          error.response?.status === 400 &&
+          error.response?.data?.message?.includes("capacity")
+        ) {
+          alert("Error: " + error.response.data.message);
+        } else {
+          alert("Could not create job");
+        }
         console.error(error);
       });
   }
@@ -199,7 +198,7 @@
           <th scope="col">Company</th>
           <th scope="col">Origin</th>
           <th scope="col">Destination</th>
-          <th scope="col">Vehicle</th>
+          <th scope="col">Payload</th>
           <th scope="col">State</th>
           <th scope="col">Actions</th>
         </tr>
@@ -216,7 +215,7 @@
             <td>{companies.find((c) => c.id === j.companyId)?.name}</td>
             <td>{locations.find((l) => l.id === j.originId)?.name}</td>
             <td>{locations.find((l) => l.id === j.destinationId)?.name}</td>
-            <td>{vehicles.find((v) => v.id === j.vehicleId)?.licensePlate}</td>
+            <td>{j.payloadKg}kg</td>
             <td>
               <span class="status-badge status-{j.jobState.toLowerCase()}">
                 {#if j.jobState === "NEW"}
@@ -296,7 +295,6 @@
       <EditJobModal
         {selectedJob}
         {locations}
-        {vehicles}
         on:close={closeEditJobModal}
         on:save={(e) => saveEditedJob(e.detail)}
       />
@@ -306,7 +304,6 @@
       <CreateJobModal
         {companies}
         {locations}
-        {vehicles}
         {myCompanyId}
         {myLocationId}
         on:cancel={closeCreateJobModal}

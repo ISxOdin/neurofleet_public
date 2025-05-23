@@ -1,15 +1,15 @@
 package ch.zhaw.neurofleet.service;
 
-import ch.zhaw.neurofleet.model.Job;
-import ch.zhaw.neurofleet.model.JobCreateDTO;
-import ch.zhaw.neurofleet.repository.JobRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import ch.zhaw.neurofleet.model.Job;
+import ch.zhaw.neurofleet.model.JobCreateDTO;
+import ch.zhaw.neurofleet.repository.JobRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -45,8 +45,7 @@ public class JobService {
         job.setScheduledTime(dto.getScheduledTime());
         job.setOriginId(dto.getOriginId());
         job.setDestinationId(dto.getDestinationId());
-        job.setVehicleId(dto.getVehicleId());
-
+        job.setPayloadKg(dto.getPayloadKg());
         job.setJobState(Objects.requireNonNull(dto.getJobState(), "Jobstate must not be null"));
 
         return jobRepository.save(job);

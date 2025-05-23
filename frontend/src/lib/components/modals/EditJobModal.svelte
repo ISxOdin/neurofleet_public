@@ -1,13 +1,11 @@
 <script>
   import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
-  import VehicleSelect from "$lib/components/forms/VehicleSelect.svelte";
   import JobStatusSelect from "$lib/components/forms/JobStatusSelect.svelte";
   import flatpickr from "flatpickr";
   import { createEventDispatcher, onMount } from "svelte";
 
   export let selectedJob;
   export let locations = [];
-  export let vehicles = [];
   const dispatch = createEventDispatcher();
 
   let flatpickrInstance;
@@ -76,11 +74,13 @@
             id="editDestinationId"
           />
 
-          <VehicleSelect
-            bind:bindValue={selectedJob.vehicleId}
-            vehicles={vehicles.filter(
-              (v) => v.locationId === selectedJob.originId
-            )}
+          <label>Payload (kg)</label>
+          <input
+            type="number"
+            class="form-control mb-3"
+            bind:value={selectedJob.payloadKg}
+            min="1"
+            placeholder="Enter payload weight in kg"
           />
         </div>
         <div class="modal-footer">
