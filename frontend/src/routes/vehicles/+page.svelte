@@ -492,7 +492,7 @@
 
   .status-on_route {
     background-color: rgba(0, 123, 255, 0.5);
-    color: #007bff;
+    color: #75b6fc;
   }
 
   .status-dropping_off {

@@ -1,19 +1,26 @@
 <script>
-  export let vehicles = [];
   export let bindValue;
-  export let label = "Vehicle";
-  export let id = "vehicleId";
+  export let label = "Job Status";
+  export let id = "jobStatusId";
   export let disabled = false;
+
+  const statuses = [
+    { value: "NEW", label: "New" },
+    { value: "SCHEDULED", label: "Scheduled" },
+    { value: "IN_PROGRESS", label: "In Progress" },
+    { value: "COMPLETED", label: "Completed" },
+    { value: "FAILED", label: "Failed" },
+    { value: "CANCELLED", label: "Cancelled" },
+    { value: "ABORTED", label: "Aborted" },
+  ];
 </script>
 
 <div class="mb-3">
   <label for={id}>{label}</label>
   <select class="form-select" {id} bind:value={bindValue} {disabled}>
-    <option disabled value="">Select vehicle</option>
-    {#each vehicles as vehicle}
-      <option value={vehicle.id}>
-        {vehicle.licensePlate ?? vehicle.id} - {vehicle.vehicleType} - {vehicle.capacity}
-      </option>
+    <option disabled value="">Select status</option>
+    {#each statuses as status}
+      <option value={status.value}>{status.label}</option>
     {/each}
   </select>
 </div>
@@ -54,6 +61,7 @@
     cursor: not-allowed;
   }
 
+  .form-select,
   .form-select option {
     background-color: #2a2e36 !important;
     color: #fff !important;
