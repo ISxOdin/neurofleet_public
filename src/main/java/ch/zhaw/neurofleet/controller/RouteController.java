@@ -64,6 +64,20 @@ public class RouteController {
     public ResponseEntity<Page<Route>> getAllRoutes(
             @RequestParam(required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(required = false, defaultValue = "5") Integer pageSize) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        if (userService.userHasAnyRole(OWNER, FLEETMANAGER)) {
+            String companyId = userService.getCompanyIdOfCurrentUser();
+            if (companyId == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+            Page<Route> companyRoutes = routeRepository.findAllByCompanyId(companyId,
+                    PageRequest.of(pageNumber - 1, pageSize));
+            return new ResponseEntity<>(companyRoutes, HttpStatus.OK);
+        }
+
         Page<Route> routes = routeRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
         return new ResponseEntity<>(routes, HttpStatus.OK);
     }

@@ -128,12 +128,19 @@
   function getConfidencePercentage(confidence) {
     return Math.round(confidence * 100);
   }
-  function getJobs() {
-    axios.get(`${api_root}/api/jobs`, {
-      headers: {
-        Authorization: `Bearer ${$jwt_token}`,
-      },
-    });
+
+  async function getJobs() {
+    try {
+      const response = await axios.get(`${api_root}/api/jobs`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
+      });
+
+      jobs = response.data.content;
+      return jobs;
+    } catch (error) {
+      console.error("Failed to load jobs:", error);
+      throw new Error("Could not load jobs. Please try again later.");
+    }
   }
 </script>
 

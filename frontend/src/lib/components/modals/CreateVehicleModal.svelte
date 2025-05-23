@@ -1,6 +1,12 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { isAuthenticated, hasAnyRole, isAdmin } from "../../../store";
+  import {
+    isAuthenticated,
+    hasAnyRole,
+    isAdmin,
+    isOwner,
+    isFleet,
+  } from "../../../store";
   const dispatch = createEventDispatcher();
 
   export let types = [];
@@ -20,16 +26,17 @@
   $: selectedTypeInfo = types.find((t) => t.name === vehicle.vehicleType);
   $: vinValid = /^[A-HJ-NPR-Z0-9]{17}$/.test(vehicle.vin);
 
-  // Set default company and location based on user role
-  if ($isAdmin) {
-    // Admin can select any company/location
-  } else if (hasAnyRole("owner")) {
+  // Automatically set company and location based on user role
+  $: if ($isOwner && myCompanyId) {
     vehicle.companyId = myCompanyId;
-  } else if (hasAnyRole("fleetmanager")) {
-    vehicle.companyId = companies.find(
-      (c) => c.id === locations.find((l) => l.id === myLocationId)?.companyId
-    )?.id;
-    vehicle.locationId = myLocationId;
+  }
+
+  $: if ($isFleet && myLocationId) {
+    const location = locations.find((l) => l.id === myLocationId);
+    if (location) {
+      vehicle.companyId = location.companyId;
+      vehicle.locationId = myLocationId;
+    }
   }
 
   function handleSubmit() {
@@ -90,11 +97,7 @@
         {/if}
 
         <label>Type</label>
-        <select
-          class="form-select mb-3"
-          bind:value={vehicle.vehicleType}
-          style="background-color: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);"
-        >
+        <select class="form-select mb-3" bind:value={vehicle.vehicleType}>
           <option disabled selected value="">Select type</option>
           {#each types as type}
             <option value={type.name}>{type.label}</option>
@@ -110,18 +113,16 @@
           disabled
         />
 
-        {#if isAdmin}
+        {#if $isAdmin}
           <label>Company</label>
-          <select
-            class="form-select mb-3"
-            bind:value={vehicle.companyId}
-            style="background-color: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);"
-          >
+          <select class="form-select mb-3" bind:value={vehicle.companyId}>
             <option disabled selected value="">Select company</option>
             {#each companies as company}
               <option value={company.id}>{company.name}</option>
             {/each}
           </select>
+        {:else if $isOwner}
+          <input type="hidden" bind:value={vehicle.companyId} />
         {/if}
 
         {#if hasAnyRole("admin", "owner")}
@@ -129,7 +130,6 @@
           <select
             class="form-select mb-3"
             bind:value={vehicle.locationId}
-            style="background-color: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);"
             disabled={!vehicle.companyId}
           >
             <option disabled selected value="">Select location</option>
@@ -142,6 +142,8 @@
               No locations available for selected company
             </small>
           {/if}
+        {:else if $isFleet}
+          <input type="hidden" bind:value={vehicle.locationId} />
         {/if}
       </div>
       <div class="modal-footer">

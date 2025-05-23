@@ -1,14 +1,21 @@
 <script>
   import { createEventDispatcher } from "svelte";
+  import { hasAnyRole, isAdmin, isOwner } from "../../../store";
 
   export let user;
   export let roles = [];
   export let companies = [];
+  export let myCompanyId = null;
 
   const dispatch = createEventDispatcher();
 
   let selectedRole = user.role;
   let selectedCompanyId = user.companyId;
+
+  // If user is an owner, automatically set their company
+  $: if ($isOwner && myCompanyId) {
+    selectedCompanyId = myCompanyId;
+  }
 
   function cancel() {
     dispatch("cancel");
@@ -43,13 +50,17 @@
           {/each}
         </select>
 
-        <label>Company</label>
-        <select class="form-select mb-2" bind:value={selectedCompanyId}>
-          <option value="">–</option>
-          {#each companies as c}
-            <option value={c.id}>{c.name}</option>
-          {/each}
-        </select>
+        {#if $isAdmin}
+          <label>Company</label>
+          <select class="form-select mb-2" bind:value={selectedCompanyId}>
+            <option value="">–</option>
+            {#each companies as c}
+              <option value={c.id}>{c.name}</option>
+            {/each}
+          </select>
+        {:else if $isOwner}
+          <input type="hidden" bind:value={selectedCompanyId} />
+        {/if}
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick={cancel}>Cancel</button>

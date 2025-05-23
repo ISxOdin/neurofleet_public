@@ -2,9 +2,10 @@
   import axios from "axios";
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
-  import { jwt_token, isAuthenticated } from "../../store";
+  import { jwt_token, isAuthenticated, user, isOwner } from "../../store";
   import EditUserModal from "$lib/components/modals/EditUserModal.svelte";
   import { goto } from "$app/navigation";
+  import { findUserCompany } from "$lib/utils";
 
   let users = [];
   let companies = [];
@@ -15,6 +16,7 @@
   let newRole = "";
   let newCompanyId = "";
   let apiRoot = "";
+  let myCompanyId = null;
 
   let currentPage = 1;
   let totalPages = 0;
@@ -32,7 +34,17 @@
       const { data } = await axios.get(`${apiRoot}/api/auth0/users`, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
-      users = data.map((u) => ({ ...u, role: u.roles?.[0] || "–" }));
+
+      let filteredUsers = data;
+
+      // If user is an owner, filter users by their company
+      if ($isOwner && myCompanyId) {
+        filteredUsers = data.filter(
+          (u) => findUserCompany(companies, u.user_id) === myCompanyId
+        );
+      }
+
+      users = filteredUsers.map((u) => ({ ...u, role: u.roles?.[0] || "–" }));
     } catch (e) {
       console.error("Could not load users", e);
       alert("Could not load users");
@@ -51,6 +63,9 @@
       companies = data.content;
       totalPages = data.totalPages;
       currentPage = page;
+      if ($isOwner) {
+        myCompanyId = findUserCompany(companies, $user.sub);
+      }
     } catch (error) {
       console.error("Could not get companies", error);
       alert("Could not get companies");

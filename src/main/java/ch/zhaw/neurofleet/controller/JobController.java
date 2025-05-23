@@ -49,6 +49,15 @@ public class JobController {
         }
 
         if (userService.userHasAnyRole(FLEETMANAGER)) {
+            String locationId = userService.getLocationIdOfCurrentUser();
+            if (locationId == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+            // Ensure origin matches fleet manager's location
+            if (!locationId.equals(jDTO.getOriginId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(null);
+            }
             jDTO.setCompanyId(userService.getCompanyIdOfCurrentUser());
         }
 
@@ -69,10 +78,27 @@ public class JobController {
 
     @GetMapping("/jobs")
     public ResponseEntity<Page<Job>> getAllJobs(
-            @RequestParam(required = false, defaultValue = "1") Integer pageNumber,
-            @RequestParam(required = false, defaultValue = "5") Integer pageSize) {
-        Page<Job> allJobs = jobRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
-        return new ResponseEntity<>(allJobs, HttpStatus.OK);
+            @RequestParam(defaultValue = "1") int pageNumber,
+            @RequestParam(defaultValue = "5") int pageSize) {
+
+        PageRequest pr = PageRequest.of(pageNumber - 1, pageSize);
+        Page<Job> page;
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        // Owners see only their company's jobs
+        if (userService.userHasAnyRole(OWNER)) {
+            String companyId = userService.getCompanyIdOfCurrentUser();
+            page = jobRepository.findAllByCompanyId(companyId,
+                    pr);
+            return new ResponseEntity<>(page, HttpStatus.OK);
+        }
+
+        // Fleet managers see all jobs (could be restricted to their location in the
+        // future if needed)
+        page = jobRepository.findAll(pr);
+        return new ResponseEntity<>(page, HttpStatus.OK);
     }
 
     @GetMapping("/jobs/{id}")

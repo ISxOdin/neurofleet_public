@@ -14,9 +14,16 @@
   import EditJobModal from "$lib/components/modals/EditJobModal.svelte";
   import CreateJobModal from "$lib/components/modals/CreateJobModal.svelte";
   import { goto } from "$app/navigation";
+  import Pagination from "$lib/components/Pagination.svelte";
+  import { browser } from "$app/environment";
+  import { findUserCompany } from "$lib/utils";
 
-  const api_root = page.url.origin;
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  let currentPage = 1;
+  let defaultPageSize = 5;
+  let nrOfPages = 0;
+  let apiRoot = "";
 
   let vehicles = [];
   let companies = [];
@@ -34,30 +41,42 @@
   let myLocationId = null;
 
   onMount(async () => {
+    if (browser) {
+      apiRoot = window.location.origin;
+    }
     await getCompanies();
     await getLocations();
     getJobs();
   });
 
   async function getCompanies() {
+    loading = true;
     try {
-      const res = await axios.get(api_root + "/api/companies", {
-        headers: { Authorization: "Bearer " + $jwt_token },
+      const response = await axios.get(`${apiRoot}/api/companies`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
-      companies = res.data.content;
-      const myCo =
-        companies.find((c) => c.userIds?.includes($user.sub)) ||
-        companies.find((c) => c.owner === $user.sub);
-      myCompanyId = myCo?.id || null;
-    } catch (e) {
+
+      companies = response.data.content || response.data;
+
+      // If user is owner, find their company ID
+      if ($isOwner) {
+        const myCompany = companies.find(
+          (c) => c.userIds?.includes($user.sub) || c.owner === $user.sub
+        );
+        myCompanyId = myCompany?.id || null;
+      }
+    } catch (err) {
+      console.error("Could not load companies", err);
       alert("Could not load companies");
+    } finally {
+      loading = false;
     }
   }
 
   async function getLocations() {
     try {
-      const res = await axios.get(api_root + "/api/locations", {
-        headers: { Authorization: "Bearer " + $jwt_token },
+      const res = await axios.get(`${apiRoot}/api/locations`, {
+        headers: { Authorization: `Bearer ${$jwt_token}` },
       });
 
       locations = res.data.content;
@@ -72,18 +91,26 @@
     }
   }
 
-  function getJobs() {
-    axios
-      .get(api_root + "/api/jobs", {
-        headers: { Authorization: "Bearer " + $jwt_token },
-      })
-      .then((res) => {
-        jobs = res.data.content;
-      })
-      .catch((error) => {
-        alert("Could not load jobs");
-        console.error(error);
-      });
+  async function getJobs(page = currentPage) {
+    try {
+      const response = await axios.get(
+        `${apiRoot}/api/jobs?pageNumber=${page}&pageSize=${defaultPageSize}`,
+        {
+          headers: { Authorization: `Bearer ${$jwt_token}` },
+        }
+      );
+
+      jobs = response.data.content;
+      nrOfPages = response.data.totalPages;
+      currentPage = page;
+
+      if ($isOwner && myCompanyId) {
+        jobs = jobs.filter((job) => job.companyId === myCompanyId);
+      }
+    } catch (error) {
+      console.error("Failed to load jobs:", error);
+      throw new Error("Could not load jobs. Please try again later.");
+    }
   }
 
   function openEditJob(jobData) {
@@ -104,7 +131,7 @@
     if (!confirm("Are you sure you want to delete this job?")) return;
 
     axios
-      .delete(`${api_root}/api/jobs/${jobId}`, {
+      .delete(`${apiRoot}/api/jobs/${jobId}`, {
         headers: {
           Authorization: `Bearer ${$jwt_token}`,
         },
@@ -120,7 +147,7 @@
 
   function saveEditedJob(jobData) {
     axios
-      .put(`${api_root}/api/jobs/${jobData.id}`, jobData, {
+      .put(`${apiRoot}/api/jobs/${jobData.id}`, jobData, {
         headers: {
           Authorization: `Bearer ${$jwt_token}`,
           "Content-Type": "application/json",
@@ -146,7 +173,7 @@
   function handleJobCreated(event) {
     const jobData = event.detail;
     axios
-      .post(`${api_root}/api/jobs`, jobData, {
+      .post(`${apiRoot}/api/jobs`, jobData, {
         headers: {
           Authorization: `Bearer ${$jwt_token}`,
           "Content-Type": "application/json",
@@ -291,8 +318,13 @@
       </tbody>
     </table>
 
+    <Pagination {currentPage} totalPages={nrOfPages} onPageChange={getJobs} />
+
     {#if showEditModal}
       <EditJobModal
+        {companies}
+        {myCompanyId}
+        {myLocationId}
         {selectedJob}
         {locations}
         on:close={closeEditJobModal}
