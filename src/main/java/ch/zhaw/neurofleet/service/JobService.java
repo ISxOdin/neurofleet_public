@@ -54,18 +54,36 @@ public class JobService {
     }
 
     public void assignToRoute(Job job, String routeId) {
-        job.setRouteId(routeId);
-        job.setJobState(JobState.SCHEDULED);
-        jobRepository.save(job);
+        Job freshJob = jobRepository.findById(job.getId())
+                .orElseThrow(() -> new NoSuchElementException("Job not found: " + job.getId()));
+        freshJob.setRouteId(routeId);
+        freshJob.setJobState(JobState.SCHEDULED);
+        jobRepository.save(freshJob);
     }
 
     public void unassignFromRoute(Job job) {
-        job.setRouteId(null);
-        job.setJobState(JobState.NEW);
-        jobRepository.save(job);
+        Job freshJob = jobRepository.findById(job.getId())
+                .orElseThrow(() -> new NoSuchElementException("Job not found: " + job.getId()));
+        if (freshJob.getJobState() != JobState.COMPLETED) {
+            freshJob.setRouteId(null);
+            freshJob.setJobState(JobState.NEW);
+            jobRepository.save(freshJob);
+        }
     }
 
     public boolean isJobAssigned(Job job) {
         return job.getRouteId() != null;
+    }
+
+    public void setJobState(Job job, JobState state) {
+        // Always get a fresh copy of the job from the database to avoid stale data
+        Job freshJob = jobRepository.findById(job.getId())
+                .orElseThrow(() -> new NoSuchElementException("Job not found: " + job.getId()));
+
+        // Only update if the state is actually changing
+        if (freshJob.getJobState() != state && freshJob.getJobState() != JobState.COMPLETED) {
+            freshJob.setJobState(state);
+            jobRepository.save(freshJob);
+        }
     }
 }
