@@ -179,6 +179,8 @@
 
   {#if showCreateModal}
     <CreateLocationModal
+      {companies}
+      {myCompanyId}
       on:created={(e) => createLocation(e.detail)}
       on:cancel={() => (showCreateModal = false)}
     />
@@ -186,6 +188,7 @@
 
   {#if showEditModal && editLocation}
     <EditLocationModal
+      {companies}
       location={editLocation}
       {users}
       companyId={myCompanyId}

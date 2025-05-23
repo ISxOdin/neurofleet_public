@@ -62,8 +62,8 @@ public class LocationController {
 
     @GetMapping("/locations")
     public ResponseEntity<Page<Location>> getAllLocations(
-            @RequestParam(defaultValue = "1") int pageNumber,
-            @RequestParam(defaultValue = "20") int pageSize) {
+            @RequestParam(required = false, defaultValue = "1") int pageNumber,
+            @RequestParam(required = false, defaultValue = "20") int pageSize) {
 
         PageRequest pr = PageRequest.of(pageNumber - 1, pageSize);
         Page<Location> page;

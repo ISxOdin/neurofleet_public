@@ -2,16 +2,31 @@
   import { createEventDispatcher } from "svelte";
   import CompanySelect from "$lib/components/forms/CompanySelect.svelte";
   import LocationSelect from "$lib/components/forms/LocationSelect.svelte";
-  import { isAdmin, hasAnyRole } from "../../../store";
+  import { isAdmin, hasAnyRole, isOwner, isFleet } from "../../../store";
 
   export let vehicle;
   export let companies = [];
   export let locations = [];
   export let types = [];
+  export let myCompanyId = null;
+  export let myLocationId = null;
 
   const dispatch = createEventDispatcher();
 
   $: selectedTypeInfo = types.find((t) => t.name === vehicle.vehicleType);
+
+  // Automatically set company and location based on user role
+  $: if ($isOwner && myCompanyId) {
+    vehicle.companyId = myCompanyId;
+  }
+
+  $: if ($isFleet && myLocationId) {
+    const location = locations.find((l) => l.id === myLocationId);
+    if (location) {
+      vehicle.companyId = location.companyId;
+      vehicle.locationId = myLocationId;
+    }
+  }
 
   function cancel() {
     dispatch("cancel");
@@ -80,6 +95,8 @@
               <option value={company.id}>{company.name}</option>
             {/each}
           </select>
+        {:else if $isOwner}
+          <input type="hidden" bind:value={vehicle.companyId} />
         {/if}
 
         {#if hasAnyRole("admin", "owner")}
@@ -99,6 +116,8 @@
               No locations available for selected company
             </small>
           {/if}
+        {:else if $isFleet}
+          <input type="hidden" bind:value={vehicle.locationId} />
         {/if}
       </div>
       <div class="modal-footer">

@@ -1,9 +1,11 @@
 <script>
   import { createEventDispatcher } from "svelte";
+  import { isAdmin, isOwner } from "../../../store";
 
   export let location;
   export let users = [];
   export let companyId;
+  export let companies = [];
 
   const dispatch = createEventDispatcher();
   let local = { ...location };
@@ -42,6 +44,17 @@
             </option>
           {/each}
         </select>
+        {#if $isAdmin}
+          <label>Company</label>
+          <select class="form-select mb-3" bind:value={local.companyId}>
+            <option disabled selected value="">Select company</option>
+            {#each companies as company}
+              <option value={company.id}>{company.name}</option>
+            {/each}
+          </select>
+        {:else if $isOwner}
+          <input type="hidden" bind:value={local.companyId} />
+        {/if}
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick={cancel}>Cancel</button>

@@ -3,12 +3,30 @@
   import JobStatusSelect from "$lib/components/forms/JobStatusSelect.svelte";
   import flatpickr from "flatpickr";
   import { createEventDispatcher, onMount } from "svelte";
+  import { isAdmin, isOwner, isFleet, hasAnyRole } from "../../../store";
 
   export let selectedJob;
   export let locations = [];
+  export let companies = [];
+  export let myCompanyId = null;
+  export let myLocationId = null;
+
   const dispatch = createEventDispatcher();
 
   let flatpickrInstance;
+
+  // Automatically set company and location based on user role
+  $: if ($isOwner && myCompanyId) {
+    selectedJob.companyId = myCompanyId;
+  }
+
+  $: if ($isFleet && myLocationId) {
+    const location = locations.find((l) => l.id === myLocationId);
+    if (location) {
+      selectedJob.companyId = location.companyId;
+      selectedJob.locationId = myLocationId;
+    }
+  }
 
   onMount(() => {
     flatpickrInstance = flatpickr("#editScheduledTime", {
@@ -58,21 +76,41 @@
 
           <JobStatusSelect bind:bindValue={selectedJob.jobState} />
 
-          <LocationSelect
-            bind:bindValue={selectedJob.originId}
-            {locations}
-            label="Origin"
-            id="editOriginId"
-          />
+          {#if $isAdmin}
+            <label>Company</label>
+            <select class="form-select mb-3" bind:value={selectedJob.companyId}>
+              <option disabled selected value="">Select company</option>
+              {#each companies as company}
+                <option value={company.id}>{company.name}</option>
+              {/each}
+            </select>
+          {:else if $isOwner}
+            <input type="hidden" bind:value={selectedJob.companyId} />
+          {/if}
 
-          <LocationSelect
-            bind:bindValue={selectedJob.destinationId}
-            locations={locations.filter(
-              (loc) => loc.id !== selectedJob.originId
-            )}
-            label="Destination"
-            id="editDestinationId"
-          />
+          {#if hasAnyRole("admin", "owner")}
+            <LocationSelect
+              bind:bindValue={selectedJob.originId}
+              locations={locations.filter(
+                (loc) => loc.companyId === selectedJob.companyId
+              )}
+              label="Origin"
+              id="editOriginId"
+            />
+
+            <LocationSelect
+              bind:bindValue={selectedJob.destinationId}
+              locations={locations.filter(
+                (loc) =>
+                  loc.companyId === selectedJob.companyId &&
+                  loc.id !== selectedJob.originId
+              )}
+              label="Destination"
+              id="editDestinationId"
+            />
+          {:else if $isFleet}
+            <input type="hidden" bind:value={selectedJob.locationId} />
+          {/if}
 
           <label>Payload (kg)</label>
           <input
@@ -121,6 +159,12 @@
     margin-bottom: 1.5rem;
   }
 
+  .modal-content {
+    padding: 2rem 2rem 1.5rem 2rem;
+    border-radius: 1rem;
+    background: #343c44;
+  }
+
   label {
     display: block;
     font-weight: 600;
@@ -153,10 +197,37 @@
     opacity: 0.7;
   }
 
-  .modal-content {
-    padding: 2rem 2rem 1.5rem 2rem;
-    border-radius: 1rem;
-    background: #343c44;
+  .form-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.75rem;
+    border-radius: 4px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2395d4ee' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem;
+  }
+
+  .form-select:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #95d4ee;
+    color: #fff;
+    box-shadow: none;
+  }
+
+  .form-select:disabled {
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .form-select,
+  .form-select option {
+    background-color: #2a2e36 !important;
+    color: #fff !important;
   }
 
   .btn-primary {

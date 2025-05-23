@@ -1,7 +1,8 @@
 package ch.zhaw.neurofleet.repository;
 
 import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import ch.zhaw.neurofleet.model.Route;
@@ -12,4 +13,6 @@ public interface RouteRepository extends MongoRepository<Route, String> {
     List<Route> findByVehicleId(String vehicleId);
 
     List<Route> findByCompanyIdAndVehicleId(String companyId, String vehicleId);
+
+    Page<Route> findAllByCompanyId(String companyId, Pageable pageable);
 }

@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { hasAnyRole, isAdmin } from "../../../store";
+  import { hasAnyRole, isAdmin, isOwner, isFleet } from "../../../store";
   import flatpickr from "flatpickr";
   import "flatpickr/dist/flatpickr.min.css";
   import { onMount } from "svelte";
@@ -36,20 +36,25 @@
     job.destinationId = "";
   }
 
+  // Automatically set company and location based on user role
+  $: if ($isOwner && myCompanyId) {
+    job.companyId = myCompanyId;
+  }
+
+  $: if ($isFleet && myLocationId) {
+    const location = locations.find((l) => l.id === myLocationId);
+    if (location) {
+      job.companyId = location.companyId;
+      job.originId = myLocationId;
+    }
+  }
+
   onMount(() => {
     flatpickr("#scheduledTime", {
       enableTime: true,
       dateFormat: "Y-m-d\\TH:i",
       time_24hr: true,
     });
-
-    if (!isAdmin && myCompanyId) {
-      job.companyId = myCompanyId;
-    }
-
-    if (hasAnyRole("fleet") && myLocationId) {
-      job.locationId = myLocationId;
-    }
   });
 
   function cancel() {
@@ -59,6 +64,12 @@
   function save() {
     if (!job.payloadKg || job.payloadKg <= 0) {
       alert("Please enter a valid payload weight (greater than 0 kg)");
+      return;
+    }
+    if ($isFleet && job.originId !== myLocationId) {
+      alert(
+        "As a fleet manager, you can only create jobs starting from your location"
+      );
       return;
     }
     dispatch("created", job);
@@ -102,6 +113,8 @@
               <option value={company.id}>{company.name}</option>
             {/each}
           </select>
+        {:else if $isOwner}
+          <input type="hidden" bind:value={job.companyId} />
         {/if}
 
         {#if hasAnyRole("admin", "owner")}
@@ -117,19 +130,25 @@
               No locations available for selected company
             </small>
           {/if}
-
-          <label>Destination</label>
-          <select
-            class="form-select mb-3"
-            bind:value={job.destinationId}
-            disabled={!job.originId}
-          >
-            <option disabled selected value="">Select destination</option>
-            {#each locations.filter((loc) => loc.companyId === job.companyId && loc.id !== job.originId) as location}
-              <option value={location.id}>{location.name}</option>
-            {/each}
-          </select>
+        {:else if $isFleet}
+          <label>Origin</label>
+          <div class="form-control mb-3 disabled">
+            {locations.find((l) => l.id === myLocationId)?.name || "Loading..."}
+          </div>
+          <input type="hidden" bind:value={job.originId} />
         {/if}
+
+        <label>Destination</label>
+        <select
+          class="form-select mb-3"
+          bind:value={job.destinationId}
+          disabled={!job.originId}
+        >
+          <option disabled selected value="">Select destination</option>
+          {#each locations.filter((loc) => loc.companyId === job.companyId && loc.id !== job.originId) as location}
+            <option value={location.id}>{location.name}</option>
+          {/each}
+        </select>
 
         <label>Payload (kg)</label>
         <input
