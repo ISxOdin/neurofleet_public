@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import flatpickr from "flatpickr";
   import "flatpickr/dist/flatpickr.min.css";
+  import RouteStatusSelect from "$lib/components/forms/RouteStatusSelect.svelte";
 
   export let route;
   export let vehicles = [];
@@ -129,6 +130,8 @@
                 {/each}
               </select>
             {/if}
+
+            <RouteStatusSelect bind:bindValue={route.state} />
 
             <label>Vehicle</label>
             <select class="form-select mb-3" bind:value={route.vehicleId}>
