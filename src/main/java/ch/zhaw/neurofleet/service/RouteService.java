@@ -63,6 +63,7 @@ public class RouteService {
         existingRoute.setVehicleId(updatedRoute.getVehicleId());
         existingRoute.setJobIds(updatedRoute.getJobIds());
         existingRoute.setTotalPayloadKg(updatedRoute.getTotalPayloadKg());
+        existingRoute.setState(updatedRoute.getState());
 
         // Validate and assign new jobs
         validateVehicleCapacity(existingRoute.getVehicleId(), existingRoute.getJobIds());
