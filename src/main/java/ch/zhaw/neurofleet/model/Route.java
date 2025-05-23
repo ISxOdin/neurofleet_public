@@ -1,16 +1,18 @@
 package ch.zhaw.neurofleet.model;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-@RequiredArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @Document("routes")
@@ -18,14 +20,17 @@ public class Route {
     @Id
     private String id;
     @NonNull
-    private String name;
+    private String description;
     @NonNull
-    private List<String> waypoints;
+    private LocalDateTime scheduledTime;
     @NonNull
     private String vehicleId;
     @NonNull
-    private List<String> jobIds;
-    @NonNull
     private String companyId;
-    private RouteState routestate = RouteState.NEW;
+    @NonNull
+    private List<String> jobIds = new ArrayList<>();
+    @NonNull
+    private Integer totalPayloadKg = 0;
+    @NonNull
+    private RouteState state = RouteState.NEW;
 }

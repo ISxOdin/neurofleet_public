@@ -5,21 +5,13 @@
   import flatpickr from "flatpickr";
   import "flatpickr/dist/flatpickr.min.css";
 
+  export let route;
   export let vehicles = [];
   export let jobs = [];
   export let companies = [];
   export let myCompanyId = null;
 
   const dispatch = createEventDispatcher();
-
-  let route = {
-    description: "",
-    scheduledTime: "",
-    vehicleId: "",
-    jobIds: [],
-    companyId: "",
-    totalPayloadKg: 0,
-  };
 
   let selectedVehicle = null;
   let totalPayload = 0;
@@ -79,7 +71,7 @@
       alert("Please add at least one job to the route");
       return;
     }
-    dispatch("created", route);
+    dispatch("updated", route);
   }
 
   onMount(() => {
@@ -87,6 +79,7 @@
       enableTime: true,
       dateFormat: "Y-m-d\\TH:i",
       time_24hr: true,
+      defaultDate: route.scheduledTime,
     });
 
     if (!isAdmin && myCompanyId) {
@@ -100,7 +93,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content bg-dark text-light">
       <div class="modal-header">
-        <h5 class="modal-title">Create Route</h5>
+        <h5 class="modal-title">Edit Route</h5>
         <button class="btn-close btn-close-white" onclick={cancel}></button>
       </div>
       <div class="modal-body">
@@ -140,7 +133,7 @@
             <label>Vehicle</label>
             <select class="form-select mb-3" bind:value={route.vehicleId}>
               <option disabled selected value="">Select vehicle</option>
-              {#each vehicles.filter((v) => !v.routeId && (!route.companyId || v.companyId === route.companyId)) as vehicle}
+              {#each vehicles.filter((v) => !v.routeId || v.routeId === route.id) as vehicle}
                 <option value={vehicle.id}>
                   {vehicle.licensePlate} ({vehicle.vehicleType} - Capacity:
                   {vehicle.capacity}kg)
@@ -174,12 +167,12 @@
           <div class="col-md-6">
             <label>Available Jobs</label>
             <div class="jobs-container">
-              {#if jobs.filter((job) => !job.routeId && (!route.companyId || job.companyId === route.companyId)).length > 0}
-                {#each jobs.filter((job) => !job.routeId && (!route.companyId || job.companyId === route.companyId) && !route.jobIds.includes(job.id)) as job}
+              {#if jobs.filter((job) => (!job.routeId || job.routeId === route.id) && (!route.companyId || job.companyId === route.companyId)).length > 0}
+                {#each jobs.filter((job) => (!job.routeId || job.routeId === route.id) && (!route.companyId || job.companyId === route.companyId) && !route.jobIds.includes(job.id)) as job}
                   <div class="job-item">
                     <div>
                       <strong>{job.description}</strong>
-                      <small class="text-light d-block">
+                      <small class="text-white d-block">
                         Payload: {job.payloadKg}kg
                         <br />
                         Scheduled: {new Date(
@@ -209,7 +202,7 @@
                     <div class="job-item">
                       <div>
                         <strong>{job.description}</strong>
-                        <small class="text-light d-block">
+                        <small class="text-white d-block">
                           Payload: {job.payloadKg}kg
                           <br />
                           Scheduled: {new Date(
@@ -233,7 +226,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick={cancel}>Cancel</button>
-        <button class="btn btn-primary" onclick={save}>Create Route</button>
+        <button class="btn btn-primary" onclick={save}>Update Route</button>
       </div>
     </div>
   </div>
@@ -327,48 +320,11 @@
   .job-item {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     padding: 0.75rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
     margin-bottom: 0.5rem;
-  }
-
-  .job-item strong {
-    display: block;
-    margin-bottom: 0.25rem;
-    color: #fff;
-  }
-
-  .job-item small {
-    display: block;
-    color: #95d4ee;
-    font-size: 0.875rem;
-  }
-
-  .job-item button {
-    margin-left: 1rem;
-    align-self: center;
-  }
-
-  .btn-outline-success {
-    color: #28a745;
-    border-color: #28a745;
-  }
-
-  .btn-outline-success:hover {
-    background-color: #28a745;
-    color: #fff;
-  }
-
-  .btn-outline-danger {
-    color: #dc3545;
-    border-color: #dc3545;
-  }
-
-  .btn-outline-danger:hover {
-    background-color: #dc3545;
-    color: #fff;
   }
 
   .capacity-info {
@@ -443,6 +399,7 @@
     background: rgba(149, 212, 238, 0.1) !important;
     color: #fff !important;
   }
+
   .input-group {
     display: flex;
     align-items: stretch;

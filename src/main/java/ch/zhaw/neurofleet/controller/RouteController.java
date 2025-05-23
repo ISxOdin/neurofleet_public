@@ -1,6 +1,8 @@
 package ch.zhaw.neurofleet.controller;
 
-import java.util.Optional;
+import static ch.zhaw.neurofleet.security.Roles.*;
+
+import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,42 +13,48 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import ch.zhaw.neurofleet.model.Route;
-import ch.zhaw.neurofleet.model.RouteCreateDTO;
 import ch.zhaw.neurofleet.repository.RouteRepository;
+import ch.zhaw.neurofleet.service.RouteService;
 import ch.zhaw.neurofleet.service.UserService;
-import static ch.zhaw.neurofleet.security.Roles.*;
 
 @RestController
 @RequestMapping("/api")
-
 public class RouteController {
 
     @Autowired
-    RouteRepository routeRepository;
+    private RouteRepository routeRepository;
 
     @Autowired
-    UserService userService;
+    private RouteService routeService;
+
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/routes")
-    public ResponseEntity<Route> createRoute(@RequestBody RouteCreateDTO rDTO) {
+    public ResponseEntity<Route> createRoute(@RequestBody Route route) {
         if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
+
+        if (userService.userHasAnyRole(OWNER, FLEETMANAGER)) {
+            route.setCompanyId(userService.getCompanyIdOfCurrentUser());
+        }
+
         try {
-            Route routeDAO = new Route(
-                    rDTO.getName(),
-                    rDTO.getWaypoints(),
-                    rDTO.getVehicleId(),
-                    rDTO.getJobIds(),
-                    rDTO.getCompanyId());
-            Route Route = routeRepository.save(routeDAO);
-            return new ResponseEntity<>(Route, HttpStatus.CREATED);
+            Route created = routeService.createRoute(route);
+            return new ResponseEntity<>(created, HttpStatus.CREATED);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -56,27 +64,52 @@ public class RouteController {
     public ResponseEntity<Page<Route>> getAllRoutes(
             @RequestParam(required = false, defaultValue = "1") Integer pageNumber,
             @RequestParam(required = false, defaultValue = "5") Integer pageSize) {
-        Page<Route> allRoutes = routeRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
-        return new ResponseEntity<>(allRoutes, HttpStatus.OK);
+        Page<Route> routes = routeRepository.findAll(PageRequest.of(pageNumber - 1, pageSize));
+        return new ResponseEntity<>(routes, HttpStatus.OK);
     }
 
     @GetMapping("/routes/{id}")
     public ResponseEntity<Route> getRouteById(@PathVariable String id) {
-        Optional<Route> c = routeRepository.findById(id);
-        if (c.isPresent()) {
-            return new ResponseEntity<>(c.get(), HttpStatus.OK);
-        } else {
+        return routeRepository.findById(id)
+                .map(route -> new ResponseEntity<>(route, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @PutMapping("/routes/{id}")
+    public ResponseEntity<Route> updateRoute(@PathVariable String id, @RequestBody Route route) {
+        if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        try {
+            Route updated = routeService.updateRoute(id, route);
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (SecurityException e) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/routes/{id}")
-    public ResponseEntity<String> deleteRouteById(@PathVariable String id) {
+    public ResponseEntity<String> deleteRoute(@PathVariable String id) {
         if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        routeRepository.deleteById(id);
-        return ResponseEntity.status(HttpStatus.OK).body("DELETED");
-    }
 
+        try {
+            routeService.deleteRoute(id);
+            return ResponseEntity.ok("DELETED");
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (SecurityException e) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

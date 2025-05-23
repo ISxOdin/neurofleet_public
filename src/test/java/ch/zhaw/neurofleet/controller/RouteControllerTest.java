@@ -1,45 +1,44 @@
 package ch.zhaw.neurofleet.controller;
 
+import static ch.zhaw.neurofleet.security.Roles.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.zhaw.neurofleet.model.Route;
-import ch.zhaw.neurofleet.model.RouteCreateDTO;
 import ch.zhaw.neurofleet.repository.RouteRepository;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
+import ch.zhaw.neurofleet.service.RouteService;
 import ch.zhaw.neurofleet.service.UserService;
-import static ch.zhaw.neurofleet.security.Roles.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
-@TestMethodOrder(OrderAnnotation.class)
 class RouteControllerTest {
 
     @Autowired
@@ -49,115 +48,201 @@ class RouteControllerTest {
     private RouteRepository routeRepository;
 
     @MockitoBean
+    private RouteService routeService;
+
+    @MockitoBean
     private UserService userService;
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final String ROUTE_ID = "route-001";
-    private static final String COMPANY_ID = "comp-001";
-    private static final String VEHICLE_ID = "veh-001";
-    private static final List<String> WAYPOINTS = List.of("A", "B", "C");
+    private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
+    private static final String ROUTE_ID = "route-123";
+    private static final String COMPANY_ID = "comp-1";
+    private static final String VEHICLE_ID = "veh-1";
     private static final List<String> JOB_IDS = List.of("job-1", "job-2");
 
-    private Route route;
+    private Route baseRoute;
 
     @BeforeEach
     void setup() {
-        route = new Route("Route A", WAYPOINTS, VEHICLE_ID, JOB_IDS, COMPANY_ID);
-        route.setId(ROUTE_ID);
+        baseRoute = new Route();
+        baseRoute.setId(ROUTE_ID);
+        baseRoute.setDescription("Test Route");
+        baseRoute.setScheduledTime(LocalDateTime.now());
+        baseRoute.setVehicleId(VEHICLE_ID);
+        baseRoute.setCompanyId(COMPANY_ID);
+        baseRoute.setJobIds(new ArrayList<>(JOB_IDS));
+        baseRoute.setTotalPayloadKg(200);
 
-        when(routeRepository.findById(ROUTE_ID)).thenReturn(Optional.of(route));
-        when(routeRepository.findAll(PageRequest.of(0, 5))).thenReturn(new PageImpl<>(List.of(route)));
+        when(routeRepository.findById(ROUTE_ID)).thenReturn(Optional.of(baseRoute));
+        when(routeRepository.findAll(PageRequest.of(0, 5))).thenReturn(new PageImpl<>(List.of(baseRoute)));
     }
 
     @Test
-    @Order(1)
-    void testCreateRoute_AsAdmin() throws Exception {
-        RouteCreateDTO dto = new RouteCreateDTO();
-        dto.setName("Route A");
-        dto.setWaypoints(WAYPOINTS);
-        dto.setVehicleId(VEHICLE_ID);
-        dto.setJobIds(JOB_IDS);
-        dto.setCompanyId(COMPANY_ID);
-
+    void testCreateRoute_AdminRole() throws Exception {
         when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
-        when(routeRepository.save(any())).thenReturn(route);
+        when(routeService.createRoute(any())).thenReturn(baseRoute);
 
-        String json = objectMapper.writeValueAsString(dto);
+        String json = objectMapper.writeValueAsString(baseRoute);
 
         mvc.perform(post("/api/routes")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN)
+                .header("Authorization", TestSecurityConfig.ADMIN)
                 .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Route A"));
+                .andExpect(jsonPath("$.id").value(ROUTE_ID))
+                .andExpect(jsonPath("$.vehicleId").value(VEHICLE_ID));
     }
 
     @Test
-    @Order(2)
-    void testCreateRoute_Forbidden() throws Exception {
-        RouteCreateDTO dto = new RouteCreateDTO();
-        dto.setName("Route B");
-        dto.setWaypoints(WAYPOINTS);
-        dto.setVehicleId(VEHICLE_ID);
-        dto.setJobIds(JOB_IDS);
-        dto.setCompanyId(COMPANY_ID);
-
+    void testCreateRoute_UnauthorizedRole() throws Exception {
         when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
+
+        String json = objectMapper.writeValueAsString(baseRoute);
 
         mvc.perform(post("/api/routes")
                 .contentType(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER)
-                .content(objectMapper.writeValueAsString(dto)))
+                .header("Authorization", TestSecurityConfig.USER)
+                .content(json))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @Order(3)
-    void testGetAllRoutes() throws Exception {
-        mvc.perform(get("/api/routes?pageNumber=1&pageSize=5")
-                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(ROUTE_ID))
-                .andExpect(jsonPath("$.content[0].name").value("Route A"));
+    void testCreateRoute_ExceedsCapacity() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+        when(routeService.createRoute(any())).thenThrow(
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "Total payload exceeds vehicle capacity"));
+
+        String json = objectMapper.writeValueAsString(baseRoute);
+
+        mvc.perform(post("/api/routes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", TestSecurityConfig.ADMIN)
+                .content(json))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @Order(4)
+    void testGetAllRoutes() throws Exception {
+        mvc.perform(get("/api/routes")
+                .header("Authorization", TestSecurityConfig.ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(ROUTE_ID));
+    }
+
+    @Test
     void testGetRouteById_Found() throws Exception {
         mvc.perform(get("/api/routes/" + ROUTE_ID)
-                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+                .header("Authorization", TestSecurityConfig.ADMIN))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ROUTE_ID))
-                .andExpect(jsonPath("$.name").value("Route A"));
+                .andExpect(jsonPath("$.id").value(ROUTE_ID));
     }
 
     @Test
-    @Order(5)
     void testGetRouteById_NotFound() throws Exception {
-        when(routeRepository.findById("invalid")).thenReturn(Optional.empty());
+        String nonExistentId = "non-existent";
+        when(routeRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        mvc.perform(get("/api/routes/invalid")
-                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
+        mvc.perform(get("/api/routes/" + nonExistentId)
+                .header("Authorization", TestSecurityConfig.ADMIN))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @Order(6)
-    void testDeleteRoute_AsOwner() throws Exception {
+    void testUpdateRoute_Success() throws Exception {
         when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+        when(routeService.updateRoute(eq(ROUTE_ID), any())).thenReturn(baseRoute);
 
-        mvc.perform(delete("/api/routes/" + ROUTE_ID)
-                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.OWNER))
-                .andExpect(status().isOk());
+        String json = objectMapper.writeValueAsString(baseRoute);
+
+        mvc.perform(put("/api/routes/" + ROUTE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", TestSecurityConfig.ADMIN)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(ROUTE_ID));
     }
 
     @Test
-    @Order(7)
-    void testDeleteRoute_Forbidden() throws Exception {
+    void testUpdateRoute_Unauthorized() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
+
+        String json = objectMapper.writeValueAsString(baseRoute);
+
+        mvc.perform(put("/api/routes/" + ROUTE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", TestSecurityConfig.USER)
+                .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testUpdateRoute_NotFound() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+        when(routeService.updateRoute(eq(ROUTE_ID), any()))
+                .thenThrow(new NoSuchElementException("Route not found"));
+
+        String json = objectMapper.writeValueAsString(baseRoute);
+
+        mvc.perform(put("/api/routes/" + ROUTE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", TestSecurityConfig.ADMIN)
+                .content(json))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testUpdateRoute_WrongCompany() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+        when(routeService.updateRoute(eq(ROUTE_ID), any()))
+                .thenThrow(new SecurityException("Route does not belong to user's company"));
+
+        String json = objectMapper.writeValueAsString(baseRoute);
+
+        mvc.perform(put("/api/routes/" + ROUTE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", TestSecurityConfig.OWNER)
+                .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testDeleteRoute_Success() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+
+        mvc.perform(delete("/api/routes/" + ROUTE_ID)
+                .header("Authorization", TestSecurityConfig.ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(content().string("DELETED"));
+    }
+
+    @Test
+    void testDeleteRoute_Unauthorized() throws Exception {
         when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
 
         mvc.perform(delete("/api/routes/" + ROUTE_ID)
-                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
+                .header("Authorization", TestSecurityConfig.USER))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testDeleteRoute_NotFound() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+        doThrow(new NoSuchElementException("Route not found"))
+                .when(routeService).deleteRoute(ROUTE_ID);
+
+        mvc.perform(delete("/api/routes/" + ROUTE_ID)
+                .header("Authorization", TestSecurityConfig.ADMIN))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeleteRoute_WrongCompany() throws Exception {
+        when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+        doThrow(new SecurityException("Route does not belong to user's company"))
+                .when(routeService).deleteRoute(ROUTE_ID);
+
+        mvc.perform(delete("/api/routes/" + ROUTE_ID)
+                .header("Authorization", TestSecurityConfig.OWNER))
                 .andExpect(status().isForbidden());
     }
 }

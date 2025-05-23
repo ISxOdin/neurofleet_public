@@ -30,4 +30,5 @@ public class Job {
     @NonNull
     private Integer payloadKg;
     private JobState jobState = JobState.NEW;
+    private String routeId;
 }
