@@ -68,7 +68,7 @@
 
   async function getCompanies() {
     try {
-      const res = await axios.get(api_root + "/api/companies", {
+      const res = await axios.get(api_root + "/api/companies?pageSize=1000", {
         headers: { Authorization: "Bearer " + $jwt_token },
       });
       companies = res.data.content;
@@ -83,7 +83,7 @@
 
   async function getLocations() {
     try {
-      const res = await axios.get(api_root + "/api/locations", {
+      const res = await axios.get(api_root + "/api/locations?pageSize=1000", {
         headers: { Authorization: "Bearer " + $jwt_token },
       });
 
@@ -102,13 +102,9 @@
   function getVehicles(page = currentPage) {
     loading = true;
     axios
-      .get(
-        api_root +
-          `/api/vehicles?pageNumber=${page}&pageSize=${defaultPageSize}`,
-        {
-          headers: { Authorization: "Bearer " + $jwt_token },
-        }
-      )
+      .get(api_root + `/api/vehicles?pageSize=1000`, {
+        headers: { Authorization: "Bearer " + $jwt_token },
+      })
       .then((res) => {
         vehicles = res.data.content;
         nrOfPages = res.data.totalPages;

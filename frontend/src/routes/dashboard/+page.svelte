@@ -32,7 +32,7 @@
             Authorization: `Bearer ${$jwt_token}`,
           },
         }),
-        axios.get(`${api_root}/api/routes`, {
+        axios.get(`${api_root}/api/routes?pageSize=1000`, {
           headers: {
             Authorization: `Bearer ${$jwt_token}`,
           },
@@ -131,7 +131,7 @@
 
   async function getJobs() {
     try {
-      const response = await axios.get(`${api_root}/api/jobs`, {
+      const response = await axios.get(`${api_root}/api/jobs?pageSize=1000`, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
 

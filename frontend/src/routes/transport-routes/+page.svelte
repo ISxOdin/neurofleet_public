@@ -45,7 +45,7 @@
 
   async function getRoutes() {
     try {
-      const res = await axios.get(`${api_root}/api/routes`, {
+      const res = await axios.get(`${api_root}/api/routes?pageSize=1000`, {
         headers: { Authorization: "Bearer " + $jwt_token },
       });
       routes = res.data.content;
@@ -57,7 +57,7 @@
 
   async function getVehicles() {
     try {
-      const res = await axios.get(`${api_root}/api/vehicles`, {
+      const res = await axios.get(`${api_root}/api/vehicles?pageSize=1000`, {
         headers: { Authorization: "Bearer " + $jwt_token },
       });
       vehicles = res.data.content;
@@ -69,7 +69,7 @@
 
   async function getJobs() {
     try {
-      const res = await axios.get(`${api_root}/api/jobs`, {
+      const res = await axios.get(`${api_root}/api/jobs?pageSize=1000`, {
         headers: { Authorization: "Bearer " + $jwt_token },
       });
       jobs = res.data.content;
@@ -81,7 +81,7 @@
 
   async function getCompanies() {
     try {
-      const res = await axios.get(`${api_root}/api/companies`, {
+      const res = await axios.get(`${api_root}/api/companies?pageSize=1000`, {
         headers: { Authorization: "Bearer " + $jwt_token },
       });
       companies = res.data.content;
@@ -94,6 +94,7 @@
       alert("Could not load companies");
     }
   }
+
   function getTypes() {
     axios
       .get(api_root + "/api/vehicles/types", {
@@ -107,7 +108,7 @@
 
   async function getLocations() {
     try {
-      const res = await axios.get(`${api_root}/api/locations`, {
+      const res = await axios.get(`${api_root}/api/locations?pageSize=1000`, {
         headers: { Authorization: "Bearer " + $jwt_token },
       });
       locations = res.data.content;

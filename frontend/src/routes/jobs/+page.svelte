@@ -52,9 +52,12 @@
   async function getCompanies() {
     loading = true;
     try {
-      const response = await axios.get(`${apiRoot}/api/companies`, {
-        headers: { Authorization: `Bearer ${$jwt_token}` },
-      });
+      const response = await axios.get(
+        `${apiRoot}/api/companies?pageSize=1000`,
+        {
+          headers: { Authorization: `Bearer ${$jwt_token}` },
+        }
+      );
 
       companies = response.data.content || response.data;
 
@@ -75,7 +78,7 @@
 
   async function getLocations() {
     try {
-      const res = await axios.get(`${apiRoot}/api/locations`, {
+      const res = await axios.get(`${apiRoot}/api/locations?pageSize=1000`, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
 

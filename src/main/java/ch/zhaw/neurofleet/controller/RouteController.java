@@ -25,9 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.zhaw.neurofleet.model.Route;
-import ch.zhaw.neurofleet.model.Vehicle;
+import ch.zhaw.neurofleet.repository.JobRepository;
+import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.repository.RouteRepository;
-import ch.zhaw.neurofleet.repository.VehicleRepository;
 import ch.zhaw.neurofleet.service.RouteService;
 import ch.zhaw.neurofleet.service.UserService;
 
@@ -48,7 +48,10 @@ public class RouteController {
     private OpenAiChatModel chatModel;
 
     @Autowired
-    private VehicleRepository vehicleRepository;
+    private JobRepository jobRepository;
+
+    @Autowired
+    private LocationRepository locationRepository;
 
     @PostMapping("/routes")
     public ResponseEntity<Route> createRoute(@RequestBody Route route) {
@@ -61,14 +64,18 @@ public class RouteController {
         }
 
         try {
-            Vehicle vehicle = vehicleRepository.findById(route.getVehicleId())
-                    .orElseThrow(() -> new NoSuchElementException("Vehicle not found"));
+            var jobs = jobRepository.findAllById(route.getJobIds());
+            var originLocation = locationRepository.findById(jobs.get(0).getOriginId())
+                    .orElseThrow(() -> new NoSuchElementException("Origin location not found"));
+            var destinationLocation = locationRepository.findById(jobs.get(0).getDestinationId())
+                    .orElseThrow(() -> new NoSuchElementException("Destination location not found"));
             var generatedDescription = chatModel.call(new Prompt(
                     "The description is: '" + route.getDescription()
                             + "'. If necessary, improve the description based on the following information: "
-                            + route.getScheduledTime() + " " + vehicle.getLicensePlate() + " "
-                            + route.getJobIds().size() + " " + route.getTotalPayloadKg()
-                            + ". Improve the current description, if necessary. Return only the improved description. Use following format: [ScheduledTime in format DD/MM/YYYY HH:MM]: [Origin] - [Destination], [Payload in kg]"));
+                            + route.getScheduledTime() + " "
+                            + originLocation.getName() + " " + destinationLocation.getName()
+                            + jobs.size() + " " + route.getTotalPayloadKg()
+                            + ". Improve the current description, if necessary. Return only the improved description. Use following format: ScheduledTime in format DD/MM/YYYY HH:MM: Region in which the route is located, JobSize jobs, Payload in kg"));
             var description = generatedDescription.getResult().getOutput().getText();
             route.setDescription(description);
             Route created = routeService.createRoute(route);
