@@ -234,9 +234,16 @@ Die Monetarisierung erfolgt über verschiedene Einnahmemodelle:
 
 Es werden folgende Rollen gebraucht:
 
-- Manager
-- Employee
-- Admin
+`User`: Standard Rolle jedes Nutzers, der sich frisch registriert hat. Diesem wird eine Rolle und eine Firma zugeteilt. Der Nutzer hat ansonsten keinen Nutzen.
+
+`Driver`: Dem Driver sollte zukünftig Routen und Fahrzeuge zugewiesen werden. Diese Funktion ist jedoch out-of-scope.
+
+`Fleetmanager`: Der Fleetmanager hat eine Company und Location. Er kann neue Fahrzeuge für seine Location registrieren, Jobs erstellen und Routen erstellen. Die Route können aber nur mit Fahrzeugen erstellt werden, die seiner Location gehören.
+
+`Owner`: Der Owner kann neue Locations erstellen. Er hat die Berechtigung Nutzern neue Rollen zuzuteilen. Ansonsten hat er die selben Rechte, wie der Fleetmanager.
+
+`Admin`: Der Admin hat alle Rechte. Er kann Companies erstellen und für jede Company jeweils Locations, Vehicles, Jobs und Routen erstellen.
+
 
 ## Fachliches Datenmodell
 
@@ -244,7 +251,38 @@ Es werden folgende Rollen gebraucht:
 
 ## Erläuterungen zum Datenmodell
 
-> Beschreibe die Entitäten, deren Attribute sowie die Beziehungen zwischen den Entitäten.
+Hier ist eine prägnante Kurzzusammenfassung aller Objekte:
+
+**Company (Unternehmen)**
+- Zentrale Organisationseinheit
+- Verwaltet Benutzer, Fahrzeuge, Standorte und Aufträge
+- Identifiziert durch Name, Adresse und Koordinaten
+
+**Vehicle (Fahrzeug)**
+- Transportmittel für Routen
+- Hat Kennzeichen, VIN und Kapazität
+- Besitzt Status (verfügbar/nicht verfügbar) und Typ
+
+**Route (Route)**
+- Transportplan für mehrere Aufträge
+- Verbindet Aufträge zu einer logischen Einheit
+- Enthält Zeitplan und Gesamtgewicht der Ladung
+
+**Job (Auftrag)**
+- Einzelner Transportauftrag
+- Definiert Start und Ziel
+- Beinhaltet Ladungsgewicht und Zeitplan
+
+**Location (Standort)**
+- Physischer Ort für Start/Ziel von Aufträgen
+- Definiert durch Name, Adresse und Koordinaten
+- Kann Basis für Fahrzeuge sein
+
+**User (Benutzer)**
+- Systembenutzer mit Auth0-Authentifizierung
+- Zugeordnet zu einem Unternehmen
+- Verwaltet durch E-Mail und Name
+
 
 ## Zustandsdiagramm
 
@@ -264,10 +302,83 @@ Es werden folgende Rollen gebraucht:
 
 ## KI-Funktionen
 
-> Aufgaben und Funktionen des eingebundenen KI-Modells.
+Die KI wird hauptsächlich bei der Erstellung von neuen Jobs und Routen genutzt. Diese erhalten eine optimale Description, damit diese klar und verständlich sind. Zusätzlich kann ein Nutzer eine Optimization Anfrage mit Company ID und Location ID im Chatbot anfragen. Dieser gib eine Empfehlung zurück.
 
 # Fazit
 
 ## Stand der Implementation
 
-> Stand der Implementation, nächste Schritte (mit Referenz auf den Backlog).
+### Kurzzusammenfassung der Applikation
+NeuroFleet ist eine Flottenmanagement-Applikation, die es Unternehmen ermöglicht:
+- Ihre Fahrzeugflotte zu verwalten
+- Transportaufträge zu koordinieren
+- Routen zu planen und zu optimieren
+- Standorte und Lieferungen zu überwachen
+- Benutzer und deren Zugriffsrechte zu verwalten
+
+### Ausbaumöglichkeiten
+
+1. **UI/UX Verbesserungen**
+   - Implementierung von Toaster-Benachrichtigungen statt Alert-Messages (#96)
+   - Entwicklung einer Settings-Seite für Benutzereinstellungen (#174)
+   - Implementierung eines responsiven Dashboards
+   - Echtzeit-Routenplanung-Visualisierung auf einer Karte
+
+   [Backlog](https://github.com/users/ISxOdin/projects/2/views/6)
+
+   
+
+2. **Technische Erweiterungen**
+   - Entwicklung von API-Client-Bibliotheken (#166)
+   - Implementierung der Fahrerzuweisung (#169)
+   - Status-Management für Aufträge durch Fahrer (#170)
+   - Integration von Echtzeit-Tracking-Systemen
+
+3. **Funktionale Erweiterungen**
+   - **Routenoptimierung**
+     - Automatische Routenberechnung basierend auf Aufträgen
+     - Berücksichtigung von Verkehrsdaten
+     - Beürcksichtigung von Wetter
+     - Kraftstoffverbrauchsoptimierung
+
+   - **Fahrzeugmanagement**
+     - Wartungsplanung und -erinnerungen
+     - Kraftstoffverbrauchsüberwachung
+     - Fahrzeugauslastungsanalyse
+
+   - **Auftragsmanagement**
+     - Automatische Auftragszuweisung
+     - Priorisierung von Aufträgen
+     - Kundenbenachrichtigungssystem
+
+   - **Berichterstattung**
+     - Detaillierte Analysen und Reports
+     - KPI-Dashboard
+     - Kostenüberwachung
+
+4. **Integration und Automatisierung**
+   - Anbindung an Buchhaltungssysteme
+   - Integration von Wetter-APIs
+   - Automatische Rechnungserstellung
+   - Schnittstellen zu Kundensystemen
+
+5. **Mobile Erweiterungen**
+   - Fahrer-App für unterwegs (Statusänderung)
+   - Mobile Auftragserfassung
+   - Digitale Lieferscheine
+   - Foto-Dokumentation von Lieferungen
+
+6. **Sicherheit und Compliance**
+   - Erweiterte Zugriffskontrollen
+   - Audit-Logging
+   - Compliance-Reporting
+   - Datenschutz-Dashboard
+
+7. **KI und Automatisierung**
+   - Vorhersagemodelle für Auftragseingänge
+   - Automatische Ressourcenplanung
+   - Predictive Maintenance
+   - Anomalieerkennung
+
+Diese Erweiterungen würden die Applikation zu einem umfassenden Flottenmanagement-System ausbauen, das den gesamten Logistikprozess abdeckt und optimiert.
+
