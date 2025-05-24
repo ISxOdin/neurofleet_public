@@ -251,8 +251,6 @@ Es werden folgende Rollen gebraucht:
 
 ## Erläuterungen zum Datenmodell
 
-Hier ist eine prägnante Kurzzusammenfassung aller Objekte:
-
 **Company (Unternehmen)**
 - Zentrale Organisationseinheit
 - Verwaltet Benutzer, Fahrzeuge, Standorte und Aufträge
