@@ -238,7 +238,7 @@
             onclick={(e) => toggleRow(j.id, e)}
           >
             <td>{j.description}</td>
-            <td>{j.scheduledTime}</td>
+            <td>{new Date(j.scheduledTime).toLocaleString()}</td>
             <td>{companies.find((c) => c.id === j.companyId)?.name}</td>
             <td>{locations.find((l) => l.id === j.originId)?.name}</td>
             <td>{locations.find((l) => l.id === j.destinationId)?.name}</td>

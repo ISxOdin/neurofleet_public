@@ -1,9 +1,13 @@
 package ch.zhaw.neurofleet.controller;
 
-import static ch.zhaw.neurofleet.security.Roles.*;
+import static ch.zhaw.neurofleet.security.Roles.ADMIN;
+import static ch.zhaw.neurofleet.security.Roles.FLEETMANAGER;
+import static ch.zhaw.neurofleet.security.Roles.OWNER;
 
 import java.util.NoSuchElementException;
 
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.zhaw.neurofleet.model.Route;
+import ch.zhaw.neurofleet.model.Vehicle;
 import ch.zhaw.neurofleet.repository.RouteRepository;
+import ch.zhaw.neurofleet.repository.VehicleRepository;
 import ch.zhaw.neurofleet.service.RouteService;
 import ch.zhaw.neurofleet.service.UserService;
 
@@ -38,6 +44,12 @@ public class RouteController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private OpenAiChatModel chatModel;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
+
     @PostMapping("/routes")
     public ResponseEntity<Route> createRoute(@RequestBody Route route) {
         if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
@@ -49,6 +61,16 @@ public class RouteController {
         }
 
         try {
+            Vehicle vehicle = vehicleRepository.findById(route.getVehicleId())
+                    .orElseThrow(() -> new NoSuchElementException("Vehicle not found"));
+            var generatedDescription = chatModel.call(new Prompt(
+                    "The description is: '" + route.getDescription()
+                            + "'. If necessary, improve the description based on the following information: "
+                            + route.getScheduledTime() + " " + vehicle.getLicensePlate() + " "
+                            + route.getJobIds().size() + " " + route.getTotalPayloadKg()
+                            + ". Improve the current description, if necessary. Return only the improved description. Use following format: [ScheduledTime in format DD/MM/YYYY HH:MM]: [Origin] - [Destination], [Payload in kg]"));
+            var description = generatedDescription.getResult().getOutput().getText();
+            route.setDescription(description);
             Route created = routeService.createRoute(route);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
         } catch (NoSuchElementException e) {

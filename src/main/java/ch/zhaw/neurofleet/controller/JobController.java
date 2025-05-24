@@ -1,8 +1,14 @@
 package ch.zhaw.neurofleet.controller;
 
+import static ch.zhaw.neurofleet.security.Roles.ADMIN;
+import static ch.zhaw.neurofleet.security.Roles.FLEETMANAGER;
+import static ch.zhaw.neurofleet.security.Roles.OWNER;
+
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,9 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.zhaw.neurofleet.model.Job;
 import ch.zhaw.neurofleet.model.JobCreateDTO;
 import ch.zhaw.neurofleet.repository.JobRepository;
+import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.service.JobService;
 import ch.zhaw.neurofleet.service.UserService;
-import static ch.zhaw.neurofleet.security.Roles.*;
+import ch.zhaw.neurofleet.model.Location;
 
 @RestController
 @RequestMapping("/api")
@@ -37,6 +44,12 @@ public class JobController {
 
     @Autowired
     JobService jobService;
+
+    @Autowired
+    OpenAiChatModel chatModel;
+
+    @Autowired
+    LocationRepository locationRepository;
 
     @PostMapping("/jobs")
     public ResponseEntity<Job> createJob(@RequestBody JobCreateDTO jDTO) {
@@ -62,8 +75,22 @@ public class JobController {
         }
 
         try {
+            // Fetch location names
+            Location originLocation = locationRepository.findById(jDTO.getOriginId())
+                    .orElseThrow(() -> new NoSuchElementException("Origin location not found"));
+            Location destinationLocation = locationRepository.findById(jDTO.getDestinationId())
+                    .orElseThrow(() -> new NoSuchElementException("Destination location not found"));
+
+            var generatedDescription = chatModel.call(new Prompt(
+                    "The description is: '" + jDTO.getDescription()
+                            + "'. If necessary, improve the description based on the following information: "
+                            + jDTO.getScheduledTime() + " " + originLocation.getName() + " "
+                            + destinationLocation.getName() + " " + jDTO.getPayloadKg()
+                            + ". Improve the current description, if necessary. Return only the improved description. Use following format: [ScheduledTime in format DD/MM/YYYY HH:MM]: [Origin] - [Destination], [Payload in kg]"));
+            var description = generatedDescription.getResult().getOutput().getText();
+            jDTO.setDescription(description);
             Job jobDAO = new Job(
-                    jDTO.getDescription(),
+                    description,
                     jDTO.getScheduledTime(),
                     jDTO.getOriginId(),
                     jDTO.getDestinationId(),
@@ -71,6 +98,8 @@ public class JobController {
                     jDTO.getPayloadKg());
             Job job = jobRepository.save(jobDAO);
             return new ResponseEntity<>(job, HttpStatus.CREATED);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
