@@ -4,6 +4,7 @@
   import axios from "axios";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { findUserCompany } from "$lib/utils";
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const api_root = $page.url.origin;
@@ -23,28 +24,52 @@
   let activeRoutes = [];
   let companyName = "";
   let jobs = [];
+  let companies = [];
+  let myCompanyId = null;
 
   onMount(async () => {
     try {
-      const [dashboardResponse, routesResponse] = await Promise.all([
-        axios.get(`${api_root}/api/dashboard`, {
-          headers: {
-            Authorization: `Bearer ${$jwt_token}`,
-          },
-        }),
-        axios.get(`${api_root}/api/routes?pageSize=1000`, {
-          headers: {
-            Authorization: `Bearer ${$jwt_token}`,
-          },
-        }),
-      ]);
+      // Get companies data first
+      const companiesResponse = await axios.get(`${api_root}/api/companies`, {
+        headers: {
+          Authorization: `Bearer ${$jwt_token}`,
+        },
+      });
+      companies = companiesResponse.data.content;
+      myCompanyId = findUserCompany(companies, $jwt_token);
+      console.log("My Company ID:", myCompanyId);
+
+      if (!myCompanyId) {
+        error = "Could not determine company ID";
+        return;
+      }
+
+      // Then fetch all other data
+      const [dashboardResponse, routesResponse, optimizationResponse] =
+        await Promise.all([
+          axios.get(`${api_root}/api/dashboard/${myCompanyId}`, {
+            headers: {
+              Authorization: `Bearer ${$jwt_token}`,
+            },
+          }),
+          axios.get(`${api_root}/api/routes?pageSize=1000`, {
+            headers: {
+              Authorization: `Bearer ${$jwt_token}`,
+            },
+          }),
+          axios.get(`${api_root}/api/optimization/summary`, {
+            headers: {
+              Authorization: `Bearer ${$jwt_token}`,
+            },
+          }),
+        ]);
 
       dashboardData = dashboardResponse.data;
 
       // Filter routes to only show active ones and create alerts for problematic ones
       const allRoutes = routesResponse.data.content || [];
-      activeRoutes = allRoutes.filter(
-        (route) => route.state === "SCHEDULED" || route.state === "IN_PROGRESS"
+      activeRoutes = allRoutes.filter((route) =>
+        ["SCHEDULED", "IN_PROGRESS"].includes(route.state)
       );
 
       // Add problematic routes to alerts
@@ -67,39 +92,9 @@
 
       companyName = dashboardData.company;
 
-      // Mock optimization suggestions (replace with actual API call in production)
-      dashboardData.optimizationSuggestions = [
-        {
-          id: 1,
-          type: "route_optimization",
-          title: "Route Optimization Available",
-          description:
-            "AI analysis suggests combining Routes #123 and #124 could save 45 minutes of travel time",
-          impact: "high",
-          potentialSavings: "45 minutes, ~12L fuel",
-          confidence: 0.89,
-        },
-        {
-          id: 2,
-          type: "load_balancing",
-          title: "Load Distribution Improvement",
-          description:
-            "Redistributing cargo across 3 vehicles could improve fuel efficiency by 15%",
-          impact: "medium",
-          potentialSavings: "15% fuel reduction",
-          confidence: 0.78,
-        },
-        {
-          id: 3,
-          type: "schedule_optimization",
-          title: "Schedule Adjustment Recommended",
-          description:
-            "Shifting departure times by 30 minutes could avoid peak traffic",
-          impact: "medium",
-          potentialSavings: "30 minutes per route",
-          confidence: 0.85,
-        },
-      ];
+      // Use the optimization suggestions from the API
+      dashboardData.optimizationSuggestions =
+        optimizationResponse.data.optimizationSuggestions;
     } catch (err) {
       error = "Failed to load dashboard data";
       console.error("Dashboard data error:", err);
