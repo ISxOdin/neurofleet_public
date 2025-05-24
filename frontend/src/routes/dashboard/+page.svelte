@@ -36,7 +36,7 @@
         },
       });
       companies = companiesResponse.data.content;
-      myCompanyId = findUserCompany(companies, $jwt_token);
+      myCompanyId = findUserCompany(companies, $user.sub);
       console.log("My Company ID:", myCompanyId);
 
       if (!myCompanyId) {
@@ -47,7 +47,7 @@
       // Then fetch all other data
       const [dashboardResponse, routesResponse, optimizationResponse] =
         await Promise.all([
-          axios.get(`${api_root}/api/dashboard/${myCompanyId}`, {
+          axios.get(`${api_root}/api/dashboard`, {
             headers: {
               Authorization: `Bearer ${$jwt_token}`,
             },
@@ -57,11 +57,14 @@
               Authorization: `Bearer ${$jwt_token}`,
             },
           }),
-          axios.get(`${api_root}/api/optimization/summary`, {
-            headers: {
-              Authorization: `Bearer ${$jwt_token}`,
-            },
-          }),
+          axios.get(
+            `${api_root}/api/optimization/summary?companyId=${myCompanyId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${$jwt_token}`,
+              },
+            }
+          ),
         ]);
 
       dashboardData = dashboardResponse.data;
