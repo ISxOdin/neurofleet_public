@@ -43,7 +43,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.zhaw.neurofleet.model.Job;
 import ch.zhaw.neurofleet.model.JobCreateDTO;
 import ch.zhaw.neurofleet.model.JobState;
+import ch.zhaw.neurofleet.model.Location;
 import ch.zhaw.neurofleet.repository.JobRepository;
+import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.security.TestSecurityConfig;
 import ch.zhaw.neurofleet.service.JobService;
 import ch.zhaw.neurofleet.service.UserService;
@@ -66,6 +68,9 @@ class JobControllerTest {
         @MockitoBean
         private UserService userService;
 
+        @MockitoBean
+        private LocationRepository locationRepository;
+
         @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
         private OpenAiChatModel chatModel;
 
@@ -76,16 +81,21 @@ class JobControllerTest {
         private static final String ORIGIN_ID = "loc-a";
         private static final String DESTINATION_ID = "loc-b";
         private static final int PAYLOAD_KG = 100;
+        private static final String TEST_JOB_DESCRIPTION = "Chatbot Job";
 
         private Job baseJob;
+        private Location origin;
+        private Location destination;
 
         @BeforeEach
         void setup() {
+                // AI-Mock
                 when(chatModel.call(any(Prompt.class))
                                 .getResult()
                                 .getOutput()
-                                .getText()).thenReturn("Chatbot Job");
-                baseJob = new Job("Test delivery", LocalDateTime.now(), ORIGIN_ID, DESTINATION_ID, COMPANY_ID,
+                                .getText()).thenReturn(TEST_JOB_DESCRIPTION);
+
+                baseJob = new Job(TEST_JOB_DESCRIPTION, LocalDateTime.now(), ORIGIN_ID, DESTINATION_ID, COMPANY_ID,
                                 PAYLOAD_KG);
                 baseJob.setId(JOB_ID);
 
@@ -93,6 +103,17 @@ class JobControllerTest {
                 when(jobRepository.existsById(JOB_ID)).thenReturn(true);
                 when(jobRepository.save(any())).thenReturn(baseJob);
                 when(jobRepository.findAll(PageRequest.of(0, 5))).thenReturn(new PageImpl<>(List.of(baseJob)));
+
+                // Location Objekte als Felder zuweisen
+                origin = new Location("OriginName", "OriginAddress", 47.37402059999999, 8.5382115, COMPANY_ID);
+                origin.setId(ORIGIN_ID);
+
+                destination = new Location("DestinationName", "DestinationAddress", 47.37402059999999, 8.5382115,
+                                COMPANY_ID);
+                destination.setId(DESTINATION_ID);
+
+                when(locationRepository.findById(ORIGIN_ID)).thenReturn(Optional.of(origin));
+                when(locationRepository.findById(DESTINATION_ID)).thenReturn(Optional.of(destination));
         }
 
         // Create Job Tests
@@ -101,7 +122,7 @@ class JobControllerTest {
         @Order(1)
         void testCreateJob_AdminRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
-                dto.setDescription("Transport X");
+                dto.setDescription(TEST_JOB_DESCRIPTION);
                 dto.setScheduledTime(LocalDateTime.now());
                 dto.setCompanyId(COMPANY_ID);
                 dto.setOriginId(ORIGIN_ID);
@@ -127,7 +148,7 @@ class JobControllerTest {
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN)
                                 .content(json))
                                 .andExpect(status().isCreated())
-                                .andExpect(jsonPath("$.description").value("Transport X"))
+                                .andExpect(jsonPath("$.description").value(TEST_JOB_DESCRIPTION))
                                 .andExpect(jsonPath("$.jobState").value("NEW"));
         }
 
@@ -135,7 +156,7 @@ class JobControllerTest {
         @Order(2)
         void testCreateJob_OwnerRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
-                dto.setDescription("Owner Job");
+                dto.setDescription(TEST_JOB_DESCRIPTION);
                 dto.setScheduledTime(LocalDateTime.now());
                 dto.setCompanyId(COMPANY_ID);
                 dto.setOriginId(ORIGIN_ID);
@@ -161,14 +182,14 @@ class JobControllerTest {
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.OWNER)
                                 .content(json))
                                 .andExpect(status().isCreated())
-                                .andExpect(jsonPath("$.description").value("Owner Job"));
+                                .andExpect(jsonPath("$.description").value(TEST_JOB_DESCRIPTION));
         }
 
         @Test
         @Order(3)
         void testCreateJob_FleetmanagerRole() throws Exception {
                 JobCreateDTO dto = new JobCreateDTO();
-                dto.setDescription("Fleetmanager Job");
+                dto.setDescription(TEST_JOB_DESCRIPTION);
                 dto.setScheduledTime(LocalDateTime.now());
                 dto.setCompanyId(COMPANY_ID);
                 dto.setOriginId(ORIGIN_ID);
@@ -194,7 +215,7 @@ class JobControllerTest {
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.FLEETMANAGER)
                                 .content(json))
                                 .andExpect(status().isCreated())
-                                .andExpect(jsonPath("$.description").value("Fleetmanager Job"));
+                                .andExpect(jsonPath("$.description").value(TEST_JOB_DESCRIPTION));
         }
 
         @Test
