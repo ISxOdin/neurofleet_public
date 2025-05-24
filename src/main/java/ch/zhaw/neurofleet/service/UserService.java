@@ -15,6 +15,7 @@ import ch.zhaw.neurofleet.model.UserDTO;
 import ch.zhaw.neurofleet.repository.CompanyRepository;
 import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.repository.UserRepository;
+import ch.zhaw.neurofleet.service.Auth0Service;
 
 @Service
 public class UserService {
@@ -27,6 +28,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private Auth0Service auth0Service;
 
     // Auth0 Methods
 
@@ -42,23 +46,30 @@ public class UserService {
     public String getAuthIdOfCurrentUser() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return jwt.getSubject();
-
     }
+
     public String getCompanyIdOfCurrentUser() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String me = jwt.getSubject();
-                return companyRepository
+        return companyRepository
                 .findByUserIdsContaining(me)
                 .map(Company::getId)
                 .orElseThrow(() -> new IllegalStateException("No company found for user " + me));
     }
+
     public String getLocationIdOfCurrentUser() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String me = jwt.getSubject();
-                return locationRepository
+        return locationRepository
                 .findFirstByFleetmanagerId(me)
                 .map(Location::getId)
                 .orElseThrow(() -> new IllegalStateException("No location found for user " + me));
+    }
+
+    public List<String> getCurrentUserRoles() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String auth0Id = jwt.getSubject();
+        return auth0Service.getUserRoles(auth0Id);
     }
 
     // MongoDB Methods

@@ -52,9 +52,12 @@
   async function getCompanies() {
     loading = true;
     try {
-      const response = await axios.get(`${apiRoot}/api/companies`, {
-        headers: { Authorization: `Bearer ${$jwt_token}` },
-      });
+      const response = await axios.get(
+        `${apiRoot}/api/companies?pageSize=1000`,
+        {
+          headers: { Authorization: `Bearer ${$jwt_token}` },
+        }
+      );
 
       companies = response.data.content || response.data;
 
@@ -75,7 +78,7 @@
 
   async function getLocations() {
     try {
-      const res = await axios.get(`${apiRoot}/api/locations`, {
+      const res = await axios.get(`${apiRoot}/api/locations?pageSize=1000`, {
         headers: { Authorization: `Bearer ${$jwt_token}` },
       });
 
@@ -238,7 +241,7 @@
             onclick={(e) => toggleRow(j.id, e)}
           >
             <td>{j.description}</td>
-            <td>{j.scheduledTime}</td>
+            <td>{new Date(j.scheduledTime).toLocaleString()}</td>
             <td>{companies.find((c) => c.id === j.companyId)?.name}</td>
             <td>{locations.find((l) => l.id === j.originId)?.name}</td>
             <td>{locations.find((l) => l.id === j.destinationId)?.name}</td>

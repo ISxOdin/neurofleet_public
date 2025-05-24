@@ -1,6 +1,8 @@
 package ch.zhaw.neurofleet.controller;
 
-import static ch.zhaw.neurofleet.security.Roles.*;
+import static ch.zhaw.neurofleet.security.Roles.ADMIN;
+import static ch.zhaw.neurofleet.security.Roles.FLEETMANAGER;
+import static ch.zhaw.neurofleet.security.Roles.OWNER;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -22,6 +24,9 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.mockito.Answers;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,6 +66,9 @@ class JobControllerTest {
         @MockitoBean
         private UserService userService;
 
+        @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
+        private OpenAiChatModel chatModel;
+
         private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
         private static final String JOB_ID = "job-123";
@@ -73,6 +81,10 @@ class JobControllerTest {
 
         @BeforeEach
         void setup() {
+                when(chatModel.call(any(Prompt.class))
+                                .getResult()
+                                .getOutput()
+                                .getText()).thenReturn("Chatbot Job");
                 baseJob = new Job("Test delivery", LocalDateTime.now(), ORIGIN_ID, DESTINATION_ID, COMPANY_ID,
                                 PAYLOAD_KG);
                 baseJob.setId(JOB_ID);

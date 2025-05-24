@@ -1,9 +1,13 @@
 package ch.zhaw.neurofleet.controller;
 
-import static ch.zhaw.neurofleet.security.Roles.*;
+import static ch.zhaw.neurofleet.security.Roles.ADMIN;
+import static ch.zhaw.neurofleet.security.Roles.FLEETMANAGER;
+import static ch.zhaw.neurofleet.security.Roles.OWNER;
 
 import java.util.NoSuchElementException;
 
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.zhaw.neurofleet.model.Route;
+import ch.zhaw.neurofleet.repository.JobRepository;
+import ch.zhaw.neurofleet.repository.LocationRepository;
 import ch.zhaw.neurofleet.repository.RouteRepository;
 import ch.zhaw.neurofleet.service.RouteService;
 import ch.zhaw.neurofleet.service.UserService;
@@ -38,6 +44,15 @@ public class RouteController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private OpenAiChatModel chatModel;
+
+    @Autowired
+    private JobRepository jobRepository;
+
+    @Autowired
+    private LocationRepository locationRepository;
+
     @PostMapping("/routes")
     public ResponseEntity<Route> createRoute(@RequestBody Route route) {
         if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
@@ -49,6 +64,20 @@ public class RouteController {
         }
 
         try {
+            var jobs = jobRepository.findAllById(route.getJobIds());
+            var originLocation = locationRepository.findById(jobs.get(0).getOriginId())
+                    .orElseThrow(() -> new NoSuchElementException("Origin location not found"));
+            var destinationLocation = locationRepository.findById(jobs.get(0).getDestinationId())
+                    .orElseThrow(() -> new NoSuchElementException("Destination location not found"));
+            var generatedDescription = chatModel.call(new Prompt(
+                    "The description is: '" + route.getDescription()
+                            + "'. If necessary, improve the description based on the following information: "
+                            + route.getScheduledTime() + " "
+                            + originLocation.getName() + " " + destinationLocation.getName()
+                            + jobs.size() + " " + route.getTotalPayloadKg()
+                            + ". Improve the current description, if necessary. Return only the improved description. Use following format: ScheduledTime in format DD/MM/YYYY HH:MM: Region in which the route is located, JobSize jobs, Payload in kg"));
+            var description = generatedDescription.getResult().getOutput().getText();
+            route.setDescription(description);
             Route created = routeService.createRoute(route);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
         } catch (NoSuchElementException e) {

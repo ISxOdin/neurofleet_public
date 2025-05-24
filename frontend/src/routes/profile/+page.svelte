@@ -152,6 +152,9 @@
                   <div class="company-info">
                     <span class="key-info">Company</span>
                     <span class="value">{company.name}</span>
+                    <span class="id"
+                      ><i class="bi bi-database"></i>{company.id}</span
+                    >
                     {#if company.address}
                       <span class="address"
                         ><i class="bi bi-geo-alt"></i>
@@ -178,6 +181,9 @@
                   <div class="company-info">
                     <span class="key-info">Location</span>
                     <span class="value">{location.name}</span>
+                    <span class="id"
+                      ><i class="bi bi-database"></i>{location.id}</span
+                    >
                     {#if location.address}
                       <span class="address"
                         ><i class="bi bi-geo-alt"></i>
@@ -444,6 +450,20 @@
   }
 
   .address i {
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+  .id {
+    color: white;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  .id i {
     font-size: 0.8rem;
     opacity: 0.8;
   }

@@ -35,6 +35,9 @@ public class ChatController {
     @Autowired
     ChatClient chatClient;
 
+    @Autowired
+    NeuroFleetTools neuroFleetTools;
+
     ChatMemory chatMemory;
 
     @GetMapping("/chat")
@@ -42,9 +45,28 @@ public class ChatController {
         if (!userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        String content = chatClient.prompt(
-                "You are NeuroBot, an assistant for transport optimization and platform guidance.")
-                .tools(new NeuroFleetTools()).user(message)
+
+        String systemPrompt = """
+                You are NeuroBot, an intelligent assistant for transport optimization and fleet management.
+                You have access to tools that can help analyze and optimize routes, vehicle assignments, and job distributions.
+
+                When users ask about route optimization or efficiency, you can:
+                1. Analyze current route efficiency using analyzeRouteEfficiency()
+                2. Suggest better job distributions using suggestJobDistribution()
+                3. Find opportunities to consolidate routes using findRouteConsolidationOpportunities()
+
+                Always provide clear, actionable insights and explain your recommendations.
+                If you notice inefficiencies, proactively suggest improvements.
+
+                Current user roles: %s
+
+                Company and location information can be found in the profile section.
+                """
+                .formatted(String.join(", ", userService.getCurrentUserRoles()));
+
+        String content = chatClient.prompt(systemPrompt)
+                .tools(neuroFleetTools)
+                .user(message)
                 .call()
                 .content();
 
