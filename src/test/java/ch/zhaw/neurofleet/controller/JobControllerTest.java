@@ -1,8 +1,6 @@
 package ch.zhaw.neurofleet.controller;
 
-import static ch.zhaw.neurofleet.security.Roles.ADMIN;
-import static ch.zhaw.neurofleet.security.Roles.FLEETMANAGER;
-import static ch.zhaw.neurofleet.security.Roles.OWNER;
+import static ch.zhaw.neurofleet.security.Roles.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -211,11 +209,54 @@ class JobControllerTest {
 
         @Test
         @Order(5)
-        void testGetAllJobs() throws Exception {
+        void testGetAllJobs_AsAdmin() throws Exception {
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+                when(userService.userHasAnyRole(OWNER)).thenReturn(false);
+                when(jobRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(baseJob)));
+
                 mvc.perform(get("/api/jobs")
                                 .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.ADMIN))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.content[0].id").value(JOB_ID));
+        }
+
+        @Test
+        @Order(5)
+        void testGetAllJobs_AsOwner() throws Exception {
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+                when(userService.userHasAnyRole(OWNER)).thenReturn(true);
+                when(userService.getCompanyIdOfCurrentUser()).thenReturn(COMPANY_ID);
+                when(jobRepository.findAllByCompanyId(eq(COMPANY_ID), any(PageRequest.class)))
+                                .thenReturn(new PageImpl<>(List.of(baseJob)));
+
+                mvc.perform(get("/api/jobs")
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.OWNER))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.content[0].id").value(JOB_ID))
+                                .andExpect(jsonPath("$.content[0].companyId").value(COMPANY_ID));
+        }
+
+        @Test
+        @Order(5)
+        void testGetAllJobs_AsFleetManager() throws Exception {
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(true);
+                when(userService.userHasAnyRole(OWNER)).thenReturn(false);
+                when(jobRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(baseJob)));
+
+                mvc.perform(get("/api/jobs")
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.FLEETMANAGER))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.content[0].id").value(JOB_ID));
+        }
+
+        @Test
+        @Order(5)
+        void testGetAllJobs_AsUnauthorizedUser() throws Exception {
+                when(userService.userHasAnyRole(ADMIN, OWNER, FLEETMANAGER)).thenReturn(false);
+
+                mvc.perform(get("/api/jobs")
+                                .header(HttpHeaders.AUTHORIZATION, TestSecurityConfig.USER))
+                                .andExpect(status().isForbidden());
         }
 
         @Test
