@@ -222,7 +222,22 @@ Die Monetarisierung erfolgt über verschiedene Einnahmemodelle:
 
 ## Diskussion Feedback Pitch
 
-> Diskussion des Feedbacks aus dem Pitch (bezogen auf Projektinhalt)
+<div style="font-family: sans-serif; font-size: 14px; line-height: 1.6; max-width: 800px; margin: auto;">
+  <h2>Feedback zum Pitch</h2>
+  <p><strong>Frage 1:</strong> Wie wird KI genau umgesetzt?</p>
+  <p><strong>Frage 2:</strong> Woher stammen die Daten zu den Routen? Gibt es Datenschutz bei wertvollen Transporten?</p>
+  <p><strong>Frage 3:</strong> Warum wird diese Art von Optimierung nicht schon heute von Logistikunternehmen eingesetzt?</p>
+  <p><strong>Frage 4:</strong> Lässt sich das System auch auf Schiff- und Zugtransport skalieren?</p>
+  <p><strong>Frage 5:</strong> Wer genau nutzt die App? (Zielgruppe und Benutzerrollen)</p>
+  <p><strong>Frage 6:</strong> Wie unterscheidet sich die Lösung von bestehenden Logistikplanern?</p>
+  <p><strong>Frage 7:</strong> Wie präzise ist die KI bei ihren Entscheidungen?</p>
+  <p><strong>Frage 8:</strong> Wie wird mit Zöllen oder länderspezifischen Anforderungen umgegangen?</p>
+  <p><strong>Frage 9:</strong> Profitieren auch LKW-Besitzer von der App, oder wird eine eigene Flotte vorausgesetzt?</p>
+  <p><strong>Frage 10:</strong> Können durch Routenoptimierung auch Staus vermieden werden?</p>
+  <p><strong>Frage 11:</strong> Wie grenzt sich die Lösung vom Wettbewerb im Markt ab?</p>
+  <p><strong>Frage 12:</strong> Ist das System auch international (grenzüberschreitend) einsetzbar?</p>
+  <p><strong>Kommentar:</strong> Sehr gut visualisiert, überzeugend präsentiert, keine Kritik.</p>
+</div>
 
 # Anforderungen
 
@@ -360,60 +375,172 @@ Die Monetarisierung erfolgt über verschiedene Einnahmemodelle:
 ### Authentication
 
 ![Login](Doc/Screenshots/Login.png)
+
+Die Login Seite.
+
 ![Signup](Doc/Screenshots/Signup.png)
+
+Die Regstrierungsseite. Im Signup-Prozess wird die Email geprüft, ob diese "disposable" ist.
+
+![MailVerification](Doc/Screenshots/MailVerification.png)
+
+Eine nicht legitime Mail gibt einen Fehler zurück.
+
 ![Not-logged-in](Doc/Screenshots/Notloggedin.png)
+
+Wenn sich ein User ausloggt, erhält er die "Not logged in" Seite.
+
+![Driver](Doc/Screenshots/Driver.png)
+
+Ein Driver sieht nur diese Seite. Jobs zu einem Driver zu assignen, war jedoch out-of-scope.
+
+![User](Doc/Screenshots/User.png)
+
+Ein User hat keine Rechte und muss darauf warten eine Rolle zu erhalten.
 
 ### Home
 
 ![Homepage](Doc/Screenshots/Home/Homepage.png)
 
+Die Homepage zeigt den Nicknamen und die Rolle an.
+
 ### Profile
 
 ![Profile persönliche Information](Doc/Screenshots/Profile/Profile1.png)
+
+Auf der Profilseite kann persönliche Information aufgerufen werden.
+
 ![Profile profesionelle Information](Doc/Screenshots/Profile/Profile2.png)
+
+Auf der Profilseite kann profesionelle Information aufgerufen werden.
+
+## Fleetmanager +
+
+Diese Seiten können von Admin, Owner und Fleetmanager angesehen werden.
+Admin sieht und kann alles.
+Owner sieht nur seine Company, aber alle Locations.
+Fleetmanager sieht nur seine Company und die Location, die ihm zugeteilt wurde.
 
 ### Dashboard
 
 ![Jobs, Routes and AI](Doc/Screenshots/Dashboard/Dashboard1.png)
+
+Das Dashboard zeigt verschiedenste Daten über die Jobs an. Ebenfalls werden aktive Routen (Status "SCHEDULED" und "IN PROGRESS") angezeigt. Die KI zeigt aktuelle Routenauslastung und Anzahl Jobs. Apply Optimization ist ein Platzhalter.
+
 ![Alerts](Doc/Screenshots/Dashboard/Dashboard2.png)
+
+Abgebrochene Jobs und Routen (verschiedene Status: "CANCELLED, FAILED etc.) werden hier angezeigt.
 
 ### Fleet Management
 
 ![Alle Fahrzeuge, edit und delete](Doc/Screenshots/Fleet-Management/Fleet1.png)
+
+Alle Fahrzeuge werden angezeigt. Fahrzeuge können gelöscht werden.
+
 ![Fahrzeug erfassen](Doc/Screenshots/Fleet-Management/Fleet2.png)
+
+Fahrzeuge können erfasst werden, das Form checkt, ob die Syntax der VIN richtig ist, da dies ein EU Standard ist. Es kann ein Fahrzeugtyp gewählt werden, welcher eine automatische Kapazitätszuweisung macht. Fahrzeuge werden einem Standort zugewiesen.
+
 ![Fahrzeug bearbeiten](Doc/Screenshots/Fleet-Management/Fleet3.png)
+
+Fahrzeuge können Status' haben, welche bearbeitet werden können.
 
 ### Transport Jobs
 
 ![Alle Jobs, edit und delete](Doc/Screenshots/Transport-Jobs/Jobs%201.png)
+
+Alle Jobs können angezeigt werden. Jobs können gelöscht werden.
+
 ![Job erfassen](Doc/Screenshots/Transport-Jobs/Jobs%202.png)
+
+Jobs können erfasst werden. Hierzu braucht es zwei registrierte Standorte (Locations).
+Erfasste Jobs erhalten eine KI generierte Beschreibung
+
 ![Job bearbeiten](Doc/Screenshots/Transport-Jobs/Jobs%203.png)
+
+Jobs können bearbeitet werden. Jobs haben verschieden Status.
+
 ![Jobroute](Doc/Screenshots/Transport-Jobs/Jobs%204.png)
+
+Die Jobroute kann angezeigt werden, wenn der Job angeklickt wird.
 
 ### Routes
 
 ![Route mit Waypoints](Doc/Screenshots/Routes/Route%201.png)
+
+Eine angeklickte Route zeigt alle Jobs und Waypoints, welche befahren werden müssen.
+
 ![Route erfassen](Doc/Screenshots/Routes/Route%202.png)
+
+Routen können so erfasst werden, dass ein gewähltes Fahrzeug eine fixe Kapazität hat. Diese kann nicht überstiegen werden. Eine Progress Bar zeigt hier den Fortschritt an. Es werden nur Vehicles und Jobs der gewählten Company angezeigt.
+
 ![Route bearbeiten](Doc/Screenshots/Routes/Route%203.png)
+
+Alle Status, ausser "COMPLETED" sind den Jobs synchronisiert. Also wenn eine Route "SCHEDULED" wird, hat der Job das auch. Bereits abgeschlossene Jobs, bleiben jedoch bei "COMPLETED"
 
 ## Admin
 
 ### Users
 
+Diese Seite kann von Admin und Owner angesehen werden.
+
 ![User anzeigen](Doc/Screenshots/Admin/Users/Users%201.png)
+
+Alle User werden mit der Rolle angezeigt. Owner sieht nur seine User.
+
 ![User bearbeiten](Doc/Screenshots/Admin/Users/Users%201.png)
 
+User können eine Rolle und Company zugeteilt werden. Owner kann keine Company zuweisen. User können **nicht** gelöscht werden. Dies war out-of-scope.
+
 ### Location
+
+Diese Seite kann von Admin und Owner angesehen werden.
 
 ![Location mit Standort](Doc/Screenshots/Admin/Locations/Location%201.png)
+
+Alle Standorte werden angezeigt. Wenn der Standort angeklickt wird, wird eine Karte der registrierten Adresse angezeigt. Standorte können gelöscht werden.
+
 ![Location erfassen](Doc/Screenshots/Admin/Locations/Location%202.png)
+
+Nach dem Erfassen des Standortes wird automatisch die Adresse geocoded. Nur der Admin kann die Company wählen
+
 ![Location bearbeiten](Doc/Screenshots/Admin/Locations/Location%203.png)
 
-### Location
+Standorte können bearbeitet werden.
+
+### Company
+
+Diese Seite kann nur vom Admin angesehen werden.
 
 ![Company mit Standort](Doc/Screenshots/Admin/Companies/Company%201.png)
+
+Alle Firmen werden angezeigt. Wenn die Firma angeklickt wird, wird eine Karte der registrierten Adresse angezeigt. Firmen können gelöscht werden.
+
 ![Company erfassen](Doc/Screenshots/Admin/Companies/Company%202.png)
+
+Nach dem Erfassen der Firma wird automatisch die Adresse geocoded.
+
 ![Company bearbeiten](Doc/Screenshots/Admin/Companies/Company%203.png)
+
+Firmen können bearbeitet werden.
+
+![Bestätigungsmail bei ersteller Firma](Doc/Screenshots/Admin/Companies/CreatedMail.png)
+
+Wenn ein Owner erfasst wird erhält dieser eine Bestätigungsmail.
+
+![Bestätigungsmail bei erfasstem Owner](Doc/Screenshots/Admin/Companies/AssignedMail.png)
+
+Wenn ein Owner erfasst wird erhält dieser eine Bestätigungsmail.
+
+### Chatbot
+
+![Chatbot](Doc/Screenshots/Chatbot/Chatbot.png)
+
+Chatbots können geöffnet werden und antworten.
+
+![Optimierung](Doc/Screenshots/Chatbot/Chatbot.png)
+
+Auf Anfrage mit Company und Location ID antwortet der Chatbot mit einer Optimierung.
 
 ## KI-Funktionen
 
