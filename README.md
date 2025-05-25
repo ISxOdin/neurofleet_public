@@ -232,7 +232,7 @@ Die Monetarisierung erfolgt über verschiedene Einnahmemodelle:
 
 ## Use-Case Beschreibung
 
-Es werden folgende Rollen gebraucht:
+**Rollenbeschreibung:**
 
 `User`: Standard Rolle jedes Nutzers, der sich frisch registriert hat. Diesem wird eine Rolle und eine Firma zugeteilt. Der Nutzer hat ansonsten keinen Nutzen.
 
@@ -244,6 +244,62 @@ Es werden folgende Rollen gebraucht:
 
 `Admin`: Der Admin hat alle Rechte. Er kann Companies erstellen und für jede Company jeweils Locations, Vehicles, Jobs und Routen erstellen.
 
+**UC-Beschreibung:**
+
+<table> <thead> <h3>Manage Company</h3><tr><th>Item</th><th>Description</th></tr> </thead> <tbody> <tr><td><strong>ID</strong></td><td>UC01</td></tr> <tr><td><strong>Title</strong></td><td>Manage Company</td></tr> <tr><td><strong>Actors</strong></td><td>Admin</td></tr> <tr><td><strong>Standard Flow</strong></td> <td> <ol> <li>Admin ruft die Übersicht der registrierten Unternehmen auf.</li> <li>Admin wählt, ob ein Unternehmen erstellt, bearbeitet oder gelöscht werden soll.</li> <li>Das System zeigt das entsprechende Eingabeformular an.</li> <li>Admin gibt Firmendetails ein oder ändert sie (Name, E-Mail, Adresse).</li> <li>Das System validiert die Eingaben, speichert sie und zeigt eine Bestätigung.</li> </ol> </td> </tr> <tr><td><strong>Exceptions</strong></td> <td> <ul> <li>Pflichtfelder fehlen oder sind ungültig → Validierungsfehler anzeigen.</li> </ul> </td> </tr> <tr><td><strong>Data Definitions</strong></td> <td>Ein Unternehmen enthält Name, E-Mail-Adresse und Geodaten (über Geocoding).</td> </tr> </tbody> </table>
+<br></br>
+
+<table> <thead> <h3>Manage Location</h3><tr><th>Item</th><th>Description</th></tr> </thead> <tbody> <tr><td><strong>ID</strong></td><td>UC02</td></tr> <tr><td><strong>Title</strong></td><td>Manage Locations</td></tr> <tr><td><strong>Actors</strong></td><td>Admin, Owner</td></tr> <tr><td><strong>Standard Flow</strong></td> <td> <ol> <li>Benutzer ruft die Standortverwaltung auf.</li> <li>System zeigt eine Liste aller zugeordneten Standorte (z. B. Depots, Lagerhallen, Kunden).</li> <li>Benutzer wählt „Standort erstellen“, „bearbeiten“ oder „löschen“.</li> <li>System öffnet das Eingabeformular mit Feldern wie Name, Adresse (ggf. Company)</li> <li>Änderungen werden gespeichert und visuell bestätigt.</li> </ol> </td> </tr> <tr><td><strong>Exceptions</strong></td> <td> <ul> <li>Ungültige Adresse → Validierung schlägt fehl (durch Geocoding-Dienst).</li> </ul> </td> </tr> <tr><td><strong>Data Definitions</strong></td> <td>Ein Standort besteht aus Name, Adresse Geokoordinaten, Fleet Manager und Firma</td> </tr> </tbody> </table>
+<br></br>
+
+<table> <thead> <h3>Manage Vehicle</h3><tr><th>Item</th><th>Description</th></tr> </thead> <tbody> <tr><td>ID</td><td>UC03</td></tr> <tr><td>Title</td><td>Manage Vehicle</td></tr> <tr><td>Actors</td><td>Fleet Manager, Owner</td></tr> <tr><td>Standard Flow</td><td>1. Benutzer wählt „Fahrzeug erstellen“, „bearbeiten“ oder „löschen“.<br>2. System zeigt Maske zur Eingabe von Daten.<br>3. Änderungen werden gespeichert.</td></tr> <tr><td>Exceptions</td><td>- Fahrzeug-ID bereits vergeben → Warnung.<br>- Fahrzeug wird aktuell verwendet → Löschen verweigert. <br>- VIN nummer entspricht nicht den Anforderungen (17 Zeichen, kein I, O oder Q)</td></tr> <tr><td>Data Definitions</td><td>Fahrzeugdaten umfassen Nummernschild, VIN, Typ, Kapazität, Firma und Standort</td></tr> </tbody> </table>
+<br></br>
+
+<table> <thead>   <h3>Manage Job</h3>
+ <tr><th>Item</th><th>Description</th></tr> </thead> <tbody> <tr><td>ID</td><td>UC04</td></tr> <tr><td>Title</td><td>Manage Job</td></tr> <tr><td>Actors</td><td>Fleet Manager, Owner</td></tr> <tr><td>Standard Flow</td><td>1. Benutzer wählt „Job erstellen“, „bearbeiten“ oder „löschen“ aus.<br>2. System zeigt Eingabemaske für Jobdetails.<br>3. Benutzer gibt oder ändert Informationen.<br>4. System speichert und bestätigt.<br>5. KI optimiert Beschreibung</td></tr> <tr><td>Exceptions</td><td>- Ungültige Eingaben (z. B. negative Vergütung) → Fehlermeldung.<br>- Unbekannte Company → Verknüpfung verweigert.</td></tr> <tr><td>Data Definitions</td><td>Ein Job enthält Beschreibung, geplante Zeit, Firma, Abfahrtsort, Ankunftsort, Ladung in Kg</td></tr> </tbody> </table>
+<br></br>
+
+<table> <thead><h3>Manage Route</h3> <tr><th>Item</th><th>Description</th></tr> </thead> <tbody> <tr><td>ID</td><td>UC05</td></tr> <tr><td>Title</td><td>Manage Route</td></tr> <tr><td>Actors</td><td>Admin, Owner, Fleet Manager</td></tr> <tr><td>Standard Flow</td><td>1. Benutzer gibt Start- und Zielort ein.<br>2. System zeigt Verbindungen.<br>3. KI generiert Beschreibung (optional).<br>4. Route wird gespeichert.</td></tr> <tr><td>Exceptions</td><td>- Ungültige Adressen → Vorschläge.<br>- Keine Verbindung → Warnung.</td></tr> <tr><td>Data Definitions</td><td>Route besteht aus Beschreibung, geplante Zeit, Firma, Fahrzeug, Jobs, Zwischenstopps</td></tr> </tbody> </table>
+<br></br>
+<table> 
+   <thead> 
+   <h3>Interact with Chatbot</h3>
+   <tr>
+      <th>Item</th>
+      <th>Description</th>
+   </tr> 
+   </thead> 
+   <tbody> 
+      <tr>
+         <td>ID</td>
+         <td>UC06</td>
+      </tr> 
+      <tr>
+         <td>Title</td>
+         <td>Interact with Chatbot</td>
+      </tr> 
+      <tr>
+         <td>Actors</td>
+         <td>Admin, Owner, Fleet Manager</td>
+      </tr> 
+      <tr>
+         <td>Standard Flow</td>
+         <td>1. Benutzer öffnet Chat.<br>2. Frage wird gestellt (z. B. „Wie können aktuelle Routen optimiert werden“).<br>3. Company ID und Location ID werden mitgegeben.<br>4. KI verarbeitet Anfrage und liefert Antwort.</td>
+      </tr> 
+      <tr>
+         <td>Exceptions</td>
+         <td>- Unklare Formulierung → Rückfrage der KI.<br>- Kein passender Kontext → Info-Hinweis.</td>
+      </tr> 
+      <tr>
+         <td>Data Definitions</td>
+         <td>Verwendung von Spring AI und RAG zur Kontexterweiterung mit aktuellen DB-Daten.</td>
+      <tr> 
+   </tbody> 
+</table>
+<br></br>
+
+<table> <thead>    <h3>Dashboard</h3>
+<tr><th>Item</th><th>Description</th></tr> </thead> <tbody> <tr><td><strong>ID</strong></td><td>UC05</td></tr> <tr><td><strong>Title</strong></td><td>View Dashboard</td></tr> <tr><td><strong>Actors</strong></td><td>Fleet Manager</td></tr> <tr><td><strong>Standard Flow</strong></td> <td> <ol> <li>Benutzer öffnet das Dashboard.</li> <li>System lädt Statistiken zur Auslastung, Fahrzeugstatus, geplante Jobs, laufende Jobs, erledigte Jobs, Routen und Alrts etc.</li> </ol> </td> </tr> <tr><td><strong>Exceptions</strong></td> <td> <ul> <li>Keine Daten für gewählten Zeitraum vorhanden → Hinweis anzeigen.</li> </ul> </td> </tr> <tr><td><strong>Data Definitions</strong></td> <td>Das Dashboard visualisiert aggregierte Daten aus Simulationen, KI-Auswertung und MongoDB. Die KI Auswertung rechnet die Routenauslastung und anzahl offener Jobs</td> </tr> </tbody> </table>
 
 ## Fachliches Datenmodell
 
@@ -252,35 +308,40 @@ Es werden folgende Rollen gebraucht:
 ## Erläuterungen zum Datenmodell
 
 **Company (Unternehmen)**
+
 - Zentrale Organisationseinheit
 - Verwaltet Benutzer, Fahrzeuge, Standorte und Aufträge
 - Identifiziert durch Name, Adresse und Koordinaten
 
 **Vehicle (Fahrzeug)**
+
 - Transportmittel für Routen
 - Hat Kennzeichen, VIN und Kapazität
 - Besitzt Status (verfügbar/nicht verfügbar) und Typ
 
 **Route (Route)**
+
 - Transportplan für mehrere Aufträge
 - Verbindet Aufträge zu einer logischen Einheit
 - Enthält Zeitplan und Gesamtgewicht der Ladung
 
 **Job (Auftrag)**
+
 - Einzelner Transportauftrag
 - Definiert Start und Ziel
 - Beinhaltet Ladungsgewicht und Zeitplan
 
 **Location (Standort)**
+
 - Physischer Ort für Start/Ziel von Aufträgen
 - Definiert durch Name, Adresse und Koordinaten
 - Kann Basis für Fahrzeuge sein
 
 **User (Benutzer)**
+
 - Systembenutzer mit Auth0-Authentifizierung
 - Zugeordnet zu einem Unternehmen
 - Verwaltet durch E-Mail und Name
-
 
 ## Zustandsdiagramm
 
@@ -296,7 +357,63 @@ Es werden folgende Rollen gebraucht:
 
 ## Frontend
 
-> Beschreibung des Frontends mit Screenshots der fertigen Applikation. Alle Teile des GUIs, die bewertet werden sollen, müssen abgebildet sein.
+### Authentication
+
+![Login](Doc/Screenshots/Login.png)
+![Signup](Doc/Screenshots/Signup.png)
+![Not-logged-in](Doc/Screenshots/Notloggedin.png)
+
+### Home
+
+![Homepage](Doc/Screenshots/Home/Homepage.png)
+
+### Profile
+
+![Profile persönliche Information](Doc/Screenshots/Profile/Profile1.png)
+![Profile profesionelle Information](Doc/Screenshots/Profile/Profile2.png)
+
+### Dashboard
+
+![Jobs, Routes and AI](Doc/Screenshots/Dashboard/Dashboard1.png)
+![Alerts](Doc/Screenshots/Dashboard/Dashboard2.png)
+
+### Fleet Management
+
+![Alle Fahrzeuge, edit und delete](Doc/Screenshots/Fleet-Management/Fleet1.png)
+![Fahrzeug erfassen](Doc/Screenshots/Fleet-Management/Fleet2.png)
+![Fahrzeug bearbeiten](Doc/Screenshots/Fleet-Management/Fleet3.png)
+
+### Transport Jobs
+
+![Alle Jobs, edit und delete](Doc/Screenshots/Transport-Jobs/Jobs%201.png)
+![Job erfassen](Doc/Screenshots/Transport-Jobs/Jobs%202.png)
+![Job bearbeiten](Doc/Screenshots/Transport-Jobs/Jobs%203.png)
+![Jobroute](Doc/Screenshots/Transport-Jobs/Jobs%204.png)
+
+### Routes
+
+![Route mit Waypoints](Doc/Screenshots/Routes/Route%201.png)
+![Route erfassen](Doc/Screenshots/Routes/Route%202.png)
+![Route bearbeiten](Doc/Screenshots/Routes/Route%203.png)
+
+## Admin
+
+### Users
+
+![User anzeigen](Doc/Screenshots/Admin/Users/Users%201.png)
+![User bearbeiten](Doc/Screenshots/Admin/Users/Users%201.png)
+
+### Location
+
+![Location mit Standort](Doc/Screenshots/Admin/Locations/Location%201.png)
+![Location erfassen](Doc/Screenshots/Admin/Locations/Location%202.png)
+![Location bearbeiten](Doc/Screenshots/Admin/Locations/Location%203.png)
+
+### Location
+
+![Company mit Standort](Doc/Screenshots/Admin/Companies/Company%201.png)
+![Company erfassen](Doc/Screenshots/Admin/Companies/Company%202.png)
+![Company bearbeiten](Doc/Screenshots/Admin/Companies/Company%203.png)
 
 ## KI-Funktionen
 
@@ -307,7 +424,9 @@ Die KI wird hauptsächlich bei der Erstellung von neuen Jobs und Routen genutzt.
 ## Stand der Implementation
 
 ### Kurzzusammenfassung der Applikation
+
 NeuroFleet ist eine Flottenmanagement-Applikation, die es Unternehmen ermöglicht:
+
 - Ihre Fahrzeugflotte zu verwalten
 - Transportaufträge zu koordinieren
 - Routen zu planen und zu optimieren
@@ -317,6 +436,7 @@ NeuroFleet ist eine Flottenmanagement-Applikation, die es Unternehmen ermöglich
 ### Ausbaumöglichkeiten
 
 1. **UI/UX Verbesserungen**
+
    - Implementierung von Toaster-Benachrichtigungen statt Alert-Messages (#96)
    - Entwicklung einer Settings-Seite für Benutzereinstellungen (#174)
    - Implementierung eines responsiven Dashboards
@@ -324,27 +444,30 @@ NeuroFleet ist eine Flottenmanagement-Applikation, die es Unternehmen ermöglich
 
    [Backlog](https://github.com/users/ISxOdin/projects/2/views/6)
 
-   
-
 2. **Technische Erweiterungen**
+
    - Entwicklung von API-Client-Bibliotheken (#166)
    - Implementierung der Fahrerzuweisung (#169)
    - Status-Management für Aufträge durch Fahrer (#170)
    - Integration von Echtzeit-Tracking-Systemen
 
 3. **Funktionale Erweiterungen**
+
    - **Routenoptimierung**
+
      - Automatische Routenberechnung basierend auf Aufträgen
      - Berücksichtigung von Verkehrsdaten
      - Beürcksichtigung von Wetter
      - Kraftstoffverbrauchsoptimierung
 
    - **Fahrzeugmanagement**
+
      - Wartungsplanung und -erinnerungen
      - Kraftstoffverbrauchsüberwachung
      - Fahrzeugauslastungsanalyse
 
    - **Auftragsmanagement**
+
      - Automatische Auftragszuweisung
      - Priorisierung von Aufträgen
      - Kundenbenachrichtigungssystem
@@ -355,18 +478,21 @@ NeuroFleet ist eine Flottenmanagement-Applikation, die es Unternehmen ermöglich
      - Kostenüberwachung
 
 4. **Integration und Automatisierung**
+
    - Anbindung an Buchhaltungssysteme
    - Integration von Wetter-APIs
    - Automatische Rechnungserstellung
    - Schnittstellen zu Kundensystemen
 
 5. **Mobile Erweiterungen**
+
    - Fahrer-App für unterwegs (Statusänderung)
    - Mobile Auftragserfassung
    - Digitale Lieferscheine
    - Foto-Dokumentation von Lieferungen
 
 6. **Sicherheit und Compliance**
+
    - Erweiterte Zugriffskontrollen
    - Audit-Logging
    - Compliance-Reporting
@@ -379,4 +505,3 @@ NeuroFleet ist eine Flottenmanagement-Applikation, die es Unternehmen ermöglich
    - Anomalieerkennung
 
 Diese Erweiterungen würden die Applikation zu einem umfassenden Flottenmanagement-System ausbauen, das den gesamten Logistikprozess abdeckt und optimiert.
-
